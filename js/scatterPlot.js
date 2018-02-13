@@ -2,6 +2,22 @@
 The models and views for the scatter plot.
 */
 
+function isInt(n){
+    return Number(n) === n && n % 1 === 0;
+}
+
+function getType(n){
+	var type = typeof n;
+	if (type === 'number'){
+		if (isInt(n)){
+			type = 'int';
+		} else {
+			type = 'float'
+		}
+	}
+	return type;
+}
+
 /** 
  * convenience for converting JSON color to rgba that canvas wants
  * Be nice to handle different forms (e.g. no alpha, CSS style, etc.)
@@ -277,7 +293,8 @@ var ScatterData = Backbone.Model.extend({
 		for (var key in response[0]){
 			if (xyz.indexOf(key) === -1){ 
 				var nUnique = _.unique(_.pluck(response, key)).length;
-				var type = typeof response[0][key];
+				// var type = typeof response[0][key];
+				var type = getType(response[0][key]);
 				this.metas.push({
 					name: key,
 					nUnique: nUnique,
@@ -337,7 +354,8 @@ var ScatterData = Backbone.Model.extend({
 		this.metas.push({
 			name: key,
 			nUnique: _.unique(values).length,
-			type: typeof values[0]
+			// type: typeof values[0]
+			type: getType(values[0])
 		});
 	},
 });
@@ -361,6 +379,7 @@ var Scatter3dView = Backbone.View.extend({
 		showStats: false, // whether to show Stats
 		is3d: true, // 3d or 2d
 		raycasterThreshold: undefined, // raycaster.Points.threshold
+		geneUrl: 'gene'
 	},
 
 	initialize: function(options){
@@ -773,11 +792,11 @@ var Scatter3dView = Backbone.View.extend({
 				.range(["#1f77b4", "#ddd", "#d62728"]);
 		} else if (dtype === 'boolean'){
 			var colorScale = d3.scale.ordinal().domain([true, false]).range(['#cc0000', '#cccccc']);
-		} else if (nUniqueCats < 11){
+		} else if (nUniqueCats < 11 && dtype !== 'float'){
 			var colorScale = d3.scale.category10().domain(uniqueCats);
-		} else if (nUniqueCats > 10 && nUniqueCats <= 20) {
+		} else if (nUniqueCats > 10 && nUniqueCats <= 20 && dtype !== 'float') {
 			var colorScale = d3.scale.category20().domain(uniqueCats);
-		} else if(nUniqueCats <= 40){
+		} else if(nUniqueCats <= 40 && dtype !== 'float'){
 			var colors40 = ["#1b70fc", "#faff16", "#d50527", "#158940", "#f898fd", "#24c9d7", "#cb9b64", "#866888", "#22e67a", "#e509ae", "#9dabfa", "#437e8a", "#b21bff", "#ff7b91", "#94aa05", "#ac5906", "#82a68d", "#fe6616", "#7a7352", "#f9bc0f", "#b65d66", "#07a2e6", "#c091ae", "#8a91a7", "#88fc07", "#ea42fe", "#9e8010", "#10b437", "#c281fe", "#f92b75", "#07c99d", "#a946aa", "#bfd544", "#16977e", "#ff6ac8", "#a88178", "#5776a9", "#678007", "#fa9316", "#85c070", "#6aa2a9", "#989e5d", "#fe9169", "#cd714a", "#6ed014", "#c5639c", "#c23271", "#698ffc", "#678275", "#c5a121", "#a978ba", "#ee534e", "#d24506", "#59c3fa", "#ca7b0a", "#6f7385", "#9a634a", "#48aa6f", "#ad9ad0", "#d7908c", "#6a8a53", "#8c46fc", "#8f5ab8", "#fd1105", "#7ea7cf", "#d77cd1", "#a9804b", "#0688b4", "#6a9f3e", "#ee8fba", "#a67389", "#9e8cfe", "#bd443c", "#6d63ff", "#d110d5", "#798cc3", "#df5f83", "#b1b853", "#bb59d8", "#1d960c", "#867ba8", "#18acc9", "#25b3a7", "#f3db1d", "#938c6d", "#936a24", "#a964fb", "#92e460", "#a05787", "#9c87a0", "#20c773", "#8b696d", "#78762d", "#e154c6", "#40835f", "#d73656", "#1afd5c", "#c4f546", "#3d88d8", "#bd3896", "#1397a3", "#f940a5", "#66aeff", "#d097e7", "#fe6ef9", "#d86507", "#8b900a", "#d47270", "#e8ac48", "#cf7c97", "#cebb11", "#718a90", "#e78139", "#ff7463", "#bea1fd"];
 			var colorScale = d3.scale.ordinal().range(colors40).domain(uniqueCats)
 		} else {
@@ -805,6 +824,18 @@ var Scatter3dView = Backbone.View.extend({
 		this.model.setAttr('scores', searchResult.scores);
 		// update the clouds by calling shapeBy
 		this.shapeBy(this.shapeKey);
+	},
+
+	colorByGeneExpression: function(gene){
+		// To retrieve the expression values for a gene,
+		// then color the dots by the expression values
+		var self = this;
+
+		$.getJSON(this.geneUrl + '/' + gene, function(result){
+			self.colorKey = gene;
+			self.model.setAttr(gene, result[gene]);
+			self.shapeBy(self.shapeKey);
+		});
 	},
 
 	highlightQuery: function(query, metaKey){

@@ -236,11 +236,11 @@ var Controler = Backbone.View.extend({
 });
 
 var SearchSelectize = Backbone.View.extend({
-	// selectize to search for drugs by name
+	// selectize to search for genes by name
 	defaults: {
 		container: document.body,
 		scatterPlot: Scatter3dView,
-		synonymsUrl: 'synonyms/'
+		synonymsUrl: 'query_genes',
 	},
 
 	initialize: function(options){
@@ -255,8 +255,7 @@ var SearchSelectize = Backbone.View.extend({
 		var scatterPlot = this.scatterPlot;
 		// scatterPlot highlightQuery once selectize is searched
 		scatterPlot.listenTo(this, 'searched', function(query){
-			scatterPlot.removeHighlightedPoints();
-			scatterPlot.highlightQuery2(query, 'Perturbation_ID');
+			scatterPlot.colorByGeneExpression(query);
 		});
 
 	},
@@ -273,7 +272,7 @@ var SearchSelectize = Backbone.View.extend({
 		// set up the DOMs
 		// wrapper for SearchSelectize
 		var searchControl = $('<div class="form-group" id="search-control"></div>')
-		searchControl.append($('<label class="control-label">Search compounds:</label>'))
+		searchControl.append($('<label class="control-label">Search a gene:</label>'))
 
 		this.$el = $('<select id="search" class="form-control"></select>');
 		searchControl.append(this.$el)
@@ -285,24 +284,24 @@ var SearchSelectize = Backbone.View.extend({
 
 		var self = this;
 		this.$el.selectize({
-			valueField: 'pert_id',
-			labelField: 'Name',
-			searchField: 'Name',
-			sortField: 'Name',
+			valueField: 'gene',
+			labelField: 'gene',
+			searchField: 'gene',
+			sortField: 'gene',
 			preload: 'focus',
 			options: [],
 			create:false,
-			placeholder: 'Type the name of a drug',
+			placeholder: 'Type the symbol of a gene',
 			render: {
 				option: function(item, escape){
 					return '<ul>' + 
-						'<li>' + escape(item.Name) + '</li>' +
-						'<li>pert_id:' + escape(item.pert_id) + '</li>' +
+						'<li>' + escape(item.gene) + '</li>' +
+						'<li>average expression:' + parseFloat(item.avg_expression).toFixed(1) + '</li>' +
 						'</ul>';
 				}
 			},
 			load: function(query, callback){
-				if (!query.length) query = 'a'; // to preload some options when focused 
+				if (!query.length) query = 'co'; // to preload some options when focused 
 				$.ajax({
 					url: self.synonymsUrl + '/' + encodeURIComponent(query),
 					type: 'GET',
@@ -318,7 +317,7 @@ var SearchSelectize = Backbone.View.extend({
 			});
 
 		// The button to clear highlighted points
-		this.btn = $('<button class="btn btn-default btn-xs">Clear highlighted points</button>').click(function(e){
+		this.btn = $('<button class="btn btn-default btn-xs">Clear</button>').click(function(e){
 			self.scatterPlot.removeHighlightedPoints();
 			self.hideButton();
 		});

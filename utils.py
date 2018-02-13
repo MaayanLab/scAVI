@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
+from gene_expression import *
+
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 def load_graphs_meta():

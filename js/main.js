@@ -16,6 +16,7 @@ var sdvDefaultConfig = {
 	textures: textures,
 	pointSize: 12,
 	is3d: false,
+	geneUrl: 'gene'
 }
 
 sdvConfig = $.extend(sdvDefaultConfig, sdvConfig)
@@ -26,6 +27,12 @@ var legend = new Legend({scatterPlot: sdv, h: window.innerHeight, container: con
 
 var controler = new Controler({scatterPlot: sdv, h: window.innerHeight, w: 200, container: container})
 
+
+var geneSearchSelectize = new SearchSelectize({
+	scatterPlot: sdv, 
+	container: "#controls", 
+	synonymsUrl: 'query_genes'
+})
 
 // var sigSimSearch = new SigSimSearchForm({
 // 	scatterPlot: sdv, 

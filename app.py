@@ -25,6 +25,8 @@ def load_globals():
 	global graphs # meta data of the graphs for the header
 	global d_all_graphs # preload all graphs
 	global graph_name_full
+	global CPM_df 
+	global genes_avg_expression
 
 	graph_name_full = 'FWD_kNN_3.json'
 	graphs = load_graphs_meta()
@@ -39,6 +41,13 @@ def load_globals():
 		graph_name = graph_rec['name']
 		graph_df_ = load_graph_from_db(graph_name, meta_df)
 		d_all_graphs[graph_name] = graph_df_
+
+	# Load expression matrix
+	CPM_df = load_CPM_matrix()
+	genes_avg_expression = CPM_df.mean(axis=1).to_frame()
+	genes_avg_expression.columns = ['avg_expression']
+	genes_avg_expression.index.name = 'gene'
+	genes_avg_expression = genes_avg_expression.reset_index()
 	return
 
 
@@ -109,6 +118,24 @@ def load_graph_layout_coords(graph_name):
 			# print graph_df_.head()
 			graph_df_ = d_all_graphs[graph_name]
 			return graph_df_.reset_index().to_json(orient='records')
+
+
+@app.route(ENTER_POINT + '/query_genes/<string:query_string>', methods=['GET'])
+def query_genes(query_string):
+	'''Endpoint handling gene search.
+	'''
+	if request.method == 'GET':
+		mask = genes_avg_expression['gene'].str.contains(query_string, case=False)
+		return genes_avg_expression.loc[mask].to_json(orient='records') 
+
+@app.route(ENTER_POINT + '/gene/<string:gene>', methods=['GET'])
+def get_gene_expression(gene):
+	'''Get the expression values of a gene across samples.
+	'''
+	cpm_arr = CPM_df.loc[gene].values
+	cpm_arr = np.log10(cpm_arr + 1.)
+	cpm_arr = (cpm_arr - cpm_arr.mean()) / cpm_arr.std()
+	return jsonify({gene: cpm_arr.tolist()})
 
 
 from jinja2 import Markup
