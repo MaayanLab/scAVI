@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 from gene_expression import *
+from enrichment import *
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 

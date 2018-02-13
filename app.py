@@ -28,6 +28,11 @@ def load_globals():
 	global CPM_df 
 	global genes_avg_expression
 
+	global d_lib_combined_score_df
+	global d_lib_top_terms
+	global all_terms_df
+
+
 	graph_name_full = 'FWD_kNN_3.json'
 	graphs = load_graphs_meta()
 	# Load cell meta
@@ -48,6 +53,9 @@ def load_globals():
 	genes_avg_expression.columns = ['avg_expression']
 	genes_avg_expression.index.name = 'gene'
 	genes_avg_expression = genes_avg_expression.reset_index()
+
+	# Load enrichment results
+	d_lib_combined_score_df, d_lib_top_terms, all_terms_df = load_all_enrichment_results()
 	return
 
 
@@ -120,22 +128,42 @@ def load_graph_layout_coords(graph_name):
 			return graph_df_.reset_index().to_json(orient='records')
 
 
-@app.route(ENTER_POINT + '/query_genes/<string:query_string>', methods=['GET'])
-def query_genes(query_string):
+'''
+Gene expression search endpoints
+'''
+@app.route(ENTER_POINT + '/gene/query/<string:query_string>', methods=['GET'])
+def search_genes(query_string):
 	'''Endpoint handling gene search.
 	'''
 	if request.method == 'GET':
 		mask = genes_avg_expression['gene'].str.contains(query_string, case=False)
 		return genes_avg_expression.loc[mask].to_json(orient='records') 
 
-@app.route(ENTER_POINT + '/gene/<string:gene>', methods=['GET'])
-def get_gene_expression(gene):
+@app.route(ENTER_POINT + '/gene/get/<string:gene>', methods=['GET'])
+def retrieve_gene_expression(gene):
 	'''Get the expression values of a gene across samples.
 	'''
 	cpm_arr = CPM_df.loc[gene].values
 	cpm_arr = np.log10(cpm_arr + 1.)
 	cpm_arr = (cpm_arr - cpm_arr.mean()) / cpm_arr.std()
 	return jsonify({gene: cpm_arr.tolist()})
+
+
+'''
+Enriched terms search endpoints
+'''
+@app.route(ENTER_POINT + '/term/query/<string:query_string>', methods=['GET'])
+def search_terms(query_string):
+	if request.method == 'GET':
+		mask = all_terms_df['term'].str.contains(query_string, case=False)
+		return all_terms_df.loc[mask].to_json(orient='records') 
+
+@app.route(ENTER_POINT + '/term/get/<string:term>', methods=['GET'])
+def retrieve_term_enrichment(term):
+	gene_set_library = all_terms_df.loc[all_terms_df['term'] == term].iloc[0]['library']
+	combined_scores = d_lib_combined_score_df[gene_set_library].loc[term]
+	combined_scores = combined_scores.fillna(np.nanmin(combined_scores))
+	return jsonify({term: combined_scores.tolist()})
 
 
 from jinja2 import Markup

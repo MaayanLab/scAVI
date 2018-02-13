@@ -261,14 +261,6 @@ var SearchSelectize = Backbone.View.extend({
 	},
 
 	render: function(){
-		// get autocomplete list
-		// var autocompleteList = _.unique(this.model.getAttr('Perturbation'));
-		// var options = [];
-		// for (var i = 0; i < autocompleteList.length; i++) {
-		// 	var name = autocompleteList[i];
-		// 	options.push({value: name, title: name});
-		// };
-
 		// set up the DOMs
 		// wrapper for SearchSelectize
 		var searchControl = $('<div class="form-group" id="search-control"></div>')
@@ -341,6 +333,114 @@ var SearchSelectize = Backbone.View.extend({
 		this.btn.hide();
 	},
 });
+
+
+var TermSearchSelectize = Backbone.View.extend({
+	// selectize to search for genes by name
+	defaults: {
+		container: document.body,
+		scatterPlot: Scatter3dView,
+		synonymsUrl: 'query_terms',
+	},
+
+	initialize: function(options){
+		if (options === undefined) {options = {}}
+		_.defaults(options, this.defaults)
+		_.defaults(this, options)
+
+		this.model = this.scatterPlot.model;
+
+		this.listenTo(this.model, 'sync', this.render);
+
+		var scatterPlot = this.scatterPlot;
+		// scatterPlot highlightQuery once selectize is searched
+		scatterPlot.listenTo(this, 'searched', function(query){
+			scatterPlot.colorByTermScores(query);
+		});
+
+	},
+
+	render: function(){
+		// set up the DOMs
+		// wrapper for SearchSelectize
+		var searchControl = $('<div class="form-group" id="search-control"></div>')
+		searchControl.append($('<label class="control-label">Search a term:</label>'))
+
+		this.$el = $('<select id="search" class="form-control"></select>');
+		searchControl.append(this.$el)
+		$(this.container).append(searchControl)
+
+		var callback = function(data){
+			return data;
+		}
+
+		var self = this;
+		this.$el.selectize({
+			valueField: 'term',
+			labelField: 'term',
+			searchField: 'term',
+			sortField: 'term',
+			optgroupField: 'library',
+			optgroupLabelField: 'name',
+			optgroupValueField: 'id',
+			lockOptgroupOrder: true,
+			preload: 'focus',
+			options: [],
+			placeholder: 'e.g. ABC transporters',
+			optgroups: [
+				{$order: 2, id: 'ChEA_2016', name: 'ChEA_2016'},
+				{$order: 1, id: 'KEGG_2016', name: 'KEGG_2016'}
+				],
+			create:false,
+			render: {
+				option: function(item, escape){
+					return '<ul>' + 
+						'<li>' + escape(item.term) + '</li>' +
+						'</ul>';
+				}
+			},
+			load: function(query, callback){
+				if (!query.length) query = 'co'; // to preload some options when focused 
+				$.ajax({
+					url: self.synonymsUrl + '/' + encodeURIComponent(query),
+					type: 'GET',
+					dataType: 'json',
+					error: function(){
+						callback();
+					},
+					success: function(res){
+						return callback(res);
+					}
+				});
+			}
+			});
+
+		// The button to clear highlighted points
+		this.btn = $('<button class="btn btn-default btn-xs">Clear</button>').click(function(e){
+			self.scatterPlot.removeHighlightedPoints();
+			self.hideButton();
+		});
+		$(this.container).append(this.btn);
+		this.hideButton();
+
+		// on change, trigger('searched', query)
+		this.$el[0].selectize.on('change', function(value){
+			if (value !== ''){
+				self.trigger('searched', value);
+				self.showButton();
+			}
+		});
+	},
+
+	showButton: function(){
+		this.btn.show();
+	},
+
+	hideButton: function(){
+		this.btn.hide();
+	},
+});
+
 
 var SigSimSearch = Backbone.View.extend({
 	// The frontend for signature similarity search
