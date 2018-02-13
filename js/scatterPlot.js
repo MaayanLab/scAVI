@@ -751,7 +751,7 @@ var Scatter3dView = Backbone.View.extend({
 		var meta = _.findWhere(this.model.metas, {name: metaKey});
 		var dtype = meta.type;
 		
-		if (dtype !== 'number' && meta.nUnique > 20){
+		if (dtype !== 'float' && dtype !== 'int' && meta.nUnique > 20){
 			metas = encodeRareCategories(metas, 19);
 		}
 		var uniqueCats = new Set(metas);
@@ -783,7 +783,6 @@ var Scatter3dView = Backbone.View.extend({
 				uniqueCats[idx] = elem;
 			}
 		}
-
 		// make colorScale
 		if (meta.name === 'Scores') { // similarity scores should center at 0
 			var colorExtent = d3.extent(metas);
