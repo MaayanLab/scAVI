@@ -4,7 +4,6 @@ import time
 import StringIO
 import numpy as np
 np.random.seed(10)
-import requests
 import pandas as pd
 
 from flask import Flask, request, redirect, render_template, \

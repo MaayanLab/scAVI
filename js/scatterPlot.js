@@ -862,6 +862,9 @@ var Scatter3dView = Backbone.View.extend({
 				self.labelKey.push(libDisplay);
 				self.shapeBy(self.shapeKey)
 			});
+		} else{
+			this.colorKey = libDisplay;
+			this.shapeBy(this.shapeKey)
 		}
 	},
 
