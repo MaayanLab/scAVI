@@ -9,6 +9,15 @@ from enrichment import *
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
+def nan_to_none(x):
+	'''Convert np.nan to None.'''
+	try:
+		if np.isnan(x):
+			x = None
+	except TypeError:
+		pass
+	return x
+
 def load_graphs_meta():
 	'''Load and preprocess the meta for graphs in the `data/graphs` dir.
 	'''

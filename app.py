@@ -164,7 +164,21 @@ def retrieve_term_enrichment(term):
 	combined_scores = d_lib_combined_score_df[gene_set_library].loc[term]
 	combined_scores = combined_scores.fillna(np.nanmin(combined_scores))
 	return jsonify({term: combined_scores.tolist()})
+	# return jsonify({term: map(nan_to_none, combined_scores)})
 
+'''
+Most enriched terms within a gene set library
+'''
+@app.route(ENTER_POINT + '/library/query', methods=['GET'])
+def get_libraries():
+	if request.method == 'GET':
+		# return jsonify([{'library': d_lib_top_terms.keys()}])
+		return jsonify([{'name': lib} for lib in d_lib_top_terms.keys()])
+
+@app.route(ENTER_POINT + '/library/get/<string:library>', methods=['GET'])
+def retrieve_library_top_terms(library):
+	top_terms = map(nan_to_none, d_lib_top_terms[library])
+	return jsonify({library: top_terms})
 
 from jinja2 import Markup
 app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])

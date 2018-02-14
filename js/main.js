@@ -17,7 +17,8 @@ var sdvDefaultConfig = {
 	pointSize: 12,
 	is3d: false,
 	geneUrl: 'gene/get',
-	termUrl: 'term/get'
+	termUrl: 'term/get',
+	libUrl: 'library/get'
 }
 
 sdvConfig = $.extend(sdvDefaultConfig, sdvConfig)
@@ -39,6 +40,12 @@ var termSearchSelectize = new TermSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
 	synonymsUrl: 'term/query'
+})
+
+var libSearchSelectize = new LibSearchSelectize({
+	scatterPlot: sdv, 
+	container: "#controls", 
+	synonymsUrl: 'library/query'
 })
 
 // var sigSimSearch = new SigSimSearchForm({

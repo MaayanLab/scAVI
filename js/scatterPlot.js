@@ -381,6 +381,7 @@ var Scatter3dView = Backbone.View.extend({
 		raycasterThreshold: undefined, // raycaster.Points.threshold
 		geneUrl: 'gene',
 		termUrl: 'term',
+		libUrl: 'library',
 	},
 
 	initialize: function(options){
@@ -846,6 +847,16 @@ var Scatter3dView = Backbone.View.extend({
 			self.model.setAttr(term, result[term]);
 			self.shapeBy(self.shapeKey)
 		});
+	},
+
+	colorByGeneSetLibrary: function(lib){
+		var self = this;
+
+		$.getJSON(this.libUrl + '/' + lib, function(result){
+			self.colorKey = lib;
+			self.model.setAttr(lib, result[lib]);
+			self.shapeBy(self.shapeKey)
+		});		
 	},
 
 	highlightQuery: function(query, metaKey){
