@@ -850,13 +850,19 @@ var Scatter3dView = Backbone.View.extend({
 	},
 
 	colorByGeneSetLibrary: function(lib){
-		var self = this;
-
-		$.getJSON(this.libUrl + '/' + lib, function(result){
-			self.colorKey = lib;
-			self.model.setAttr(lib, result[lib]);
-			self.shapeBy(self.shapeKey)
-		});		
+		var libDisplay = lib.split('_').slice(0,-1).join('_');
+		if (this.labelKey.indexOf(libDisplay) === -1){
+			// retrieve from server if not in the labelKey
+			var self = this;
+			$.getJSON(this.libUrl + '/' + lib, function(result){
+				
+				self.colorKey = libDisplay;
+				self.model.setAttr(libDisplay, result[lib]);
+				// Add this lib to labelKey for hovering display
+				self.labelKey.push(libDisplay);
+				self.shapeBy(self.shapeKey)
+			});
+		}
 	},
 
 	highlightQuery: function(query, metaKey){
