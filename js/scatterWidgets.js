@@ -341,6 +341,7 @@ var TermSearchSelectize = Backbone.View.extend({
 		container: document.body,
 		scatterPlot: Scatter3dView,
 		synonymsUrl: 'query_terms',
+		optGroupUrl: ''
 	},
 
 	initialize: function(options){
@@ -375,47 +376,57 @@ var TermSearchSelectize = Backbone.View.extend({
 		}
 
 		var self = this;
-		this.$el.selectize({
-			valueField: 'term',
-			labelField: 'term',
-			searchField: 'term',
-			sortField: 'term',
-			optgroupField: 'library',
-			optgroupLabelField: 'name',
-			optgroupValueField: 'id',
-			lockOptgroupOrder: true,
-			preload: 'focus',
-			options: [],
-			placeholder: 'e.g. ABC transporters',
-			optgroups: [
-				{$order: 4, id: 'WikiPathways_2016', name: 'WikiPathways_2016'},
-				{$order: 3, id: 'MGI_Mammalian_Phenotype_2017', name: 'MGI_Mammalian_Phenotype_2017'},
-				{$order: 2, id: 'KEGG_2016', name: 'KEGG_2016'},
-				{$order: 1, id: 'ChEA_2016', name: 'ChEA_2016'},
-				],
-			create:false,
-			render: {
-				option: function(item, escape){
-					return '<ul>' + 
-						'<li>' + escape(item.term) + '</li>' +
-						'</ul>';
-				}
-			},
-			load: function(query, callback){
-				if (!query.length) query = 'co'; // to preload some options when focused 
-				$.ajax({
-					url: self.synonymsUrl + '/' + encodeURIComponent(query),
-					type: 'GET',
-					dataType: 'json',
-					error: function(){
-						callback();
-					},
-					success: function(res){
-						return callback(res);
-					}
-				});
-			}
+		// fetch optgroups from optGroupUrl
+		$.getJSON(this.optGroupUrl, function(res){
+			var optgroups = [];
+			$.each(res, function(index, value){
+				optgroups.push({$order: index+1, id: value['name'], name: value['name']});
 			});
+
+			self.$el.selectize({
+				valueField: 'term',
+				labelField: 'term',
+				searchField: 'term',
+				sortField: 'term',
+				optgroupField: 'library',
+				optgroupLabelField: 'name',
+				optgroupValueField: 'id',
+				lockOptgroupOrder: true,
+				preload: 'focus',
+				options: [],
+				placeholder: 'e.g. ABC transporters',
+				optgroups: optgroups,
+				create:false,
+				render: {
+					option: function(item, escape){
+						return '<ul>' + 
+							'<li>' + escape(item.term) + '</li>' +
+							'</ul>';
+					}
+				},
+				load: function(query, callback){
+					if (!query.length) query = 'co'; // to preload some options when focused 
+					$.ajax({
+						url: self.synonymsUrl + '/' + encodeURIComponent(query),
+						type: 'GET',
+						dataType: 'json',
+						error: function(){
+							callback();
+						},
+						success: function(res){
+							return callback(res);
+						}
+					});
+				}
+				});
+			// on change, trigger('searched', query)
+			self.$el[0].selectize.on('change', function(value){
+				if (value !== ''){
+					self.trigger('searched', value);
+					self.showButton();
+				}
+			});
+		});
 
 		// The button to clear highlighted points
 		this.btn = $('<button class="btn btn-default btn-xs">Clear</button>').click(function(e){
@@ -424,14 +435,6 @@ var TermSearchSelectize = Backbone.View.extend({
 		});
 		$(this.container).append(this.btn);
 		this.hideButton();
-
-		// on change, trigger('searched', query)
-		this.$el[0].selectize.on('change', function(value){
-			if (value !== ''){
-				self.trigger('searched', value);
-				self.showButton();
-			}
-		});
 	},
 
 	showButton: function(){

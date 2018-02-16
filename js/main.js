@@ -39,7 +39,8 @@ var geneSearchSelectize = new SearchSelectize({
 var termSearchSelectize = new TermSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
-	synonymsUrl: 'term/query'
+	synonymsUrl: 'term/query',
+	optGroupUrl: 'library/query'
 })
 
 var libSearchSelectize = new LibSearchSelectize({
