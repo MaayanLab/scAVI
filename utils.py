@@ -31,6 +31,9 @@ def load_graphs_meta():
 		graphs.append(graph_meta)
 	return graphs
 
+def load_predicted_cell_types():
+	preds_df = pd.read_csv(os.path.join(SCRIPT_DIR, 'data/predicted_cell_types.csv'))
+	return preds_df.set_index(preds_df.columns[0])
 
 def load_cell_meta_from_file():
 	meta_file = os.path.join(SCRIPT_DIR, 'data/Index Sort Matrix_04_MR.xlsx')
@@ -45,6 +48,8 @@ def load_cell_meta_from_file():
 	meta_df['SSC'] = meta_df['SSC'].fillna(0)
 
 	meta_df.fillna('unknown', inplace=True)
+	preds_df = load_predicted_cell_types()
+	meta_df = meta_df.merge(preds_df, left_index=True, right_index=True, how='left')
 	print meta_df.shape
 	return meta_df
 
