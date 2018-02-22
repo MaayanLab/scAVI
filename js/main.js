@@ -1,7 +1,7 @@
 var textures = new Textures()
 
 var sd = new ScatterData({
-	url : 'graph/' + graph_name // need to get this variable from server
+	url : 'graph/' + graph_name + '/' + dataset_id // need to get this variable from server
 })
 
 var container = document.getElementById("body")

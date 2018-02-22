@@ -10,7 +10,7 @@ class Visualization(object):
 		self.func = func
 
 	def compute_visualization(self):
-		coords = self.func(self.ged.df.values)
+		coords = self.func(self.ged.df.values.T)
 		self.coords = coords
 		return self.coords
 		
