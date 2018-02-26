@@ -18,6 +18,8 @@ def load_read_counts_and_meta(organism='human', gsms=[], gse=None, retrive_meta=
 	f = h5py.File(fn, 'r')
 	mat = f['data']['expression']
 	genes = f['meta']['genes']
+	# to prevent MongoDB error
+	genes = map(lambda x:x.replace('.', '_'), genes)
 	all_gsms = f['meta']['Sample_geo_accession']
 	if gse is None:
 		sample_mask = np.in1d(all_gsms, gsms)
@@ -115,6 +117,7 @@ class GeneExpressionDataset(object):
 			'meta': self.meta,
 			'sample_ids': self.sample_ids.tolist(),
 			'genes': self.genes.tolist(),
+			'df': self.df.transpose().to_dict('list') # {gene: values}
 			# 'd_sample_userListId': self.d_sample_userListId
 		}
 		insert_result = db[self.coll].insert_one(doc)
@@ -128,21 +131,23 @@ class GEODataset(GeneExpressionDataset):
 		self.id = gse_id
 		self.organism = organism
 		if meta_doc is None:
-			df, meta_doc = self.retrieve_expression_and_meta(retrive_meta=True)
+			df, meta_doc, avg_expression = self.retrieve_expression_and_meta(retrive_meta=True)
 		else:
-			df, _ = self.retrieve_expression_and_meta(retrive_meta=False)
+			df, _, avg_expression = self.retrieve_expression_and_meta(retrive_meta=False)
 		GeneExpressionDataset.__init__(self, df)
 		self.meta = meta_doc
 		self.meta_df = pd.DataFrame(meta_doc['meta_df'])\
 			.set_index('Sample_geo_accession')
+		self.avg_expression = avg_expression
 
 
 	def retrieve_expression_and_meta(self, retrive_meta=True):
 		df, meta_doc = load_read_counts_and_meta(organism=self.organism, gse=self.id,
 			retrive_meta=retrive_meta)
 		df = compute_CPMs(df)
+		avg_expression = df.mean(axis=1)
 		df = log10_and_zscore(df)
-		return df, meta_doc
+		return df, meta_doc, avg_expression
 	
 	def save(self, db):
 		doc = {
@@ -151,6 +156,8 @@ class GEODataset(GeneExpressionDataset):
 			'meta': self.meta,
 			'sample_ids': self.sample_ids.tolist(),
 			'genes': self.genes.tolist(),
+			'avg_expression': self.avg_expression.tolist(),
+			'df': self.df.transpose().to_dict('list') # {gene: values}
 			# 'd_sample_userListId': self.d_sample_userListId
 		}
 		insert_result = db[self.coll].insert_one(doc)
@@ -158,8 +165,30 @@ class GEODataset(GeneExpressionDataset):
 
 	@classmethod
 	def load(cls, gse_id, db):
+		'''Load from h5 file.'''
 		doc = db[cls.coll].find_one({'id': gse_id})
 		obj = cls(doc['id'], organism=doc['organism'], meta_doc=doc['meta'])
 		return obj
+
+	@classmethod
+	def load_meta(cls, gse_id, db):
+		return
+
+	@classmethod
+	def query_gene(cls, gse_id, query_string, db):
+		'''Given a query string for gene symbols, return matched
+		gene symbols and their avg_expression.'''
+		doc = db[cls.coll].find_one({'id': gse_id}, 
+			{'genes':True, 'avg_expression':True, '_id':False})
+		genes_df = pd.DataFrame(doc)
+		mask = genes_df.genes.str.contains(query_string, case=False)
+		return genes_df.loc[mask].rename(columns={'genes': 'gene'})
+
+	@classmethod
+	def get_gene_expr(cls, gse_id, gene, db):
+		doc = db[cls.coll].find_one({'id': gse_id}, 
+			{'df.%s' % gene: True, '_id':False})
+		return doc['df']
+
 
 

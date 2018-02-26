@@ -117,14 +117,6 @@ def load_graph_layout_coords(graph_name, dataset_id):
 
 		graph_df = load_vis_df(vis, gds)
 		return graph_df.reset_index().to_json(orient='records')
-		# if graph_name == 'full':
-		# 	print graph_df.shape
-		# 	return graph_df.reset_index().to_json(orient='records')
-		# else:
-		# 	# graph_df_, meta_df_ = load_graph_from_db(graph_name, drug_meta_df)
-		# 	# print graph_df_.head()
-		# 	graph_df_ = d_all_graphs[graph_name]
-		# 	return graph_df_.reset_index().to_json(orient='records')
 
 
 '''
@@ -135,17 +127,14 @@ def search_genes(query_string, dataset_id):
 	'''Endpoint handling gene search.
 	'''
 	if request.method == 'GET':
-		mask = genes_avg_expression['gene'].str.contains(query_string, case=False)
-		return genes_avg_expression.loc[mask].to_json(orient='records') 
+		genes_avg_expression = GEODataset.query_gene(dataset_id, query_string, mongo.db)
+		return genes_avg_expression.to_json(orient='records')
 
-@app.route(ENTER_POINT + '/gene/get/<string:gene>', methods=['GET'])
-def retrieve_gene_expression(gene):
+@app.route(ENTER_POINT + '/gene/get/<string:dataset_id>/<string:gene>', methods=['GET'])
+def retrieve_single_gene_expression_vector(gene, dataset_id):
 	'''Get the expression values of a gene across samples.
 	'''
-	cpm_arr = CPM_df.loc[gene].values
-	cpm_arr = np.log10(cpm_arr + 1.)
-	cpm_arr = (cpm_arr - cpm_arr.mean()) / cpm_arr.std()
-	return jsonify({gene: cpm_arr.tolist()})
+	return jsonify(GEODataset.get_gene_expr(dataset_id, gene, mongo.db))
 
 
 '''

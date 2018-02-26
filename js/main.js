@@ -16,7 +16,7 @@ var sdvDefaultConfig = {
 	textures: textures,
 	pointSize: 12,
 	is3d: false,
-	geneUrl: 'gene/get',
+	geneUrl: 'gene/get/' + dataset_id,
 	termUrl: 'term/get',
 	libUrl: 'library/get'
 }
@@ -33,7 +33,7 @@ var controler = new Controler({scatterPlot: sdv, h: window.innerHeight, w: 200, 
 var geneSearchSelectize = new SearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
-	synonymsUrl: 'gene/query'
+	synonymsUrl: 'gene/query/' + dataset_id 
 })
 
 var termSearchSelectize = new TermSearchSelectize({
