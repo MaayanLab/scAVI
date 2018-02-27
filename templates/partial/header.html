@@ -21,9 +21,9 @@
             <a class="dropdown-toggle" data-toggle="dropdown">Layouts<span class="caret"></span></a>
             <ul class="dropdown-menu" role="menu">
               
-              <!-- {% for graph in graphs %}
-                <li><a href="graph_page/{{ graph.name }}">{{ graph.display_name }}</a></li>
-              {% endfor %} -->
+              {% for graph in graphs %}
+                <li><a href="graph_page/{{dataset_id}}/{{ graph.name }}">{{ graph.name }}</a></li>
+              {% endfor %}
 
             </ul>
           </li>

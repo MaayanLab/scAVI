@@ -40,12 +40,11 @@ db['enrichr_temp'].remove({'$and': [
 				{'gene_set_library': er.gene_set_library}
 			]})
 
-from sklearn.decomposition import PCA
-
-def do_pca(X):
-	pca = PCA(n_components=2)
-	return pca.fit_transform(X)
 
 vis = Visualization(ged=gds, name='PCA', func=do_pca)
+coords = vis.compute_visualization()
+print vis.save(db)
+
+vis = Visualization(ged=gds, name='tSNE', func=do_tsne)
 coords = vis.compute_visualization()
 print vis.save(db)

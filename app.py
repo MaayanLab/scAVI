@@ -41,7 +41,7 @@ def index_page():
 		sdvConfig=json.dumps(sdvConfig),
 		)
 
-@app.route(ENTER_POINT + '/graph_page/<string:graph_name>/<string:dataset_id>')
+@app.route(ENTER_POINT + '/graph_page/<string:dataset_id>/<string:graph_name>')
 def graph_page(graph_name, dataset_id):
 	# defaults
 	sdvConfig = {
@@ -49,13 +49,16 @@ def graph_page(graph_name, dataset_id):
 		'shapeKey': 'Sample_source_name_ch1',
 		'labelKey': ['Sample_geo_accession', 'Sample_source_name_ch1'],
 	}
+	# get available visualizations in the DB
+	visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
+		{'_id':False, 'name':True})
 
 
 	return render_template('index.html', 
 		script='main',
 		ENTER_POINT=ENTER_POINT,
 		result_id='hello',
-		# graphs=graphs,
+		graphs=visualizations,
 		graph_name=graph_name,
 		dataset_id=dataset_id,
 		sdvConfig=json.dumps(sdvConfig),
@@ -69,7 +72,7 @@ def serve_static_file(filename):
 	return send_from_directory(app.static_folder, filename)
 
 
-@app.route(ENTER_POINT + '/graph/<string:graph_name>/<string:dataset_id>', methods=['GET'])
+@app.route(ENTER_POINT + '/graph/<string:dataset_id>/<string:graph_name>', methods=['GET'])
 def load_graph_layout_coords(graph_name, dataset_id):
 	'''API for different graphs'''
 	if request.method == 'GET':
