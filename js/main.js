@@ -18,7 +18,7 @@ var sdvDefaultConfig = {
 	is3d: false,
 	geneUrl: 'gene/get/' + dataset_id,
 	termUrl: 'term/get/' + dataset_id,
-	libUrl: 'library/get'
+	libUrl: 'library/get/' + dataset_id
 }
 
 sdvConfig = $.extend(sdvDefaultConfig, sdvConfig)

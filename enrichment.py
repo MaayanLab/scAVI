@@ -17,7 +17,7 @@ def get_most_enriched_terms(combined_scores_df):
 	top1_terms = np.empty(combined_scores_df.shape[1], dtype='object')
 	top1_terms[~non_missing_sample_mask] = np.nan
 	top1_terms[non_missing_sample_mask] = combined_scores_df.index[max_idx]
-	return top1_terms
+	return top1_terms.tolist()
 
 def load_all_enrichment_results():
 	'''Read enrichr folder to load all available enrichment results.
@@ -84,6 +84,7 @@ class EnrichmentResults(object):
 	def summarize(self, db):
 		'''
 		Get top enriched term based on combined score.
+		Also get the top enriched terms for samples.
 		'''
 		combined_scores_df = None
 		for sample_id in self.ged.sample_ids:
@@ -110,6 +111,7 @@ class EnrichmentResults(object):
 						right_index=True,
 						how='outer')
 		self.combined_scores_df = combined_scores_df
+		self.top1_terms = get_most_enriched_terms(combined_scores_df)
 		return combined_scores_df
 
 	def save(self, db):
@@ -119,7 +121,8 @@ class EnrichmentResults(object):
 			'sample_ids': self.combined_scores_df.columns.tolist(),
 			'terms': self.combined_scores_df.index.tolist(),
 			'gene_set_library': self.gene_set_library,
-			'dataset_id': self.ged.id
+			'dataset_id': self.ged.id,
+			'top1_terms': self.top1_terms
 		}
 		insert_result = db[self.coll].insert_one(doc)
 		return insert_result.inserted_id
@@ -141,6 +144,7 @@ class EnrichmentResults(object):
 			]})
 		obj = cls(ged=None, gene_set_library=gene_set_library)
 		obj.combined_scores_df = pd.DataFrame(doc['scores'], index=doc['sample_ids'])
+		obj.top1_terms = doc['top1_terms']
 		return obj
 
 	@classmethod
@@ -156,3 +160,14 @@ class EnrichmentResults(object):
 		doc['scores'][term] = map(nan_to_none, doc['scores'][term])
 		return doc['scores']
 
+	@classmethod
+	def get_top_terms(cls, dataset_id, gene_set_library, db):
+		'''Return the list top enriched terms for samples.
+		'''
+		doc = db[cls.coll].find_one({'$and': [
+				{'dataset_id': dataset_id},
+				{'gene_set_library': gene_set_library}
+			]}, 
+			{'top1_terms':True, '_id':False}
+			)
+		return {gene_set_library: map(nan_to_none, doc['top1_terms'])}

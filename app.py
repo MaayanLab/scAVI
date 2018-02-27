@@ -23,45 +23,6 @@ app.config['MONGO_URI'] = MONGOURI
 
 mongo.init_app(app)
 
-# @app.before_first_request
-# def load_globals():
-# 	global meta_df, graph_df
-# 	global graphs # meta data of the graphs for the header
-# 	global d_all_graphs # preload all graphs
-# 	global graph_name_full
-# 	global CPM_df 
-# 	global genes_avg_expression
-
-# 	global d_lib_combined_score_df
-# 	global d_lib_top_terms
-# 	global all_terms_df
-
-
-# 	graph_name_full = 'FWD_kNN_3.json'
-# 	graphs = load_graphs_meta()
-# 	# Load cell meta
-# 	meta_df = load_cell_meta_from_file()
-
-# 	graph_df = load_graph_from_db(graph_name_full, meta_df)
-
-# 	# Load all the graphs
-# 	d_all_graphs = {}
-# 	for graph_rec in graphs:
-# 		graph_name = graph_rec['name']
-# 		graph_df_ = load_graph_from_db(graph_name, meta_df)
-# 		d_all_graphs[graph_name] = graph_df_
-
-# 	# Load expression matrix
-# 	CPM_df = load_CPM_matrix()
-# 	genes_avg_expression = CPM_df.mean(axis=1).to_frame()
-# 	genes_avg_expression.columns = ['avg_expression']
-# 	genes_avg_expression.index.name = 'gene'
-# 	genes_avg_expression = genes_avg_expression.reset_index()
-
-# 	# Load enrichment results
-# 	d_lib_combined_score_df, d_lib_top_terms, all_terms_df = load_all_enrichment_results()
-# 	return
-
 
 @app.route(ENTER_POINT + '/')
 def index_page():
@@ -160,10 +121,6 @@ def search_terms(query_string, dataset_id):
 
 @app.route(ENTER_POINT + '/term/get/<string:dataset_id>/<string:term>', methods=['GET'])
 def retrieve_term_enrichment(dataset_id, term):
-	# gene_set_library = all_terms_df.loc[all_terms_df['term'] == term].iloc[0]['library']
-	# combined_scores = d_lib_combined_score_df[gene_set_library].loc[term]
-	# combined_scores = combined_scores.fillna(np.nanmin(combined_scores))
-	# return jsonify({term: combined_scores.tolist()})
 	gene_set_library = find_library_for_term(term, mongo.db)
 	doc = EnrichmentResults.get_term_scores(dataset_id, gene_set_library, term, mongo.db)
 	return jsonify(doc)
@@ -178,10 +135,11 @@ def get_libraries(dataset_id):
 		docs = mongo.db['enrichr'].find({'dataset_id': dataset_id}, {'gene_set_library':True, '_id':False})
 		return jsonify([{'name': doc['gene_set_library']} for doc in docs])
 
-@app.route(ENTER_POINT + '/library/get/<string:library>', methods=['GET'])
-def retrieve_library_top_terms(library):
-	top_terms = map(nan_to_none, d_lib_top_terms[library])
-	return jsonify({library: top_terms})
+@app.route(ENTER_POINT + '/library/get/<string:dataset_id>/<string:library>', methods=['GET'])
+def retrieve_library_top_terms(dataset_id, library):
+	doc = EnrichmentResults.get_top_terms(dataset_id, library, mongo.db)
+	return jsonify(doc)
+
 
 from jinja2 import Markup
 app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])

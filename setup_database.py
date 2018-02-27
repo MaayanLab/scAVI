@@ -20,6 +20,7 @@ coll_ds.create_index('id', unique=True)
 
 coll_enrichr.create_index([('dataset_id', ASCENDING), ('gene_set_library', ASCENDING)], 
 	unique=True)
+coll_enrichr.create_index('terms') # keywords index
 
 coll_vis.create_index([('dataset_id', ASCENDING), ('name', ASCENDING)], 
 	unique=True)
