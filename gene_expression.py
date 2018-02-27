@@ -127,18 +127,23 @@ class GeneExpressionDataset(object):
 
 class GEODataset(GeneExpressionDataset):
 	"""docstring for GEODataset"""
-	def __init__(self, gse_id, organism='human', meta_doc=None):
+	def __init__(self, gse_id, organism='human', meta_doc=None, meta_only=False):
 		self.id = gse_id
 		self.organism = organism
-		if meta_doc is None:
-			df, meta_doc, avg_expression = self.retrieve_expression_and_meta(retrive_meta=True)
+		if not meta_only:
+			if meta_doc is None:
+				df, meta_doc, avg_expression = self.retrieve_expression_and_meta(retrive_meta=True)
+			else:
+				df, _, avg_expression = self.retrieve_expression_and_meta(retrive_meta=False)
+			self.avg_expression = avg_expression
 		else:
-			df, _, avg_expression = self.retrieve_expression_and_meta(retrive_meta=False)
+			df = pd.DataFrame(index=[], columns=meta_doc['meta_df']['Sample_geo_accession'])
+
 		GeneExpressionDataset.__init__(self, df)
 		self.meta = meta_doc
 		self.meta_df = pd.DataFrame(meta_doc['meta_df'])\
 			.set_index('Sample_geo_accession')
-		self.avg_expression = avg_expression
+		
 
 
 	def retrieve_expression_and_meta(self, retrive_meta=True):
@@ -164,15 +169,25 @@ class GEODataset(GeneExpressionDataset):
 		return insert_result.inserted_id
 
 	@classmethod
-	def load(cls, gse_id, db):
+	def load(cls, gse_id, db, meta_only=False):
 		'''Load from h5 file.'''
-		doc = db[cls.coll].find_one({'id': gse_id})
-		obj = cls(doc['id'], organism=doc['organism'], meta_doc=doc['meta'])
+		projection = {}
+		if meta_only:
+			projection = {'_id':False, 'df':False}
+
+		doc = db[cls.coll].find_one({'id': gse_id}, projection)
+		print doc.keys()
+		obj = cls(doc['id'], organism=doc['organism'], meta_doc=doc['meta'], meta_only=meta_only)
 		return obj
 
-	@classmethod
-	def load_meta(cls, gse_id, db):
-		return
+	# @classmethod
+	# def load_meta(cls, gse_id, db):
+	# 	'''Load metadata from DB'''
+	# 	doc = db[cls.coll].find_one({'id': gse_id}, 
+	# 		{'_id':False, 'meta':True})
+	# 	meta_df = pd.DataFrame(doc['meta']['meta_df'])\
+	# 		.set_index('Sample_geo_accession')
+	# 	return meta_df
 
 	@classmethod
 	def query_gene(cls, gse_id, query_string, db):

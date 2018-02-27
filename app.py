@@ -73,7 +73,7 @@ def serve_static_file(filename):
 def load_graph_layout_coords(graph_name, dataset_id):
 	'''API for different graphs'''
 	if request.method == 'GET':
-		gds = GEODataset.load(dataset_id, mongo.db)
+		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
 		vis = Visualization.load(dataset_id, graph_name, mongo.db)
 
 		graph_df = load_vis_df(vis, gds)
