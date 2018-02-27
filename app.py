@@ -140,28 +140,43 @@ def retrieve_single_gene_expression_vector(gene, dataset_id):
 '''
 Enriched terms search endpoints
 '''
-@app.route(ENTER_POINT + '/term/query/<string:query_string>', methods=['GET'])
-def search_terms(query_string):
+@app.route(ENTER_POINT + '/term/query/<string:dataset_id>/<string:query_string>', methods=['GET'])
+def search_terms(query_string, dataset_id):
 	if request.method == 'GET':
-		mask = all_terms_df['term'].str.contains(query_string, case=False)
-		return all_terms_df.loc[mask].to_json(orient='records') 
+		docs = mongo.db['enrichr'].find(
+			{'$and': [
+				{'dataset_id': dataset_id},
+				{'terms': {'$elemMatch': {'$regex': ".*%s.*" % query_string, '$options': 'i'} }}
+			]}, 
+			{'_id':False, 'terms': True, 'gene_set_library':True})
 
-@app.route(ENTER_POINT + '/term/get/<string:term>', methods=['GET'])
-def retrieve_term_enrichment(term):
-	gene_set_library = all_terms_df.loc[all_terms_df['term'] == term].iloc[0]['library']
-	combined_scores = d_lib_combined_score_df[gene_set_library].loc[term]
-	combined_scores = combined_scores.fillna(np.nanmin(combined_scores))
-	return jsonify({term: combined_scores.tolist()})
-	# return jsonify({term: map(nan_to_none, combined_scores)})
+		array_of_terms = []
+		for doc in docs:
+			for term in doc['terms']:
+				if query_string.lower() in term.lower():
+					term = {'library': doc['gene_set_library'], 'term': term}
+					array_of_terms.append(term)
+		return jsonify(array_of_terms)
+
+@app.route(ENTER_POINT + '/term/get/<string:dataset_id>/<string:term>', methods=['GET'])
+def retrieve_term_enrichment(dataset_id, term):
+	# gene_set_library = all_terms_df.loc[all_terms_df['term'] == term].iloc[0]['library']
+	# combined_scores = d_lib_combined_score_df[gene_set_library].loc[term]
+	# combined_scores = combined_scores.fillna(np.nanmin(combined_scores))
+	# return jsonify({term: combined_scores.tolist()})
+	gene_set_library = find_library_for_term(term, mongo.db)
+	doc = EnrichmentResults.get_term_scores(dataset_id, gene_set_library, term, mongo.db)
+	return jsonify(doc)
 
 '''
 Most enriched terms within a gene set library
 '''
-@app.route(ENTER_POINT + '/library/query', methods=['GET'])
-def get_libraries():
+@app.route(ENTER_POINT + '/library/query/<string:dataset_id>', methods=['GET'])
+def get_libraries(dataset_id):
 	if request.method == 'GET':
-		# return jsonify([{'library': d_lib_top_terms.keys()}])
-		return jsonify([{'name': lib} for lib in d_lib_top_terms.keys()])
+		'''Return a list of available gene_set_libraries for the dataset'''
+		docs = mongo.db['enrichr'].find({'dataset_id': dataset_id}, {'gene_set_library':True, '_id':False})
+		return jsonify([{'name': doc['gene_set_library']} for doc in docs])
 
 @app.route(ENTER_POINT + '/library/get/<string:library>', methods=['GET'])
 def retrieve_library_top_terms(library):

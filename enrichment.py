@@ -6,6 +6,7 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 
+from utils import nan_to_none
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -55,6 +56,10 @@ def get_enrichment(user_list_id, gene_set_library):
 	data = json.loads(response.text)
 	return data
 
+
+def find_library_for_term(term, db):
+	doc = db['enrichr'].find_one({'terms': term}, {'_id':False, 'gene_set_library':True})
+	return doc['gene_set_library']
 
 class EnrichmentResults(object):
 	"""EnrichmentResults of a list of DEGs on a single gene_set_library"""
@@ -108,10 +113,11 @@ class EnrichmentResults(object):
 		return combined_scores_df
 
 	def save(self, db):
-		scores = self.combined_scores_df.reset_index().to_dict('list')
+		scores = self.combined_scores_df.transpose().to_dict('list')
 		doc = {
 			'scores': scores,
 			'sample_ids': self.combined_scores_df.columns.tolist(),
+			'terms': self.combined_scores_df.index.tolist(),
 			'gene_set_library': self.gene_set_library,
 			'dataset_id': self.ged.id
 		}
@@ -134,7 +140,19 @@ class EnrichmentResults(object):
 				{'gene_set_library': gene_set_library}
 			]})
 		obj = cls(ged=None, gene_set_library=gene_set_library)
-		obj.combined_scores_df = pd.DataFrame(doc['scores']).set_index('Term')
+		obj.combined_scores_df = pd.DataFrame(doc['scores'], index=doc['sample_ids'])
 		return obj
 
+	@classmethod
+	def get_term_scores(cls, dataset_id, gene_set_library, term, db):
+		'''Given dataset_id, gene_set_library, term, find the scores of the samples.
+		'''
+		doc = db[cls.coll].find_one({'$and': [
+				{'dataset_id': dataset_id},
+				{'gene_set_library': gene_set_library}
+			]}, 
+			{'scores.%s'%term:True, '_id': False}
+			)
+		doc['scores'][term] = map(nan_to_none, doc['scores'][term])
+		return doc['scores']
 

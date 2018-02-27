@@ -17,7 +17,7 @@ var sdvDefaultConfig = {
 	pointSize: 12,
 	is3d: false,
 	geneUrl: 'gene/get/' + dataset_id,
-	termUrl: 'term/get',
+	termUrl: 'term/get/' + dataset_id,
 	libUrl: 'library/get'
 }
 
@@ -39,14 +39,14 @@ var geneSearchSelectize = new SearchSelectize({
 var termSearchSelectize = new TermSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
-	synonymsUrl: 'term/query',
-	optGroupUrl: 'library/query'
+	synonymsUrl: 'term/query/' + dataset_id,
+	optGroupUrl: 'library/query/' + dataset_id
 })
 
 var libSearchSelectize = new LibSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
-	synonymsUrl: 'library/query'
+	synonymsUrl: 'library/query/' + dataset_id
 })
 
 // var sigSimSearch = new SigSimSearchForm({

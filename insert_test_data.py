@@ -26,6 +26,14 @@ er = EnrichmentResults(gds, 'KEGG_2016')
 er.do_enrichment(db)
 er.summarize(db)
 print er.save(db)
+er.remove_intermediates(db)
+
+er = EnrichmentResults(gds, 'ARCHS4_Cell-lines')
+er.do_enrichment(db)
+er.summarize(db)
+print er.save(db)
+er.remove_intermediates(db)
+
 
 db['enrichr_temp'].remove({'$and': [
 				{'sample_id': {'$in': er.ged.sample_ids.tolist()}},
