@@ -36,13 +36,17 @@ def load_read_counts_and_meta(organism='human', gsms=[], gse=None, retrive_meta=
 	# Filter out non-expressed genes
 	expr_df = expr_df.loc[expr_df.sum(axis=1) > 0, :] 
 
+	# Filter out samples with very low read counts
+	valid_sample_mask = expr_df.sum(axis=0) > 100
+	expr_df = expr_df.loc[:, valid_sample_mask]
+
 	meta_doc = None
 	if retrive_meta:
 		# Retrieve metadata
 		meta_doc = {'meta_df':{}} 
 		for meta_key in f['meta'].keys():
 			if meta_key != 'genes':
-				meta_vals = f['meta'][meta_key][sample_mask]
+				meta_vals = f['meta'][meta_key][sample_mask][valid_sample_mask]
 				if len(np.unique(meta_vals)) == 1:
 					meta_doc[meta_key] = meta_vals[0]
 				else:

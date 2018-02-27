@@ -41,14 +41,40 @@ def index_page():
 		sdvConfig=json.dumps(sdvConfig),
 		)
 
+
+@app.route(ENTER_POINT + '/all')
+def all_datasets():
+	dataset_ids = mongo.db['dataset'].distinct('id')
+
+	geo_datasets = []
+	for dataset_id in dataset_ids:
+		if dataset_id.startswith('GSE'):
+			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+			geo_datasets.append(gds)
+
+	return render_template('datasets.html', 
+			ENTER_POINT=ENTER_POINT,
+			geo_datasets=geo_datasets
+			)
+
+
 @app.route(ENTER_POINT + '/graph_page/<string:dataset_id>/<string:graph_name>')
 def graph_page(graph_name, dataset_id):
 	# defaults
 	sdvConfig = {
-		'colorKey': 'Sample_source_name_ch1',
-		'shapeKey': 'Sample_source_name_ch1',
 		'labelKey': ['sample_id', 'Sample_source_name_ch1'],
 	}
+	# pick the attributes for default shaping and coloring
+	gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+	n_samples = len(gds.sample_ids)
+	d_col_nuniques = {}
+	for col in gds.meta_df.columns:
+		d_col_nuniques[col] = gds.meta_df[col].nunique()
+
+	d_col_nuniques = sorted(d_col_nuniques.items(), key=lambda x:x[1])
+	sdvConfig['colorKey'] = d_col_nuniques[1][0]
+	sdvConfig['shapeKey'] = d_col_nuniques[0][0]
+			
 	# get available visualizations in the DB
 	visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
 		{'_id':False, 'name':True})
