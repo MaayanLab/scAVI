@@ -7,16 +7,21 @@ mongo = MongoClient(MONGOURI)
 db = mongo['SCV']
 
 coll_ds = db['dataset']
+coll_expr = db['expression']
 coll_enrichr = db['enrichr']
 coll_vis = db['vis']
 
 
 coll_ds.drop()
+coll_expr.drop()
 coll_enrichr.drop()
 coll_vis.drop()
 
 
 coll_ds.create_index('id', unique=True)
+
+coll_expr.create_index([('dataset_id', ASCENDING), ('gene', ASCENDING)], 
+	unique=True)
 
 coll_enrichr.create_index([('dataset_id', ASCENDING), ('gene_set_library', ASCENDING)], 
 	unique=True)

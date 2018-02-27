@@ -2,6 +2,7 @@
 '''
 import os, sys
 import json
+import hashlib
 from collections import OrderedDict
 import h5py
 import requests
@@ -83,6 +84,7 @@ def post_genes_to_enrichr(genes, description):
 class GeneExpressionDataset(object):
 	"""docstring for GeneExpressionDataset"""
 	coll = 'dataset'
+	coll_expr = 'expression'
 	def __init__(self, df, enrichment_results=[], visualizations=[], meta={}):
 		self.df = df # df should be log and zscore normalized
 		self.sample_ids = df.columns
@@ -90,6 +92,7 @@ class GeneExpressionDataset(object):
 		self.enrichment_results = enrichment_results
 		self.visualizations = visualizations
 		self.meta = meta
+		self.id = hashlib.md5(self.df.values.tobytes()).hexdigest()
 	
 
 	def identify_DEGs(self, cutoff=2.33):
@@ -117,10 +120,14 @@ class GeneExpressionDataset(object):
 			'meta': self.meta,
 			'sample_ids': self.sample_ids.tolist(),
 			'genes': self.genes.tolist(),
-			'df': self.df.transpose().to_dict('list') # {gene: values}
+			# 'df': self.df.transpose().to_dict('list') # {gene: values}
 			# 'd_sample_userListId': self.d_sample_userListId
 		}
 		insert_result = db[self.coll].insert_one(doc)
+		gene_expression_docs = [
+			{'dataset_id': self.id, 'gene': gene, 'values': values.tolist()} for gene, values in self.df.iterrows()
+		]
+		_ = db[self.coll_expr].insert(gene_expression_docs)
 		return insert_result.inserted_id
 
 
@@ -140,6 +147,7 @@ class GEODataset(GeneExpressionDataset):
 			df = pd.DataFrame(index=[], columns=meta_doc['meta_df']['Sample_geo_accession'])
 
 		GeneExpressionDataset.__init__(self, df)
+		self.id = gse_id
 		self.meta = meta_doc
 		self.meta_df = pd.DataFrame(meta_doc['meta_df'])\
 			.set_index('Sample_geo_accession')
@@ -162,10 +170,14 @@ class GEODataset(GeneExpressionDataset):
 			'sample_ids': self.sample_ids.tolist(),
 			'genes': self.genes.tolist(),
 			'avg_expression': self.avg_expression.tolist(),
-			'df': self.df.transpose().to_dict('list') # {gene: values}
+			# 'df': self.df.transpose().to_dict('list') # {gene: values}
 			# 'd_sample_userListId': self.d_sample_userListId
 		}
 		insert_result = db[self.coll].insert_one(doc)
+		gene_expression_docs = [
+			{'dataset_id': self.id, 'gene':gene, 'values': values.tolist()} for gene, values in self.df.iterrows()
+		]
+		_ = db[self.coll_expr].insert(gene_expression_docs)
 		return insert_result.inserted_id
 
 	@classmethod
@@ -200,9 +212,9 @@ class GEODataset(GeneExpressionDataset):
 
 	@classmethod
 	def get_gene_expr(cls, gse_id, gene, db):
-		doc = db[cls.coll].find_one({'id': gse_id}, 
-			{'df.%s' % gene: True, '_id':False})
-		return doc['df']
+		doc = db[cls.coll_expr].find_one({'dataset_id': gse_id, 'gene': gene}, 
+			{'values': True, '_id':False})
+		return {gene: doc['values']}
 
 
 

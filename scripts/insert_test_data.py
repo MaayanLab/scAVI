@@ -1,7 +1,8 @@
 '''
 Insert some data into the MongoDB
 '''
-
+import sys
+sys.path.append('../')
 from database import *
 from pymongo import MongoClient
 mongo = MongoClient(MONGOURI)
@@ -13,8 +14,10 @@ from classes import *
 
 gse = 'GSE96870'
 organism = 'mouse'
+# gse = 'GSE68086'
+# organism = 'human'
 
-gds = GEODataset(gse_id=gse, organism='mouse')
+gds = GEODataset(gse_id=gse, organism=organism)
 print gds.df.shape
 
 rid = gds.save(db)

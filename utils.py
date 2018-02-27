@@ -100,7 +100,7 @@ def load_vis_df(vis, gds):
 		'x': vis.coords[:, 0].tolist(),
 		'y': vis.coords[:, 1].tolist(),
 		}).set_index('sample_ids')
-	graph_df.index.name = 'sample_ids'
+	graph_df.index.name = 'sample_id'
 	# Scale the x, y 
 	graph_df['x'] = minmax_scaling(graph_df['x'].values)
 	graph_df['y'] = minmax_scaling(graph_df['y'].values)

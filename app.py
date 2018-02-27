@@ -30,7 +30,7 @@ def index_page():
 	sdvConfig = {
 		'colorKey': 'Sample_source_name_ch1',
 		'shapeKey': 'Sample_source_name_ch1',
-		'labelKey': ['Sample_geo_accession', 'Sample_source_name_ch1'],
+		'labelKey': ['sample_id', 'Sample_source_name_ch1'],
 	}
 
 	return render_template('index.html', 
@@ -47,7 +47,7 @@ def graph_page(graph_name, dataset_id):
 	sdvConfig = {
 		'colorKey': 'Sample_source_name_ch1',
 		'shapeKey': 'Sample_source_name_ch1',
-		'labelKey': ['Sample_geo_accession', 'Sample_source_name_ch1'],
+		'labelKey': ['sample_id', 'Sample_source_name_ch1'],
 	}
 	# get available visualizations in the DB
 	visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
