@@ -171,12 +171,11 @@ class GEODataset(GeneExpressionDataset):
 	@classmethod
 	def load(cls, gse_id, db, meta_only=False):
 		'''Load from h5 file.'''
-		projection = {}
+		projection = None
 		if meta_only:
 			projection = {'_id':False, 'df':False}
 
 		doc = db[cls.coll].find_one({'id': gse_id}, projection)
-		print doc.keys()
 		obj = cls(doc['id'], organism=doc['organism'], meta_doc=doc['meta'], meta_only=meta_only)
 		return obj
 

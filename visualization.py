@@ -1,6 +1,19 @@
 import numpy as np
 from sklearn import decomposition, manifold
 
+## Visualization functions:
+def do_pca(X):
+	pca = decomposition.PCA(n_components=2)
+	return pca.fit_transform(X)
+
+
+def do_tsne(X):
+	pca = decomposition.PCA(n_components=50)
+	X_pca = pca.fit_transform(X)
+	tsne = manifold.TSNE(n_components=2, random_state=2018)
+	return tsne.fit_transform(X_pca)
+
+
 class Visualization(object):
 	"""docstring for Visualization"""
 	coll = 'vis'
@@ -19,8 +32,8 @@ class Visualization(object):
 		doc = {
 			'name': self.name,
 			'dataset_id': self.ged.id,
-			'x': list(self.coords[:, 0]),
-			'y': list(self.coords[:, 1])
+			'x': self.coords[:, 0].tolist(),
+			'y': self.coords[:, 1].tolist()
 		}
 		insert_result = db[self.coll].insert_one(doc)
 		return insert_result.inserted_id
