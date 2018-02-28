@@ -3,6 +3,7 @@
 import os, sys
 import json
 import hashlib
+import math
 from collections import OrderedDict
 import h5py
 import requests
@@ -55,9 +56,12 @@ def load_read_counts_and_meta(organism='human', gsms=[], gse=None, retrive_meta=
 	return expr_df, meta_doc
 
 
-def compute_CPMs(expr_df, CPM_cutoff=0.3, at_least_in_n_samples=10):
+def compute_CPMs(expr_df, CPM_cutoff=0.3, at_least_in_persent_samples=10):
 	'''Convert expression counts to CPM.
 	'''
+	n_samples = expr_df.shape[1]
+	at_least_in_n_samples = int(math.ceil(at_least_in_persent_samples/100. * n_samples))
+
 	expr_df = (expr_df * 1e6) / expr_df.sum(axis=0)
 	# Filter out lowly expressed genes
 	mask_low_vals = (expr_df > CPM_cutoff).sum(axis=1) > at_least_in_n_samples
@@ -215,11 +219,11 @@ class GEODataset(GeneExpressionDataset):
 		else:
 			df = pd.DataFrame(index=[], columns=meta_doc['meta_df']['Sample_geo_accession'])
 
-		GeneExpressionDataset.__init__(self, df)
+		GeneExpressionDataset.__init__(self, df, meta=meta_doc)
 		self.id = gse_id
-		self.meta = meta_doc
-		self.meta_df = pd.DataFrame(meta_doc['meta_df'])\
-			.set_index('Sample_geo_accession')
+		# self.meta = meta_doc
+		# self.meta_df = pd.DataFrame(meta_doc['meta_df'])\
+		# 	.set_index('Sample_geo_accession')
 		
 
 
@@ -229,23 +233,23 @@ class GEODataset(GeneExpressionDataset):
 		df = compute_CPMs(df)
 		return df, meta_doc
 	
-	def save(self, db):
-		doc = {
-			'id': self.id,
-			'organism': self.organism,
-			'meta': self.meta,
-			'sample_ids': self.sample_ids.tolist(),
-			'genes': self.genes.tolist(),
-			'avg_expression': self.avg_expression.tolist(),
-			# 'df': self.df.transpose().to_dict('list') # {gene: values}
-			# 'd_sample_userListId': self.d_sample_userListId
-		}
-		insert_result = db[self.coll].insert_one(doc)
-		gene_expression_docs = [
-			{'dataset_id': self.id, 'gene':gene, 'values': values.tolist()} for gene, values in self.df.iterrows()
-		]
-		_ = db[self.coll_expr].insert(gene_expression_docs)
-		return insert_result.inserted_id
+	# def save(self, db):
+	# 	doc = {
+	# 		'id': self.id,
+	# 		'organism': self.organism,
+	# 		'meta': self.meta,
+	# 		'sample_ids': self.sample_ids.tolist(),
+	# 		'genes': self.genes.tolist(),
+	# 		'avg_expression': self.avg_expression.tolist(),
+	# 		# 'df': self.df.transpose().to_dict('list') # {gene: values}
+	# 		# 'd_sample_userListId': self.d_sample_userListId
+	# 	}
+	# 	insert_result = db[self.coll].insert_one(doc)
+	# 	gene_expression_docs = [
+	# 		{'dataset_id': self.id, 'gene':gene, 'values': values.tolist()} for gene, values in self.df.iterrows()
+	# 	]
+	# 	_ = db[self.coll_expr].insert(gene_expression_docs)
+	# 	return insert_result.inserted_id
 
 	@classmethod
 	def load(cls, gse_id, db, meta_only=False):
