@@ -119,7 +119,8 @@ class GeneExpressionDataset(object):
 		else:
 			doc = db[self.coll].find_one({'id': self.id}, 
 				{'d_sample_userListId':True, '_id':False})
-			result = len(doc.get('d_sample_userListId', {})) > 0
+			if doc:
+				result = len(doc.get('d_sample_userListId', {})) > 0
 		return result
 
 	def identify_DEGs(self, cutoff=2.33):
