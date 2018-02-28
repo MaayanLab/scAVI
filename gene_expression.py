@@ -90,8 +90,8 @@ class GeneExpressionDataset(object):
 	coll = 'dataset'
 	coll_expr = 'expression'
 	def __init__(self, df, enrichment_results=[], visualizations=[], meta={}):
-		self.df = df # df should be CPMs/RPKMs/FPKMs/TPMs and etc.
-		assert not self.is_zscored()
+		self.df = df # df could be CPMs/RPKMs/FPKMs/TPMs or z-scores.
+		# assert not self.is_zscored()
 		self.avg_expression = df.mean(axis=1)
 		self.sample_ids = df.columns
 		self.genes = df.index
@@ -143,6 +143,38 @@ class GeneExpressionDataset(object):
 		]
 		_ = db[self.coll_expr].insert(gene_expression_docs)
 		return insert_result.inserted_id
+
+	@classmethod
+	def load(cls, dataset_id, db, meta_only=False):
+		'''Load from the database.'''
+		doc = db[cls.coll].find_one({'id': dataset_id}, {'_id':False})
+		if meta_only:
+			# fake a df
+			df = pd.DataFrame(index=doc['genes'], columns=doc['sample_ids'])
+		else:
+			# retrieve gene expression from expression collection
+			expressions = db[cls.coll_expr].find({'dataset_id': dataset_id}, 
+				{'_id':False, 'gene':True, 'values':True})
+			df = pd.DataFrame({expr['gene']: expr['values'] for expr in expressions}).transpose()
+			df.columns = doc['sample_ids']
+		obj = cls(df, meta=doc['meta'])
+		return obj
+
+	@classmethod
+	def query_gene(cls, dataset_id, query_string, db):
+		'''Given a query string for gene symbols, return matched
+		gene symbols and their avg_expression.'''
+		doc = db[cls.coll].find_one({'id': dataset_id}, 
+			{'genes':True, 'avg_expression':True, '_id':False})
+		genes_df = pd.DataFrame(doc)
+		mask = genes_df.genes.str.contains(query_string, case=False)
+		return genes_df.loc[mask].rename(columns={'genes': 'gene'})
+
+	@classmethod
+	def get_gene_expr(cls, dataset_id, gene, db):
+		doc = db[cls.coll_expr].find_one({'dataset_id': dataset_id, 'gene': gene}, 
+			{'values': True, '_id':False})
+		return {gene: doc['values']}
 
 
 
@@ -201,31 +233,5 @@ class GEODataset(GeneExpressionDataset):
 		doc = db[cls.coll].find_one({'id': gse_id}, projection)
 		obj = cls(doc['id'], organism=doc['organism'], meta_doc=doc['meta'], meta_only=meta_only)
 		return obj
-
-	# @classmethod
-	# def load_meta(cls, gse_id, db):
-	# 	'''Load metadata from DB'''
-	# 	doc = db[cls.coll].find_one({'id': gse_id}, 
-	# 		{'_id':False, 'meta':True})
-	# 	meta_df = pd.DataFrame(doc['meta']['meta_df'])\
-	# 		.set_index('Sample_geo_accession')
-	# 	return meta_df
-
-	@classmethod
-	def query_gene(cls, gse_id, query_string, db):
-		'''Given a query string for gene symbols, return matched
-		gene symbols and their avg_expression.'''
-		doc = db[cls.coll].find_one({'id': gse_id}, 
-			{'genes':True, 'avg_expression':True, '_id':False})
-		genes_df = pd.DataFrame(doc)
-		mask = genes_df.genes.str.contains(query_string, case=False)
-		return genes_df.loc[mask].rename(columns={'genes': 'gene'})
-
-	@classmethod
-	def get_gene_expr(cls, gse_id, gene, db):
-		doc = db[cls.coll_expr].find_one({'dataset_id': gse_id, 'gene': gene}, 
-			{'values': True, '_id':False})
-		return {gene: doc['values']}
-
 
 
