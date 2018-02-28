@@ -106,36 +106,58 @@ class GeneExpressionDataset(object):
 	def is_zscored(self):
 		return self.df.min().min() < 0
 
+	def DEGs_posted(self, db):
+		'''Whether DEGs has been POSTed to Enrichr.'''
+		result = False
+		if hasattr(self, 'd_sample_userListId'):
+			result = True
+		else:
+			doc = db[self.coll].find_one({'id': self.id}, 
+				{'d_sample_userListId':True, '_id':False})
+			result = len(doc.get('d_sample_userListId', {})) > 0
+		return result
+
 	def identify_DEGs(self, cutoff=2.33):
 		if not self.is_zscored():
 			self.log10_and_zscore()
 		up_DEGs_df = self.df > cutoff
 		return up_DEGs_df
 
-	def post_DEGs_to_Enrichr(self, cutoff=2.33):
-		up_DEGs_df = self.identify_DEGs(cutoff)
-		d_sample_userListId = OrderedDict()
+	def post_DEGs_to_Enrichr(self, db, cutoff=2.33):
+		if not self.DEGs_posted(db):
+			up_DEGs_df = self.identify_DEGs(cutoff)
+			d_sample_userListId = OrderedDict()
 
-		for sample_id in self.sample_ids:
-			up_genes = self.genes[np.where(up_DEGs_df[sample_id])[0]].tolist()
-			user_list_id = None
-			if len(up_genes) > 10:
-				user_list_id = post_genes_to_enrichr(up_genes, '%s up' % sample_id)
+			for sample_id in self.sample_ids:
+				up_genes = self.genes[np.where(up_DEGs_df[sample_id])[0]].tolist()
+				user_list_id = None
+				if len(up_genes) > 10:
+					user_list_id = post_genes_to_enrichr(up_genes, '%s up' % sample_id)
 
-			d_sample_userListId[sample_id] = user_list_id
+				d_sample_userListId[sample_id] = user_list_id
+
+		else:
+			doc = db[self.coll].find_one({'id': self.id},
+				{'d_sample_userListId':True, '_id':False},
+				as_class=OrderedDict
+				)
+			d_sample_userListId = doc['d_sample_userListId']
 
 		self.d_sample_userListId = d_sample_userListId
 		return d_sample_userListId
 
 
 	def save(self, db):
+		if hasattr(self, 'd_sample_userListId'): 
+			d_sample_userListId = self.d_sample_userListId
+		else:
+			d_sample_userListId = OrderedDict()
 		doc = {
 			'meta': self.meta,
 			'sample_ids': self.sample_ids.tolist(),
 			'genes': self.genes.tolist(),
 			'avg_expression': self.avg_expression.tolist(),
-			# 'df': self.df.transpose().to_dict('list') # {gene: values}
-			# 'd_sample_userListId': self.d_sample_userListId
+			'd_sample_userListId': d_sample_userListId
 		}
 		insert_result = db[self.coll].insert_one(doc)
 		gene_expression_docs = [
