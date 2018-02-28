@@ -1,0 +1,37 @@
+<html>
+<head>
+    <base href="{{ ENTER_POINT }}/"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Zichen Wang (zichen.wang@mssm.edu)">    
+    <title>Single Cell Fireworks</title>
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="lib/selectize.bootstrap3.css">
+    <link rel="stylesheet" type="text/css" href="lib/datatables.bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap-select.min.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body>
+    {% include 'partial/header-empty.html' %}
+    <div class="container-full">
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+                <h1>Progress</h1>
+                <dl class="dl-horizontal">
+                    <dt>Dataset ID</dt>
+                    <dd>{{ ds.id }}</dd>
+                    <dt>N samples</dt>
+                    <dd>{{ ds.sample_ids|length }}</dd>
+                    <dt>N genes</dt>
+                    <dd>{{ ds.genes|length }}</dd>                    
+                </dl>
+
+            </div>
+        </div>
+    </div>
+    {% include 'partial/footer.html' %}
+
+</body>
+</html>

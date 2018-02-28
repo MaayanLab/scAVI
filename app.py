@@ -2,6 +2,7 @@ import os, sys
 import json
 import time
 import StringIO
+from collections import Counter
 import numpy as np
 np.random.seed(10)
 import pandas as pd
@@ -68,7 +69,8 @@ def upload_files():
 		data_file = request.files['data']
 		metadata_file = request.files['metadata']
 
-		if data_file and allowed_file(data_file.filename) and metadata_file and allowed_file(metadata_file.filename):
+		if data_file and allowed_file(data_file.filename) and \
+			metadata_file and allowed_file(metadata_file.filename):
 			data_filename = secure_filename(data_file.filename)
 			# data_file.save(os.path.join(app.config['UPLOAD_FOLDER'], data_filename))
 			metadata_filename = secure_filename(metadata_file.filename)
@@ -88,22 +90,43 @@ def upload_files():
 				# parse into GeneExpressionDataset object
 				dataset = GeneExpressionDataset(expr_df, meta={'meta_df': meta_df.to_dict('list')})
 				dataset.save(mongo.db)
-				# do visualizations
-				print 'Performing PCA'
-				vis_pca = Visualization(ged=dataset, name='PCA', func=do_pca)
-				coords = vis_pca.compute_visualization()
-				print vis_pca.save(mongo.db)
+				# # do visualizations
+				# print 'Performing PCA'
+				# vis_pca = Visualization(ged=dataset, name='PCA', func=do_pca)
+				# coords = vis_pca.compute_visualization()
+				# print vis_pca.save(mongo.db)
 
-				print 'Performing tSNE'
-				vis_tsne = Visualization(ged=dataset, name='tSNE', func=do_tsne)
-				coords = vis_tsne.compute_visualization()
-				print vis_tsne.save(mongo.db)
+				# print 'Performing tSNE'
+				# vis_tsne = Visualization(ged=dataset, name='tSNE', func=do_tsne)
+				# coords = vis_tsne.compute_visualization()
+				# print vis_tsne.save(mongo.db)
 
 			return 'data file %s saved; metadata file %s saved, dataset_id: %s' % \
 				(data_filename, metadata_filename, dataset.id)
 
 	return render_template('upload.html',
 			ENTER_POINT=ENTER_POINT)
+
+@app.route(ENTER_POINT + '/progress/<string:dataset_id>', methods=['GET'])
+def check_progress(dataset_id):
+	'''Given dataset_id, return some metadata and the progress of its associated 
+	objects: visualizations, enrichment.'''
+	ds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
+	visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
+		{'_id': False, 'name':True})
+	enrichments = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
+		{'_id': False, 'gene_set_library':True})
+	er_pendings = mongo.db['enrichr_temp'].find({'dataset_id': dataset_id}, 
+		{'_id': False, 'gene_set_library':True})
+
+	ds.visualizations = [vis for vis in visualizations]
+	ds.enrichment_results = [er for er in enrichments]
+	er_pendings = Counter([er['gene_set_libraries'] for er in er_pendings])
+	ds.er_pendings = [{'gene_set_library': key, 'count': val} for key, val in er_pendings.items()]	
+	return render_template('progress.html', 
+		ENTER_POINT=ENTER_POINT,
+		ds=ds)
+
 
 
 @app.route(ENTER_POINT + '/graph_page/<string:dataset_id>/<string:graph_name>')

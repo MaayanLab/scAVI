@@ -205,6 +205,13 @@ class GeneExpressionDataset(object):
 			{'values': True, '_id':False})
 		return {gene: doc['values']}
 
+	@classmethod
+	def remove_all(cls, dataset_id, db):
+		'''Remove all enrichment, visualization, dataset related to the dataset.'''
+		db[cls.coll].delete_one({'id': dataset_id})
+		db[cls.coll_expr].delete_many({'dataset_id': dataset_id})
+		db['enrichr'].delete_many({'dataset_id': dataset_id})
+		db['vis'].delete_many({'dataset_id': dataset_id})
 
 
 class GEODataset(GeneExpressionDataset):

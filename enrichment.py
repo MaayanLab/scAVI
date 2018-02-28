@@ -79,6 +79,7 @@ class EnrichmentResults(object):
 				res = get_enrichment(user_list_id, self.gene_set_library)
 				res['sample_id'] = sample_id
 				res['gene_set_library'] = self.gene_set_library
+				res['dataset_id'] = self.ged.id
 				db['enrichr_temp'].insert_one(res)
 
 	def summarize(self, db):
