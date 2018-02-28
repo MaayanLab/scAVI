@@ -1,0 +1,45 @@
+<html>
+<head>
+    <base href="{{ ENTER_POINT }}/"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Zichen Wang (zichen.wang@mssm.edu)">    
+    <title>Single Cell Fireworks</title>
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="lib/selectize.bootstrap3.css">
+    <link rel="stylesheet" type="text/css" href="lib/datatables.bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap-select.min.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body>
+    {% include 'partial/header-empty.html' %}
+    <div class="container-full">
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+
+                <form method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="inputFile1">Expression matrix file</label>
+                        <input type="file" id="inputFile1" name="data">
+                        <p class="help-block">Expression matrix file need to be a csv or txt file with genes by samples matrix. The values in the matrix can be read counts or normalized read counts such as CPM, RPKM, FPKM, TPM and etc. <a href="data/sample_read_counts_26511x45.csv">Example</a></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inputFile2">Metadata file</label>
+                        <input type="file" id="inputFile2" name="metadata">
+                        <p class="help-block">Metadata file need to be a csv or txt file with the samples on the rows and attributes on the columns. <a href="data/sample_metadata.csv">Example</a></p>
+                    </div>
+
+                    <button type="submit" class="btn btn-default">Submit</button>
+
+                </form>
+                
+            </div>
+        </div>
+    </div>
+    {% include 'partial/footer.html' %}
+
+</body>
+</html>

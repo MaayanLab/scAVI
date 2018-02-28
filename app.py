@@ -8,6 +8,7 @@ import pandas as pd
 
 from flask import Flask, request, redirect, render_template, \
 	jsonify, send_from_directory, abort, Response, send_file
+from werkzeug.utils import secure_filename
 
 from utils import *
 
@@ -20,6 +21,7 @@ app = Flask(__name__, static_url_path=ENTER_POINT, static_folder=os.getcwd())
 app.debug = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 6
 app.config['MONGO_URI'] = MONGOURI
+app.config['UPLOAD_FOLDER'] = os.path.join(SCRIPT_DIR, 'data/uploads')
 
 mongo.init_app(app)
 
@@ -58,6 +60,52 @@ def all_datasets():
 			)
 
 
+from upload_utils import *
+
+@app.route(ENTER_POINT + '/upload', methods=['GET', 'POST'])
+def upload_files():
+	if request.method == 'POST':
+		data_file = request.files['data']
+		metadata_file = request.files['metadata']
+
+		if data_file and allowed_file(data_file.filename) and metadata_file and allowed_file(metadata_file.filename):
+			data_filename = secure_filename(data_file.filename)
+			# data_file.save(os.path.join(app.config['UPLOAD_FOLDER'], data_filename))
+			metadata_filename = secure_filename(metadata_file.filename)
+			# metadata_file.save(os.path.join(app.config['UPLOAD_FOLDER'], metadata_filename))
+
+			# parse uploaded files
+			expr_df, meta_df = parse_uploaded_files(data_file, metadata_file)
+			try:
+				expr_dtype = expression_is_valid(expr_df)
+			except ValueError as e:
+				print expr_df.head()
+				abort(str(e))
+			else:
+				if expr_dtype == 'counts':
+					expr_df = compute_CPMs(expr_df)
+
+				# parse into GeneExpressionDataset object
+				dataset = GeneExpressionDataset(expr_df, meta={'meta_df': meta_df.to_dict('list')})
+				dataset.save(mongo.db)
+				# do visualizations
+				print 'Performing PCA'
+				vis_pca = Visualization(ged=dataset, name='PCA', func=do_pca)
+				coords = vis_pca.compute_visualization()
+				print vis_pca.save(mongo.db)
+
+				print 'Performing tSNE'
+				vis_tsne = Visualization(ged=dataset, name='tSNE', func=do_tsne)
+				coords = vis_tsne.compute_visualization()
+				print vis_tsne.save(mongo.db)
+
+			return 'data file %s saved; metadata file %s saved, dataset_id: %s' % \
+				(data_filename, metadata_filename, dataset.id)
+
+	return render_template('upload.html',
+			ENTER_POINT=ENTER_POINT)
+
+
 @app.route(ENTER_POINT + '/graph_page/<string:dataset_id>/<string:graph_name>')
 def graph_page(graph_name, dataset_id):
 	# defaults
@@ -65,7 +113,10 @@ def graph_page(graph_name, dataset_id):
 		'labelKey': ['sample_id', 'Sample_source_name_ch1'],
 	}
 	# pick the attributes for default shaping and coloring
-	gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+	if dataset_id.startswith('GSE'):
+		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+	else:
+		gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
 	n_samples = len(gds.sample_ids)
 	d_col_nuniques = {}
 	for col in gds.meta_df.columns:
@@ -102,7 +153,10 @@ def serve_static_file(filename):
 def load_graph_layout_coords(graph_name, dataset_id):
 	'''API for different graphs'''
 	if request.method == 'GET':
-		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+		if dataset_id.startswith('GSE'):
+			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+		else:
+			gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
 		vis = Visualization.load(dataset_id, graph_name, mongo.db)
 
 		graph_df = load_vis_df(vis, gds)
