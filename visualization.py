@@ -23,6 +23,9 @@ class Visualization(object):
 		self.func = func
 
 	def compute_visualization(self):
+		# make sure it is z-scored
+		if not self.ged.is_zscored():
+			self.ged.log10_and_zscore()
 		coords = self.func(self.ged.df.values.T)
 		self.coords = coords
 		return self.coords

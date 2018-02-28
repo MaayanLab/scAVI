@@ -90,7 +90,9 @@ class GeneExpressionDataset(object):
 	coll = 'dataset'
 	coll_expr = 'expression'
 	def __init__(self, df, enrichment_results=[], visualizations=[], meta={}):
-		self.df = df # df should be log and zscore normalized
+		self.df = df # df should be CPMs/RPKMs/FPKMs/TPMs and etc.
+		assert not self.is_zscored()
+		self.avg_expression = df.mean(axis=1)
 		self.sample_ids = df.columns
 		self.genes = df.index
 		self.enrichment_results = enrichment_results
@@ -98,8 +100,15 @@ class GeneExpressionDataset(object):
 		self.meta = meta
 		self.id = hashlib.md5(self.df.values.tobytes()).hexdigest()
 	
+	def log10_and_zscore(self):
+		self.df = log10_and_zscore(self.df)
+
+	def is_zscored(self):
+		return self.df.min().min() < 0
 
 	def identify_DEGs(self, cutoff=2.33):
+		if not self.is_zscored():
+			self.log10_and_zscore()
 		up_DEGs_df = self.df > cutoff
 		return up_DEGs_df
 
@@ -124,6 +133,7 @@ class GeneExpressionDataset(object):
 			'meta': self.meta,
 			'sample_ids': self.sample_ids.tolist(),
 			'genes': self.genes.tolist(),
+			'avg_expression': self.avg_expression.tolist(),
 			# 'df': self.df.transpose().to_dict('list') # {gene: values}
 			# 'd_sample_userListId': self.d_sample_userListId
 		}
@@ -143,10 +153,9 @@ class GEODataset(GeneExpressionDataset):
 		self.organism = organism
 		if not meta_only:
 			if meta_doc is None:
-				df, meta_doc, avg_expression = self.retrieve_expression_and_meta(retrive_meta=True)
+				df, meta_doc = self.retrieve_expression_and_meta(retrive_meta=True)
 			else:
-				df, _, avg_expression = self.retrieve_expression_and_meta(retrive_meta=False)
-			self.avg_expression = avg_expression
+				df, _ = self.retrieve_expression_and_meta(retrive_meta=False)
 		else:
 			df = pd.DataFrame(index=[], columns=meta_doc['meta_df']['Sample_geo_accession'])
 
@@ -162,9 +171,7 @@ class GEODataset(GeneExpressionDataset):
 		df, meta_doc = load_read_counts_and_meta(organism=self.organism, gse=self.id,
 			retrive_meta=retrive_meta)
 		df = compute_CPMs(df)
-		avg_expression = df.mean(axis=1)
-		df = log10_and_zscore(df)
-		return df, meta_doc, avg_expression
+		return df, meta_doc
 	
 	def save(self, db):
 		doc = {
