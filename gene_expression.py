@@ -98,6 +98,7 @@ class GeneExpressionDataset(object):
 		self.enrichment_results = enrichment_results
 		self.visualizations = visualizations
 		self.meta = meta
+		self.meta_df = pd.DataFrame(meta.get('meta_df', {})).set_index(self.sample_ids)
 		self.id = hashlib.md5(self.df.values.tobytes()).hexdigest()
 	
 	def log10_and_zscore(self):
@@ -153,6 +154,7 @@ class GeneExpressionDataset(object):
 		else:
 			d_sample_userListId = OrderedDict()
 		doc = {
+			'id': self.id,
 			'meta': self.meta,
 			'sample_ids': self.sample_ids.tolist(),
 			'genes': self.genes.tolist(),
