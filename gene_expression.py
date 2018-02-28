@@ -233,23 +233,27 @@ class GEODataset(GeneExpressionDataset):
 		df = compute_CPMs(df)
 		return df, meta_doc
 	
-	# def save(self, db):
-	# 	doc = {
-	# 		'id': self.id,
-	# 		'organism': self.organism,
-	# 		'meta': self.meta,
-	# 		'sample_ids': self.sample_ids.tolist(),
-	# 		'genes': self.genes.tolist(),
-	# 		'avg_expression': self.avg_expression.tolist(),
-	# 		# 'df': self.df.transpose().to_dict('list') # {gene: values}
-	# 		# 'd_sample_userListId': self.d_sample_userListId
-	# 	}
-	# 	insert_result = db[self.coll].insert_one(doc)
-	# 	gene_expression_docs = [
-	# 		{'dataset_id': self.id, 'gene':gene, 'values': values.tolist()} for gene, values in self.df.iterrows()
-	# 	]
-	# 	_ = db[self.coll_expr].insert(gene_expression_docs)
-	# 	return insert_result.inserted_id
+	def save(self, db):
+		if hasattr(self, 'd_sample_userListId'): 
+			d_sample_userListId = self.d_sample_userListId
+		else:
+			d_sample_userListId = OrderedDict()
+
+		doc = {
+			'id': self.id,
+			'organism': self.organism,
+			'meta': self.meta,
+			'sample_ids': self.sample_ids.tolist(),
+			'genes': self.genes.tolist(),
+			'avg_expression': self.avg_expression.tolist(),
+			'd_sample_userListId': self.d_sample_userListId
+		}
+		insert_result = db[self.coll].insert_one(doc)
+		gene_expression_docs = [
+			{'dataset_id': self.id, 'gene':gene, 'values': values.tolist()} for gene, values in self.df.iterrows()
+		]
+		_ = db[self.coll_expr].insert(gene_expression_docs)
+		return insert_result.inserted_id
 
 	@classmethod
 	def load(cls, gse_id, db, meta_only=False):
