@@ -3,6 +3,7 @@ import json
 import time
 import StringIO
 from collections import Counter
+import subprocess
 import numpy as np
 np.random.seed(10)
 import pandas as pd
@@ -89,20 +90,21 @@ def upload_files():
 
 				# parse into GeneExpressionDataset object
 				dataset = GeneExpressionDataset(expr_df, meta={'meta_df': meta_df.to_dict('list')})
-				dataset.save(mongo.db)
-				# # do visualizations
-				# print 'Performing PCA'
-				# vis_pca = Visualization(ged=dataset, name='PCA', func=do_pca)
-				# coords = vis_pca.compute_visualization()
-				# print vis_pca.save(mongo.db)
+				# check if dataset exists
+				dataset_exists = True
+				if not dataset.exists(mongo.db):
+					dataset_exists = False
+					dataset.save(mongo.db)
+					# run the pipeline
+					p = subprocess.Popen(['python', 'pipeline.py', '-i', dataset.id], 
+						stdout=subprocess.PIPE)
 
-				# print 'Performing tSNE'
-				# vis_tsne = Visualization(ged=dataset, name='tSNE', func=do_tsne)
-				# coords = vis_tsne.compute_visualization()
-				# print vis_tsne.save(mongo.db)
-
-			return 'data file %s saved; metadata file %s saved, dataset_id: %s' % \
-				(data_filename, metadata_filename, dataset.id)
+			return render_template('upload_success.html',
+					ENTER_POINT=ENTER_POINT,
+					data_filename=data_filename,
+					metadata_filename=metadata_filename,
+					dataset_exists=dataset_exists,
+					ds=dataset)
 
 	return render_template('upload.html',
 			ENTER_POINT=ENTER_POINT)
@@ -124,7 +126,7 @@ def check_progress(dataset_id):
 
 		ds.visualizations = [vis for vis in visualizations]
 		ds.enrichment_results = [er for er in enrichments]
-		er_pendings = Counter([er['gene_set_libraries'] for er in er_pendings])
+		er_pendings = Counter([er['gene_set_library'] for er in er_pendings])
 		ds.er_pendings = [{'gene_set_library': key, 'count': val} for key, val in er_pendings.items()]	
 		return render_template('progress.html', 
 			ENTER_POINT=ENTER_POINT,

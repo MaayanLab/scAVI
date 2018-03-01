@@ -173,6 +173,10 @@ class GeneExpressionDataset(object):
 		_ = db[self.coll_expr].insert(gene_expression_docs)
 		return insert_result.inserted_id
 
+	def exists(self, db):
+		doc = db[self.coll].find_one({'id': self.id})
+		return doc is not None
+
 	@classmethod
 	def load(cls, dataset_id, db, meta_only=False):
 		'''Load from the database.'''
@@ -190,6 +194,8 @@ class GeneExpressionDataset(object):
 				df = pd.DataFrame({expr['gene']: expr['values'] for expr in expressions}).transpose()
 				df.columns = doc['sample_ids']
 			obj = cls(df, meta=doc['meta'])
+			if meta_only:
+				obj.id = dataset_id
 		return obj
 
 	@classmethod
@@ -214,6 +220,7 @@ class GeneExpressionDataset(object):
 		db[cls.coll].delete_one({'id': dataset_id})
 		db[cls.coll_expr].delete_many({'dataset_id': dataset_id})
 		db['enrichr'].delete_many({'dataset_id': dataset_id})
+		db['enrichr_temp'].delete_many({'dataset_id': dataset_id})
 		db['vis'].delete_many({'dataset_id': dataset_id})
 
 
