@@ -112,20 +112,23 @@ def check_progress(dataset_id):
 	'''Given dataset_id, return some metadata and the progress of its associated 
 	objects: visualizations, enrichment.'''
 	ds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
-	visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
-		{'_id': False, 'name':True})
-	enrichments = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
-		{'_id': False, 'gene_set_library':True})
-	er_pendings = mongo.db['enrichr_temp'].find({'dataset_id': dataset_id}, 
-		{'_id': False, 'gene_set_library':True})
+	if ds is None:
+		abort(404)
+	else:
+		visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
+			{'_id': False, 'name':True})
+		enrichments = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
+			{'_id': False, 'gene_set_library':True})
+		er_pendings = mongo.db['enrichr_temp'].find({'dataset_id': dataset_id}, 
+			{'_id': False, 'gene_set_library':True})
 
-	ds.visualizations = [vis for vis in visualizations]
-	ds.enrichment_results = [er for er in enrichments]
-	er_pendings = Counter([er['gene_set_libraries'] for er in er_pendings])
-	ds.er_pendings = [{'gene_set_library': key, 'count': val} for key, val in er_pendings.items()]	
-	return render_template('progress.html', 
-		ENTER_POINT=ENTER_POINT,
-		ds=ds)
+		ds.visualizations = [vis for vis in visualizations]
+		ds.enrichment_results = [er for er in enrichments]
+		er_pendings = Counter([er['gene_set_libraries'] for er in er_pendings])
+		ds.er_pendings = [{'gene_set_library': key, 'count': val} for key, val in er_pendings.items()]	
+		return render_template('progress.html', 
+			ENTER_POINT=ENTER_POINT,
+			ds=ds)
 
 
 
@@ -245,6 +248,15 @@ def get_libraries(dataset_id):
 def retrieve_library_top_terms(dataset_id, library):
 	doc = EnrichmentResults.get_top_terms(dataset_id, library, mongo.db)
 	return jsonify(doc)
+
+
+
+'''
+Error handlers.
+'''
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html', ENTER_POINT=ENTER_POINT), 404
 
 
 from jinja2 import Markup

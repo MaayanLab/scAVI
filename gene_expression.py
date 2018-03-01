@@ -177,16 +177,19 @@ class GeneExpressionDataset(object):
 	def load(cls, dataset_id, db, meta_only=False):
 		'''Load from the database.'''
 		doc = db[cls.coll].find_one({'id': dataset_id}, {'_id':False})
-		if meta_only:
-			# fake a df
-			df = pd.DataFrame(index=doc['genes'], columns=doc['sample_ids'])
+		if doc is None:
+			obj = None
 		else:
-			# retrieve gene expression from expression collection
-			expressions = db[cls.coll_expr].find({'dataset_id': dataset_id}, 
-				{'_id':False, 'gene':True, 'values':True})
-			df = pd.DataFrame({expr['gene']: expr['values'] for expr in expressions}).transpose()
-			df.columns = doc['sample_ids']
-		obj = cls(df, meta=doc['meta'])
+			if meta_only:
+				# fake a df
+				df = pd.DataFrame(index=doc['genes'], columns=doc['sample_ids'])
+			else:
+				# retrieve gene expression from expression collection
+				expressions = db[cls.coll_expr].find({'dataset_id': dataset_id}, 
+					{'_id':False, 'gene':True, 'values':True})
+				df = pd.DataFrame({expr['gene']: expr['values'] for expr in expressions}).transpose()
+				df.columns = doc['sample_ids']
+			obj = cls(df, meta=doc['meta'])
 		return obj
 
 	@classmethod

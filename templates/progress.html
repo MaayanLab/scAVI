@@ -18,15 +18,33 @@
     <div class="container-full">
         <div class="row">
             <div class="col-md-10 col-md-offset-1">
-                <h1>Progress</h1>
-                <dl class="dl-horizontal">
-                    <dt>Dataset ID</dt>
-                    <dd>{{ ds.id }}</dd>
-                    <dt>N samples</dt>
-                    <dd>{{ ds.sample_ids|length }}</dd>
-                    <dt>N genes</dt>
-                    <dd>{{ ds.genes|length }}</dd>                    
-                </dl>
+                <div class="row">
+                    <h1>Progress</h1>
+                    <dl class="dl-horizontal">
+                        <dt>Dataset ID</dt>
+                        <dd>{{ ds.id }}</dd>
+                        <dt>N samples</dt>
+                        <dd>{{ ds.sample_ids|length }}</dd>
+                        <dt>N genes</dt>
+                        <dd>{{ ds.genes|length }}</dd>
+                    </dl>                    
+                </div>
+                <div class="row">
+                    <h1>Visualizations</h1>
+                    <ul>
+                        {% for vis in ds.visualizations %}
+                        <li><a href="graph_page/{{ds.id}}/{{vis['name']}}">{{vis['name']}}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="row">
+                    <h1>Enrichment analysis</h1>
+                    <ul>
+                        {% for er in ds.enrichment_results %}
+                        <li>{{er['gene_set_library']}}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
 
             </div>
         </div>

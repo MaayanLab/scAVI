@@ -12,42 +12,49 @@ coll = db['dataset']
 
 from classes import *
 
-gse = 'GSE96870'
-organism = 'mouse'
+gene_set_libraries = ['KEGG_2016', 'ARCHS4_Cell-lines']
+
+# gse = 'GSE96870'
+# organism = 'mouse'
 # gse = 'GSE68086'
 # organism = 'human'
 
-gds = GEODataset(gse_id=gse, organism=organism)
-print gds.df.shape
+# gses = ['GSE57872', 'GSE75140']
+# organisms = ['human'] * len(gses)
 
-rid = gds.save(db)
-print rid
+gses = ['GSE96870']
+organisms = ['mouse']
 
-d_sample_userListId = gds.post_DEGs_to_Enrichr()
-print len(d_sample_userListId)
-er = EnrichmentResults(gds, 'KEGG_2016')
-er.do_enrichment(db)
-er.summarize(db)
-print er.save(db)
-er.remove_intermediates(db)
-
-er = EnrichmentResults(gds, 'ARCHS4_Cell-lines')
-er.do_enrichment(db)
-er.summarize(db)
-print er.save(db)
-er.remove_intermediates(db)
+for gse, organism in zip(gses, organisms):
+	print 'Retrieving expression data from h5 for %s' % gse
+	gds = GEODataset(gse_id=gse, organism=organism)
+	print gds.df.shape
 
 
-db['enrichr_temp'].remove({'$and': [
-				{'sample_id': {'$in': er.ged.sample_ids.tolist()}},
-				{'gene_set_library': er.gene_set_library}
-			]})
+	print 'POSTing DEGs to Enrichr'
+	d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
+	print len(d_sample_userListId)
+
+	rid = gds.save(db)
+	print rid
 
 
-vis = Visualization(ged=gds, name='PCA', func=do_pca)
-coords = vis.compute_visualization()
-print vis.save(db)
+	for gene_set_library in gene_set_libraries:
 
-vis = Visualization(ged=gds, name='tSNE', func=do_tsne)
-coords = vis.compute_visualization()
-print vis.save(db)
+		print 'Performing enrichment on: %s' % gene_set_library 
+		er = EnrichmentResults(gds, gene_set_library)
+		er.do_enrichment(db)
+		er.summarize(db)
+		print er.save(db)
+		er.remove_intermediates(db)
+
+
+	print 'Performing PCA'
+	vis = Visualization(ged=gds, name='PCA', func=do_pca)
+	coords = vis.compute_visualization()
+	print vis.save(db)
+
+	print 'Performing tSNE'
+	vis = Visualization(ged=gds, name='tSNE', func=do_tsne)
+	coords = vis.compute_visualization()
+	print vis.save(db)
