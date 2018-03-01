@@ -38,4 +38,38 @@
 
         {% endif %}
     </div>
+    <div class="row">
+        <h4>Live status</h4>
+        <div class="well" id="log"></div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <script type="text/javascript">
+        
+$(document).ready(function(){
+    var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+
+
+            // Event handler for new connections.
+            // The callback function is invoked when a connection with the
+            // server is established.
+            socket.on('connect', function() {
+                socket.emit('my_event', {data: 'I\'m connected!'});
+
+                socket.emit('check_status', {id: '{{ ds.id }}'});
+            });
+            // Event handler for server sent data.
+            // The callback function is invoked whenever the server emits data
+            // to the client. The data is then displayed in the "Received"
+            // section of the page.
+            socket.on('my_response', function(msg) {
+                console.log(msg.data, msg.count)
+                $('#log').append('<br>'+ $('<div/>').text(msg.data + ' ' + msg.count).html());
+                // $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
+            });
+
+
+});
+    </script>
 {% endblock %}

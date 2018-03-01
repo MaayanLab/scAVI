@@ -11,6 +11,7 @@ import pandas as pd
 from flask import Flask, request, redirect, render_template, \
 	jsonify, send_from_directory, abort, Response, send_file
 from werkzeug.utils import secure_filename
+from flask_socketio import SocketIO, emit
 
 from utils import *
 
@@ -26,6 +27,9 @@ app.config['MONGO_URI'] = MONGOURI
 app.config['UPLOAD_FOLDER'] = os.path.join(SCRIPT_DIR, 'data/uploads')
 
 mongo.init_app(app)
+
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
 
 
 @app.route(ENTER_POINT + '/')
@@ -96,8 +100,8 @@ def upload_files():
 					dataset_exists = False
 					dataset.save(mongo.db)
 					# run the pipeline
-					p = subprocess.Popen(['python', 'pipeline.py', '-i', dataset.id], 
-						stdout=subprocess.PIPE)
+					# p = subprocess.Popen(['python', 'pipeline.py', '-i', dataset.id], 
+					# 	stdout=subprocess.PIPE)
 
 			return render_template('upload_success.html',
 					ENTER_POINT=ENTER_POINT,
@@ -108,6 +112,7 @@ def upload_files():
 
 	return render_template('upload.html',
 			ENTER_POINT=ENTER_POINT)
+
 
 @app.route(ENTER_POINT + '/progress/<string:dataset_id>', methods=['GET'])
 def check_progress(dataset_id):
@@ -128,6 +133,8 @@ def check_progress(dataset_id):
 		ds.enrichment_results = [er for er in enrichments]
 		er_pendings = Counter([er['gene_set_library'] for er in er_pendings])
 		ds.er_pendings = [{'gene_set_library': key, 'count': val} for key, val in er_pendings.items()]	
+		
+		# run the pipeline
 		return render_template('progress.html', 
 			ENTER_POINT=ENTER_POINT,
 			ds=ds)
@@ -265,7 +272,60 @@ from jinja2 import Markup
 app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])
 
 
+'''
+SocketIO endpoints
+'''
+
+# @socketio.on('server_status_update', namespace='/test')
+# def test_message(message):
+# 	for i in range(10):
+# 		time.sleep(1)
+# 		emit('my response', {'data': 'update %d'%i})
+
+# @socketio.on('my broadcast event', namespace='/test')
+# def test_message(message):
+#     emit('my response', {'data': message['data']}, broadcast=True)
+
+from threading import Lock
+thread = None
+thread_lock = Lock()
+from background_pipeline import *
+@socketio.on('connect', namespace='/test')
+def test_connect():
+    # global thread
+    # with thread_lock:
+    #     if thread is None:
+    #         thread = socketio.start_background_task(target=background_pipeline_test, socketio=socketio)
+    emit('my_response', {'data': 'Connected', 'count': 0})
+
+@socketio.on('my_event', namespace='/test')
+def print_msg_from_client(msg):
+	print msg
+
+
+@socketio.on('check_status', namespace='/test')
+def check_pipeline_status(msg):
+	dataset_id = msg['id']
+	print dataset_id
+	# ds = GeneExpressionDataset.load(dataset_id, mongo.db)
+	# if not ds.pipeline_finished():
+	# 	with thread_lock:
+	# 		t = socketio.start_background_task(target=background_pipeline_test, socketio=socketio)
+	global thread
+	with thread_lock:
+		if thread is None:
+			thread = socketio.start_background_task(target=background_pipeline_test, socketio=socketio)
+
+
+
+@socketio.on('disconnect', namespace='/test')
+def test_disconnect():
+    print('Client disconnected', request.sid)
+
+
+
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=5000, threaded=True)
+	# app.run(host='0.0.0.0', port=5000, threaded=True)
+	socketio.run(app)
 
 
