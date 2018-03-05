@@ -1,14 +1,11 @@
-import subprocess
-
-
-def background_pipeline_test(socketio=None):
+def background_pipeline_test(socketio=None, namespace='/test'):
     """Example of how to send server generated events to clients."""
     count = 0
     for i in range(100):
         socketio.sleep(1)
         socketio.emit('my_response',
                       {'data': 'Server generated event', 'count': i},
-                      namespace='/test',
+                      namespace=namespace,
                       # broadcast=True
                       )
 
@@ -26,7 +23,7 @@ def background_pipeline(socketio=None, dataset_id=None, gene_set_libraries=None)
 
 	from classes import *
 
-	def emit_message(msg='', socketio=socketio, namespace='/test'):
+	def emit_message(msg='', socketio=socketio, namespace='/%s'%dataset_id):
 		socketio.emit('my_response', 
 				{'data': msg},
 				namespace=namespace)
@@ -42,11 +39,13 @@ def background_pipeline(socketio=None, dataset_id=None, gene_set_libraries=None)
 	vis = Visualization(ged=gds, name='PCA', func=do_pca)
 	coords = vis.compute_visualization()
 	emit_message('PCA finished')
+	vis.save(db)
 
 	emit_message('Performing tSNE')
 	vis = Visualization(ged=gds, name='tSNE', func=do_tsne)
 	coords = vis.compute_visualization()
 	emit_message('tSNE finished')
+	vis.save(db)
 
 	# step 3.
 	emit_message('POSTing DEGs to Enrichr')
@@ -58,6 +57,9 @@ def background_pipeline(socketio=None, dataset_id=None, gene_set_libraries=None)
 		er = EnrichmentResults(gds, gene_set_library)
 		er.do_enrichment(db)
 		er.summarize(db)
-		emit_message('Enrichment on %s finished' % gene_set_library)
+		er.save(db)
+		emit_message('Enrichment on %s has finished' % gene_set_library)
 		er.remove_intermediates(db)
 
+	emit_message('All completed!')
+	

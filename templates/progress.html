@@ -1,7 +1,7 @@
 {% extends "base-center.html" %}
 {% block content_center %}
     <div class="row">
-        <h1>Progress</h1>
+        <h1>Dataset</h1>
         <dl class="dl-horizontal">
             <dt>Dataset ID</dt>
             <dd>{{ ds.id }}</dd>
@@ -48,15 +48,14 @@
     <script type="text/javascript">
         
 $(document).ready(function(){
-    var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
-
+    var namespace = '/' + '{{ds.id}}';
+    var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 
             // Event handler for new connections.
             // The callback function is invoked when a connection with the
             // server is established.
             socket.on('connect', function() {
                 socket.emit('my_event', {data: 'I\'m connected!'});
-
                 socket.emit('check_status', {id: '{{ ds.id }}'});
             });
             // Event handler for server sent data.
@@ -64,11 +63,9 @@ $(document).ready(function(){
             // to the client. The data is then displayed in the "Received"
             // section of the page.
             socket.on('my_response', function(msg) {
-                console.log(msg.data, msg.count)
-                $('#log').append('<br>'+ $('<div/>').text(msg.data + ' ' + msg.count).html());
+                $('#log').append('<br>'+ $('<div/>').text(msg.data).html());
                 // $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
             });
-
 
 });
     </script>

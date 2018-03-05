@@ -67,6 +67,10 @@ def all_datasets():
 
 
 from upload_utils import *
+from threading import Lock
+all_threads = {}
+from background_pipeline import *
+
 
 @app.route(ENTER_POINT + '/upload', methods=['GET', 'POST'])
 def upload_files():
@@ -99,9 +103,21 @@ def upload_files():
 				if not dataset.exists(mongo.db):
 					dataset_exists = False
 					dataset.save(mongo.db)
-					# run the pipeline
+					# run the pipeline in background
 					# p = subprocess.Popen(['python', 'pipeline.py', '-i', dataset.id], 
 					# 	stdout=subprocess.PIPE)
+					dataset_id = dataset.id
+
+					# thread_lock = Lock()
+					# with thread_lock:
+					if dataset_id not in all_threads:
+						thread = socketio.start_background_task(target=background_pipeline, 
+							socketio=socketio,
+							dataset_id=dataset_id,
+							gene_set_libraries='KEGG_2016,ARCHS4_Cell-lines'
+							)
+						all_threads[dataset_id] = thread
+
 
 			return render_template('upload_success.html',
 					ENTER_POINT=ENTER_POINT,
@@ -275,52 +291,28 @@ app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader
 '''
 SocketIO endpoints
 '''
-
-# @socketio.on('server_status_update', namespace='/test')
-# def test_message(message):
-# 	for i in range(10):
-# 		time.sleep(1)
-# 		emit('my response', {'data': 'update %d'%i})
-
-# @socketio.on('my broadcast event', namespace='/test')
-# def test_message(message):
-#     emit('my response', {'data': message['data']}, broadcast=True)
-
-from threading import Lock
-thread = None
-thread_lock = Lock()
-from background_pipeline import *
 @socketio.on('connect', namespace='/test')
 def test_connect():
-    # global thread
-    # with thread_lock:
-    #     if thread is None:
-    #         thread = socketio.start_background_task(target=background_pipeline_test, socketio=socketio)
-    emit('my_response', {'data': 'Connected', 'count': 0})
+	'''Send message to client when one connects.
+	'''
+	# global thread
+	# with thread_lock:
+	#     if thread is None:
+	#         thread = socketio.start_background_task(target=background_pipeline_test, socketio=socketio)
+	emit('my_response', {'data': 'Connected', 'count': 0})
 
-@socketio.on('my_event', namespace='/test')
-def print_msg_from_client(msg):
-	print msg
-
-
-@socketio.on('check_status', namespace='/test')
+# @socketio.on('check_status', namespace='/test')
+@socketio.on('check_status')
 def check_pipeline_status(msg):
+	'''Send specific message to client when one wants to check the status of a dataset.
+	'''
 	dataset_id = msg['id']
 	print dataset_id
-	# ds = GeneExpressionDataset.load(dataset_id, mongo.db)
-	# if not ds.pipeline_finished():
-	# 	with thread_lock:
-	# 		t = socketio.start_background_task(target=background_pipeline_test, socketio=socketio)
-	global thread
-	with thread_lock:
-		if thread is None:
-			thread = socketio.start_background_task(target=background_pipeline_test, socketio=socketio)
-
 
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():
-    print('Client disconnected', request.sid)
+	print('Client disconnected', request.sid)
 
 
 
