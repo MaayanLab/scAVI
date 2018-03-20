@@ -21,9 +21,9 @@ from classes import *
 ENTER_POINT = os.environ['ENTER_POINT']
 
 app = Flask(__name__, static_url_path=ENTER_POINT, static_folder=os.getcwd())
-app.debug = True
+app.debug = bool(int(os.environ.get('debug', True)))
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 6
-app.config['MONGO_URI'] = MONGOURI
+app.config['MONGO_URI'] = os.environ.get('MONGOURI', MONGOURI)
 app.config['UPLOAD_FOLDER'] = os.path.join(SCRIPT_DIR, 'data/uploads')
 
 mongo.init_app(app)
@@ -35,19 +35,7 @@ socketio = SocketIO(app)
 @app.route(ENTER_POINT + '/')
 def index_page():
 	# The default main page
-	sdvConfig = {
-		'colorKey': 'Sample_source_name_ch1',
-		'shapeKey': 'Sample_source_name_ch1',
-		'labelKey': ['sample_id', 'Sample_source_name_ch1'],
-	}
-
-	return render_template('index.html', 
-		script='main',
-		ENTER_POINT=ENTER_POINT,
-		graphs=graphs,
-		graph_name=graph_name_full,
-		sdvConfig=json.dumps(sdvConfig),
-		)
+	return redirect(ENTER_POINT+'/all', code=302)
 
 
 @app.route(ENTER_POINT + '/all')
@@ -318,6 +306,6 @@ def test_disconnect():
 
 if __name__ == '__main__':
 	# app.run(host='0.0.0.0', port=5000, threaded=True)
-	socketio.run(app)
+	socketio.run(app, host='0.0.0.0', port=5000)
 
 

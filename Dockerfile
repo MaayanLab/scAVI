@@ -9,11 +9,15 @@ RUN pip install --upgrade pip
 # Install required python packages
 RUN pip install \
 	pandas==0.20.1\
-	requests==2.6.2\
-	flask==0.12\
-	scipy==0.15.1\
-	scikit-learn==0.19\
-	xlrd
+	gevent==1.2.2\
+	Flask==0.12.2\
+	Flask-PyMongo==0.5.1\
+	Flask-SocketIO==2.9.4\
+	h5py==2.7.1\
+	requests==2.18.4\
+	scipy==1.0.0\
+	scikit-learn==0.19.1
+
 
 # Copy the application folder inside the container
 ADD . /my_application
