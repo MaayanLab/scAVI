@@ -57,6 +57,7 @@ def all_datasets():
 from upload_utils import *
 from threading import Lock
 all_threads = {}
+all_loggers = {}
 from background_pipeline import *
 
 
@@ -99,10 +100,14 @@ def upload_files():
 					# thread_lock = Lock()
 					# with thread_lock:
 					if dataset_id not in all_threads:
+						# create logger for the job
+						logger = Logger(dataset_id)
+						all_loggers[dataset_id] = logger
 						thread = socketio.start_background_task(target=background_pipeline, 
 							socketio=socketio,
 							dataset_id=dataset_id,
-							gene_set_libraries='KEGG_2016,ARCHS4_Cell-lines'
+							gene_set_libraries='KEGG_2016,ARCHS4_Cell-lines',
+							logger=logger
 							)
 						all_threads[dataset_id] = thread
 
@@ -141,6 +146,7 @@ def check_progress(dataset_id):
 		# run the pipeline
 		return render_template('progress.html', 
 			ENTER_POINT=ENTER_POINT,
+			logger=all_loggers[dataset_id],
 			ds=ds)
 
 

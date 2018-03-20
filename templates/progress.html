@@ -39,8 +39,12 @@
         {% endif %}
     </div>
     <div class="row">
-        <h4>Live status</h4>
-        <div class="well" id="log"></div>
+        <h4>Live log</h4>
+        <div class="well" id="log">
+            {% for line in logger.get_all_msg() %}
+                <div>{{line}}</div>
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}
 {% block scripts %}
