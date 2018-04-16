@@ -20,7 +20,7 @@ from classes import *
 
 ENTER_POINT = os.environ['ENTER_POINT']
 
-app = Flask(__name__, static_url_path=ENTER_POINT, static_folder=os.getcwd())
+app = Flask(__name__, static_url_path=ENTER_POINT, static_folder=os.path.join(os.getcwd(), 'static'))
 app.debug = bool(int(os.environ.get('debug', True)))
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 6
 app.config['MONGO_URI'] = os.environ.get('MONGOURI', MONGOURI)
