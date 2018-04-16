@@ -1,3 +1,4 @@
 *.pyc
 data/
 .ipynb_checkpoints/
+static/node_modules
