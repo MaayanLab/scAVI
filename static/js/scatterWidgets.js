@@ -312,30 +312,14 @@ var SearchSelectize = Backbone.View.extend({
 			}
 			});
 
-		// The button to clear highlighted points
-		this.btn = $('<button class="btn btn-default btn-xs">Clear</button>').click(function(e){
-			self.scatterPlot.removeHighlightedPoints();
-			self.hideButton();
-		});
-		$(this.container).append(this.btn);
-		this.hideButton();
-
 		// on change, trigger('searched', query)
 		this.$el[0].selectize.on('change', function(value){
 			if (value !== ''){
 				self.trigger('searched', value);
-				self.showButton();
 			}
 		});
 	},
 
-	showButton: function(){
-		this.btn.show();
-	},
-
-	hideButton: function(){
-		this.btn.hide();
-	},
 });
 
 
@@ -427,27 +411,12 @@ var TermSearchSelectize = Backbone.View.extend({
 			self.$el[0].selectize.on('change', function(value){
 				if (value !== ''){
 					self.trigger('searched', value);
-					self.showButton();
 				}
 			});
 		});
 
-		// The button to clear highlighted points
-		this.btn = $('<button class="btn btn-default btn-xs">Clear</button>').click(function(e){
-			self.scatterPlot.removeHighlightedPoints();
-			self.hideButton();
-		});
-		$(this.container).append(this.btn);
-		this.hideButton();
 	},
 
-	showButton: function(){
-		this.btn.show();
-	},
-
-	hideButton: function(){
-		this.btn.hide();
-	},
 });
 
 var LibSearchSelectize = Backbone.View.extend({
@@ -521,30 +490,14 @@ var LibSearchSelectize = Backbone.View.extend({
 			}
 			});
 
-		// The button to clear highlighted points
-		this.btn = $('<button class="btn btn-default btn-xs">Clear</button>').click(function(e){
-			self.scatterPlot.removeHighlightedPoints();
-			self.hideButton();
-		});
-		$(this.container).append(this.btn);
-		this.hideButton();
-
 		// on change, trigger('searched', query)
 		this.$el[0].selectize.on('change', function(value){
 			if (value !== ''){
 				self.trigger('searched', value);
-				self.showButton();
 			}
 		});
 	},
 
-	showButton: function(){
-		this.btn.show();
-	},
-
-	hideButton: function(){
-		this.btn.hide();
-	},
 });
 
 var SigSimSearch = Backbone.View.extend({

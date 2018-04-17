@@ -3,7 +3,11 @@
     <a class="navbar-brand" title="Visualization of Single-Cell Transcriptomics" href="#">
       <span>
         <img src="images/logo.png" width="25px" height="25px">
-      </span>Visualization of Single-Cell Transcriptomics: {{ graph_name.strip('.json') }}
+        {% if graph_name is defined %}
+          </span>Visualization of Single-Cell Transcriptomics: {{ graph_name.strip('.json') }}
+        {% else %}
+          </span>Visualization of Single-Cell Transcriptomics
+        {% endif %}
     </a>
     <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
@@ -12,7 +16,7 @@
 
       <div class="collapse navbar-collapse" id="navbarsExampleDefault">
         <ul class="navbar-nav mr-auto">
-          <li id="graph_page" class="nav-item active">
+          <li id="graph_page" class="nav-item dropdown active">
             <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Layouts</a>
             <div class="dropdown-menu" role="menu">
 

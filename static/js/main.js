@@ -25,9 +25,9 @@ sdvConfig = $.extend(sdvDefaultConfig, sdvConfig)
 
 var sdv = new Scatter3dView(sdvConfig)
 
-var legend = new Legend({scatterPlot: sdv, h: window.innerHeight, container: container})
+var legend = new Legend({scatterPlot: sdv, h: window.innerHeight + 'px', container: container})
 
-var controler = new Controler({scatterPlot: sdv, h: window.innerHeight, w: 200, container: container})
+var controler = new Controler({scatterPlot: sdv, h: window.innerHeight + 'px', w: '200px', container: container})
 
 
 var geneSearchSelectize = new SearchSelectize({

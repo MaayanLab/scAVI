@@ -42,7 +42,7 @@ def load_cell_meta_from_file():
 	meta_df = meta_df[meta_df.columns[2:]]
 	
 	meta_df = meta_df.transpose()
-	meta_df.index.name = 'sample_ids'
+	meta_df.index.name = 'sample_id'
 	meta_df['Plate'] = meta_df.index.map(lambda x:x.split('_')[0])
 	meta_df['FSC'] = meta_df['FSC'].fillna(0)
 	meta_df['SSC'] = meta_df['SSC'].fillna(0)
@@ -74,11 +74,11 @@ def load_graph_from_db(graph_name, meta_df=None):
 		open(os.path.join(SCRIPT_DIR, 'data/graphs', graph_name), 'rb')
 		)
 	graph_df = pd.DataFrame({
-		'sample_ids': graph_doc['sample_ids'],
+		'sample_id': graph_doc['sample_ids'],
 		'x': graph_doc['x'],
 		'y': graph_doc['y'],
-		}).set_index('sample_ids')
-	graph_df.index.name = 'sample_ids'
+		}).set_index('sample_id')
+	graph_df.index.name = 'sample_id'
 	# Scale the x, y 
 	graph_df['x'] = _minmax_scaling(graph_df['x'].values)
 	graph_df['y'] = _minmax_scaling(graph_df['y'].values)
