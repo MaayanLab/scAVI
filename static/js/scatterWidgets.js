@@ -222,10 +222,10 @@ var Controler = Backbone.View.extend({
 		});
 
 		$('.selectpicker').on('shown.bs.select', function(e){
-			$('[data-toggle="tooltip"]').tooltip({
-				placement: 'auto',
-				container: 'body',
-			});			
+			// $('[data-toggle="tooltip"]').tooltip({
+			// 	placement: 'auto',
+			// 	container: 'body',
+			// });			
 		})
 
 		return this;
@@ -403,7 +403,7 @@ var TermSearchSelectize = Backbone.View.extend({
 				create:false,
 				render: {
 					option: function(item, escape){
-						return '<ul>' + 
+						return '<ul class="list-unstyled">' + 
 							'<li>' + escape(item.term) + '</li>' +
 							'</ul>';
 					}
@@ -501,7 +501,7 @@ var LibSearchSelectize = Backbone.View.extend({
 			placeholder: 'Type a gene-set library',
 			render: {
 				option: function(item, escape){
-					return '<ul>' + 
+					return '<ul class="list-unstyled">' + 
 						'<li>' + escape(item.name) + '</li>' +
 						'</ul>';
 				}
@@ -719,7 +719,7 @@ var SigSimSearchForm = Backbone.View.extend({
 			create:false,
 			render: {
 				option: function(item, escape){
-					return '<ul>' + 
+					return '<ul class="list-unstyled">' + 
 						'<li>' + escape(item.name) + '</li>' +
 						'<li>GEO ID:' + escape(item.geo_id) + '</li>' +
 						'<li>CREEDS ID:' + escape(item.id) + '</li>' +
@@ -871,8 +871,8 @@ var Overlay = Backbone.View.extend({
 	},
 
 	render: function(){
-		var w = $(this.container).width(),
-			h = $(this.container).height();
+		var w = $(this.container).width() + 'px',
+			h = $(this.container).height() + 'px';
 		this.el = d3.select(this.container)
 			.append(this.tagName)
 			.style('width', w)

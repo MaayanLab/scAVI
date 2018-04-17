@@ -1,17 +1,24 @@
 {% extends "base-center.html" %}
 {% block content_center %}
-    <div class="row">
+<style type="text/css">
+    #log {
+        max-height: 300px;
+        overflow: scroll;
+        background-color: #eee;
+    }
+</style>
+    <div class="">
         <h1>Dataset</h1>
-        <dl class="dl-horizontal">
-            <dt>Dataset ID</dt>
-            <dd>{{ ds.id }}</dd>
-            <dt>N samples</dt>
-            <dd>{{ ds.sample_ids|length }}</dd>
-            <dt>N genes</dt>
-            <dd>{{ ds.genes|length }}</dd>
+        <dl class="row">
+            <dt class="col-4">Dataset ID</dt>
+            <dd class="col-8">{{ ds.id }}</dd>
+            <dt class="col-4">N samples</dt>
+            <dd class="col-8">{{ ds.sample_ids|length }}</dd>
+            <dt class="col-4">N genes</dt>
+            <dd class="col-8">{{ ds.genes|length }}</dd>
         </dl>                    
     </div>
-    <div class="row">
+    <div>
         <h1>Visualizations</h1>
         <ul>
             {% for vis in ds.visualizations %}
@@ -19,7 +26,7 @@
             {% endfor %}
         </ul>
     </div>
-    <div class="row">
+    <div>
         <h1>Enrichment analysis</h1>
         <h4>Finished:</h4>
         <ul>
@@ -38,14 +45,15 @@
 
         {% endif %}
     </div>
-    <div class="row">
+    <div>
         <h4>Live log</h4>
-        <div class="well" id="log">
+        <div id="log">
             {% for line in logger.get_all_msg() %}
                 <div>{{line}}</div>
             {% endfor %}
         </div>
     </div>
+
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="lib/socket.io.min.js"></script>
