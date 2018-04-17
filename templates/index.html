@@ -1,40 +1,23 @@
-<html>
-  <head>
-    <base href="{{ ENTER_POINT }}/"/>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="Zichen Wang (zichen.wang@mssm.edu)">    
-    <title>Single Cell Fireworks</title>
-    <!-- <link rel="icon" href="images/favicon.png" type="image/x-icon"> -->
-    <link rel="shortcut icon" href="images/favicon.ico">
-    <link rel="stylesheet" type="text/css" href="lib/bootstrap.css">
-    <link rel="stylesheet" type="text/css" href="lib/selectize.bootstrap3.css">
-    <link rel="stylesheet" type="text/css" href="lib/datatables.bootstrap.css">
-    <link rel="stylesheet" type="text/css" href="lib/bootstrap-select.min.css">
-    <link rel="stylesheet" type="text/css" href="css/main.css">
-  </head>
-  <body>
-    {% include 'partial/header.html' %}
+{% extends "base.html" %}
+{% block content %}
     <div id="body" class="container-full">
       <canvas id="text-label"></canvas>
     </div>
-    {% include 'partial/footer.html' %}
+{% endblock %}
+{% block scripts %}
 
-    <script src="lib/three.min.js"></script>
-    <script src="lib/OrbitControls.js"></script>
+    <script src="node_modules/three/build/three.min.js"></script>
+    <script src="node_modules/three/examples/js/controls/OrbitControls.js"></script>
 
-    <script src="lib/Detector.js"></script>
-    <script src="lib/stats.min.js"></script>
+    <script src="node_modules/three/examples/js/Detector.js"></script>
+    <script src="node_modules/three/examples/js/libs/stats.min.js"></script>
     
     <script src="js/textures.js"></script>
     <script src="js/scatterPlot.js"></script>
     <script src="js/scatterWidgets.js"></script>
     <script>
-        var graph_name = "{{ graph_name }}"
+        var graph_name = "{{ graph_name }}";
         var sdvConfig = {{ sdvConfig|safe }};
     </script>
     <script src="js/{{ script }}.js"></script>
-
-  </body>
-</html>
+{% endblock %}

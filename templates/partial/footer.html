@@ -44,26 +44,26 @@
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-  ga('create', 'UA-60506844-10', 'auto');
-  ga('send', 'pageview');
+  // ga('create', 'UA-60506844-10', 'auto');
+  // ga('send', 'pageview');
 </script>
-<script src="lib/jquery.min.js"></script>
-<script src="lib/underscore-min.js"></script>
-<script src="lib/backbone-min.js"></script>
-<script src="lib/bootstrap.min.js"></script>
 
-<script src="lib/d3.v3.min.js"></script>
-<script src="lib/d3-legend.min.js"></script>
-<script src="lib/selectize.js"></script>
-<script src="lib/datatables.js"></script>
-<script src="lib/datatables.bootstrap.js"></script>
-<script src="lib/bootstrap-select.min.js"></script>
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+<script src="node_modules/underscore/underscore-min.js"></script>
+<script src="node_modules/backbone/backbone-min.js"></script>
+<script src="node_modules/popper.js/dist/umd/popper.min.js"></script>
+<script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+
+<script src="node_modules/d3/d3.min.js"></script>
+<script src="node_modules/d3-svg-legend/d3-legend.min.js"></script>
+<script src="node_modules/selectizebootstrap/dist/js/selectize/standalone/selectize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.0-beta/js/bootstrap-select.min.js"></script>
 
 <script>
   // toggle header active tab
   var currentUrlRoute = window.location.pathname.split('/')[2];
-  $(".navbar-nav > li").each(function(){
-    $(this).removeClass('active');
-  });
-  $("#" + currentUrlRoute).addClass("active");
+  // $(".navbar-nav > li").each(function(){
+  //   $(this).removeClass('active');
+  // });
+  // $("#" + currentUrlRoute).addClass("active");
 </script>

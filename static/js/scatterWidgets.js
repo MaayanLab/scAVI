@@ -8,8 +8,8 @@ var Legend = Backbone.View.extend({
 	defaults: {
 		container: document.body,
 		scatterPlot: Scatter3dView,
-		w: 300,
-		h: 800,
+		w: '300px',
+		h: '800px',
 	},
 
 	initialize: function(options){
@@ -117,14 +117,18 @@ var Controler = Backbone.View.extend({
 		this.listenTo(this.model, 'sync', this.render);
 
 		var scatterPlot = this.scatterPlot;
-
+		var self = this;
 		this.listenTo(scatterPlot, 'shapeChanged', this.changeSelection)
 
 		scatterPlot.listenTo(this, 'shapeChanged', function(selectedMetaKey){
-			scatterPlot.shapeBy(selectedMetaKey);
+			if (selectedMetaKey != self.scatterPlot.shapeKey){
+				scatterPlot.shapeBy(selectedMetaKey);	
+			}
 		});
 		scatterPlot.listenTo(this, 'colorChanged', function(selectedMetaKey){
-			scatterPlot.colorBy(selectedMetaKey);
+			if (selectedMetaKey != self.scatterPlot.colorKey){
+				scatterPlot.colorBy(selectedMetaKey);
+			}
 		});
 
 	},
@@ -149,7 +153,7 @@ var Controler = Backbone.View.extend({
 
 		// Shapes: 
 		var shapeControl = this.el.append('div')
-			.attr('class', 'form-group');
+			.attr('class', 'form-group my-1');
 		shapeControl.append('label')
 			.attr('class', 'control-label')
 			.text('Shape by:');
@@ -177,7 +181,7 @@ var Controler = Backbone.View.extend({
 
 		// Colors
 		var colorControl = this.el.append('div')
-			.attr('class', 'form-group')
+			.attr('class', 'form-group my-1')
 		colorControl.append('label')
 			.attr('class', 'control-label')
 			.text('Color by:');
@@ -214,13 +218,15 @@ var Controler = Backbone.View.extend({
 			});
 
 		$('.selectpicker').selectpicker({
-			style: 'btn-default btn-sm',
+			style: 'btn-outline-secondary btn-sm',
 		});
 
-		$('[data-toggle="tooltip"]').tooltip({
-			placement: 'left',
-			container: 'body',
-		});
+		$('.selectpicker').on('shown.bs.select', function(e){
+			// $('[data-toggle="tooltip"]').tooltip({
+			// 	placement: 'auto',
+			// 	container: 'body',
+			// });			
+		})
 
 		return this;
 	},
@@ -228,9 +234,7 @@ var Controler = Backbone.View.extend({
 	changeSelection: function(){
 		// change the current selected option to value
 		$('#shape').val(this.scatterPlot.shapeKey); 
-		$('#shape').selectpicker('val', this.scatterPlot.shapeKey)
 		$('#color').val(this.scatterPlot.colorKey);
-		$('#color').selectpicker('val', this.scatterPlot.colorKey)
 	},
 
 });
@@ -263,7 +267,7 @@ var SearchSelectize = Backbone.View.extend({
 	render: function(){
 		// set up the DOMs
 		// wrapper for SearchSelectize
-		var searchControl = $('<div class="form-group" id="search-control"></div>')
+		var searchControl = $('<div class="form-group my-1" id="search-control"></div>')
 		searchControl.append($('<label class="control-label">Search a gene:</label>'))
 
 		this.$el = $('<select id="search" class="form-control"></select>');
@@ -286,7 +290,7 @@ var SearchSelectize = Backbone.View.extend({
 			placeholder: 'Type the symbol of a gene',
 			render: {
 				option: function(item, escape){
-					return '<ul>' + 
+					return '<ul class="list-unstyled">' + 
 						'<li>' + escape(item.gene) + '</li>' +
 						'<li>average expression:' + parseFloat(item.avg_expression).toFixed(1) + '</li>' +
 						'</ul>';
@@ -399,7 +403,7 @@ var TermSearchSelectize = Backbone.View.extend({
 				create:false,
 				render: {
 					option: function(item, escape){
-						return '<ul>' + 
+						return '<ul class="list-unstyled">' + 
 							'<li>' + escape(item.term) + '</li>' +
 							'</ul>';
 					}
@@ -497,7 +501,7 @@ var LibSearchSelectize = Backbone.View.extend({
 			placeholder: 'Type a gene-set library',
 			render: {
 				option: function(item, escape){
-					return '<ul>' + 
+					return '<ul class="list-unstyled">' + 
 						'<li>' + escape(item.name) + '</li>' +
 						'</ul>';
 				}
@@ -715,7 +719,7 @@ var SigSimSearchForm = Backbone.View.extend({
 			create:false,
 			render: {
 				option: function(item, escape){
-					return '<ul>' + 
+					return '<ul class="list-unstyled">' + 
 						'<li>' + escape(item.name) + '</li>' +
 						'<li>GEO ID:' + escape(item.geo_id) + '</li>' +
 						'<li>CREEDS ID:' + escape(item.id) + '</li>' +
@@ -867,8 +871,8 @@ var Overlay = Backbone.View.extend({
 	},
 
 	render: function(){
-		var w = $(this.container).width(),
-			h = $(this.container).height();
+		var w = $(this.container).width() + 'px',
+			h = $(this.container).height() + 'px';
 		this.el = d3.select(this.container)
 			.append(this.tagName)
 			.style('width', w)
