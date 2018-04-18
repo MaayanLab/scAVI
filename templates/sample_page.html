@@ -1,34 +1,202 @@
 {% extends "base.html" %}
 {% block content %}
+<style type="text/css">
+#gene-chart {
+  min-width: 310px; 
+  max-width: 800px; 
+  min-height: 600px; 
+  margin: 0 auto;
+}
+#enrichr-chart {
+  min-width: 310px; 
+  max-width: 800px; 
+  min-height: 500px; 
+  margin: 0 auto;
+}
+</style>
+
 <div class="container-fluid">
   <div class="row justify-content-center">
     <div class="col-10">
 
       <div class="row">
-        <h1>Sample</h1>
+        <h1>Sample {{sample_meta['sample_id'] }}</h1>
         <dl class="row">
-          {% for key, val in sample_data['meta'].items() %}
-            <dt class="col-sm-3">{{ key }}</dt>
-            <dd class="col-sm-9">{{ val }}</dd>
+          {% for key, val in sample_meta.items() %}
+          <dt class="col-sm-3">{{ key }}</dt>
+          <dd class="col-sm-9">{{ val }}</dd>
           {% endfor %}
         </dl>
       </div>
 
       <div class="row">
         <h1>Gene expression</h1>
-        <div id="gene-chart"></div>
       </div>
+      <div class="row" id="gene-chart"></div>
+      <button id="gene-btn" class="btn btn-outline-info">Toggle CPM/Z-score</button>
 
       <div class="row">
         <h1>Enrichment analysis</h1>
-        <div id="enrichr-chart"></div>
       </div>
+      <div class="row" id="enrichr-chart"></div>
 
     </div>
   </div>
 </div>
 {% endblock %}
 {% block scripts %}
+<script src="node_modules/highcharts/highcharts.js"></script>
+<script src="node_modules/highcharts/modules/exporting.js"></script>
+<script src="node_modules/highcharts/modules/export-data.js"></script>
 
-<script src="js/{{ script }}.js"></script>
+<script type="text/javascript">
+  var colors10 = _.map(_.range(10), d3.scale.category10());
+  var sample_data = {{ sample_data|safe }};
+
+  // Parse data for gene expression bar plot
+  var genes = _.pluck(sample_data.genes, 'gene');
+  var gene_series_base = {
+    cursor: 'pointer',
+    point: {
+      events: {
+        click: function(){
+          location.href = 'http://amp.pharm.mssm.edu/Harmonizome/gene/' + 
+          this.options.gene.toUpperCase();    
+        }
+      }
+    },
+  }
+
+  var gene_data_z = _.map(sample_data.genes, function(d){
+    var val = d.val
+    var color = colors10[0];
+    if (val > 0){
+      var color = colors10[3]
+    }
+    return {
+      gene: d.gene,
+      y: parseFloat(d.val.toFixed(3)),
+      color: color
+    };
+  });
+
+  var gene_series_z = Object.assign(
+    {name: 'z-scores', data: gene_data_z},
+    gene_series_base
+    );
+
+  var gene_data_cpm = _.map(sample_data.genes, function(d){
+    var val = d.val
+    var color = colors10[0];
+    if (val > 0){
+      var color = colors10[3]
+    }
+    return {
+      gene: d.gene,
+      y: parseFloat(d.cpm.toFixed(2)),
+      color: color
+    };
+  });
+
+  var gene_series_cpm = Object.assign( 
+    {name: 'CPM', data: gene_data_cpm},
+    gene_series_base
+    );
+
+
+  var chart = new Highcharts.chart('gene-chart', {
+    chart: {
+      type: 'bar'
+    },
+    title: {
+      text: 'Relative expression'
+    },
+    xAxis: {
+      categories: genes,
+      labels: {
+        step: 1  
+      }
+    },
+    yAxis: {
+      title: {text: 'z-score'}
+    },
+    credits: {
+      enabled: false
+    },
+    series: []
+  });
+  chart.addSeries(gene_series_z)
+
+  $("#gene-btn").click(function(){
+    var currentAttr = chart.yAxis[0].axisTitle.textStr;
+    if (currentAttr == 'z-score'){ // switch to CPM
+      chart.series[0].remove(false)
+      chart.addSeries(gene_series_cpm, false)
+      chart.setTitle({text: 'Absolute expression'}, false)
+      chart.yAxis[0].setTitle({text:'CPM'}, true);
+    }else{
+      chart.series[0].remove(false)
+      chart.addSeries(gene_series_z, false)
+      chart.setTitle({text: 'Relative expression'}, false)
+      chart.yAxis[0].setTitle({text:'z-score'}, true);
+    }
+  })
+
+
+  // Parse data for Enrichment bar plot
+  var gene_set_libs = _.keys(sample_data.enrichment);
+
+  var enrich_data = _.map(sample_data.enrichment[gene_set_libs[0]], function(d){
+    var val = d.score
+    var color = colors10[3];
+    return {
+      term: d.term,
+      y: parseFloat(d.score.toFixed(3)),
+      color: color
+    };
+  });
+  var enrich_series = Object.assign({name: 'combined score', data: enrich_data})
+
+  var chart2 = new Highcharts.chart('enrichr-chart', {
+    chart: {
+      type: 'bar'
+    },
+    plotOptions: {
+      series: {
+        pointWidth: 30,
+      }
+    },
+    title: {
+      text: 'Top enriched terms'
+    },
+    xAxis: {
+      categories: _.pluck(enrich_data, 'term'),
+      labels: {
+        step: 1,
+        overflow: 'justify',
+        align: 'left',
+        x: 5,
+        reserveSpace: false,
+        style: {
+          color: colors10[9],
+          fontWeight: 'bold',
+          fontSize: '14px',
+          whiteSpace: 'nowrap'
+        }
+      }
+    },
+    yAxis: {
+      title: {text: 'combined score'}
+    },
+    credits: {
+      enabled: false
+    },
+    series: []
+  });
+  chart2.addSeries(enrich_series)
+
+
+
+</script>
+<!-- <script src="js/sample_page.js"></script> -->
 {% endblock %}

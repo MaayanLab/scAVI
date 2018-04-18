@@ -186,30 +186,32 @@ Pages for samples
 @app.route(ENTER_POINT + '/sample/<string:sample_id>', methods=['GET'])
 def sample_landing_page(sample_id):
 	# prepare meta
-	sample_meta = meta_df.loc[sample_id].to_dict()
+	sample_meta = meta_df.loc[sample_id]#.to_dict()
 	sample_meta['sample_id'] = sample_id
 	# filter out less informative fields
-	sample_meta = {key: val for key, val in sample_meta.items() if not key.startswith('>')}
+	sample_meta = {key: val for key, val in sample_meta.iteritems() if not key.startswith('>')}
 
 	# prepare gene expression
 	sorted_zscores = zscores_df[sample_id].sort_values()
-	top_up_genes = [{'gene':gene, 'val': val} for gene, val in sorted_zscores[-20:].to_dict().items()]
-	top_dn_genes = [{'gene':gene, 'val': val} for gene, val in sorted_zscores[:20].to_dict().items()]
+	top_up_genes = [{'gene':gene, 'val': val, 'cpm': CPM_df.loc[gene, sample_id]} \
+		for gene, val in sorted_zscores[-20:].iteritems()][::-1]
+	top_dn_genes = [{'gene':gene, 'val': val, 'cpm': CPM_df.loc[gene, sample_id]} \
+		for gene, val in sorted_zscores[:20].iteritems()][::-1]
 
 	# prepare enrichment
 	enrichment = {}
 	for lib in d_lib_combined_score_df:
 		top_terms = d_lib_combined_score_df[lib][sample_id].sort_values(ascending=False)[:10]
-		top_terms = [{'term':term, 'score':score} for term, score in top_terms.to_dict().items()]
+		top_terms = [{'term':term, 'score':score} for term, score in top_terms.iteritems()]
 		enrichment[lib] = top_terms
 
 	sample_data = {
-		'meta': sample_meta,
-		'genes': top_up_genes + top_dn_genes,
+		'genes': 	top_up_genes + top_dn_genes,
 		'enrichment': enrichment
 	}
 	return render_template('sample_page.html', 
-		sample_data=sample_data,
+		sample_meta=sample_meta,
+		sample_data=json.dumps(sample_data),
 		ENTER_POINT=ENTER_POINT,
 		graphs=graphs,
 		)

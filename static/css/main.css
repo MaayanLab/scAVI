@@ -90,13 +90,11 @@ text.legendTitle{
   font-size: 16px;
 }
 
-#footer {
-  position: absolute;
-  left: 0;
-  top: 120%;
+.footer {
+  border-top: solid #343a40bd;
   bottom: 0;
-  height: 210px;
   width: 100%;
+  margin-top: 10px;
 }
 #header {
   background-color: #ddd;
@@ -171,33 +169,6 @@ text.legendTitle{
 	font-size: 30px;
   float: none;
 }
-
-#footer {
-  background-color: #f8f8f8;
-  border-top: solid #e7e7e7;
-}
-#footer a,
-#footer li,
-#footer p {
-  color: black;
-  font-family: 'Roboto', arial, sans-serif;
-  font-size: 14px;
-  font-weight: 100;
-}
-#footer h3 {
-  color: black;
-}
-#footer a {
-  color: #777;
-  text-decoration: none;
-}
-#footer a:hover {
-  text-decoration: underline;
-}
-#footer .container {
-  margin-top: 15px;
-}
-
 .tooltip-inner {
   white-space: pre-wrap;
   min-width: 200px;
