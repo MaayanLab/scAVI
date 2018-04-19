@@ -38,6 +38,8 @@
       <div class="row">
         <h1>Enrichment analysis</h1>
       </div>
+      
+      <select id="enrichr-select" class="selectpicker" data-style="btn btn-outline-info"></select>
       <div class="row" id="enrichr-chart"></div>
 
     </div>
@@ -145,17 +147,28 @@
 
   // Parse data for Enrichment bar plot
   var gene_set_libs = _.keys(sample_data.enrichment);
+  
+  // add options in <select>
+  for (var i = gene_set_libs.length - 1; i >= 0; i--) {
+    var lib = gene_set_libs[i];
+    $("#enrichr-select").append($('<option>'+ lib +'</option>'));
+  }
 
-  var enrich_data = _.map(sample_data.enrichment[gene_set_libs[0]], function(d){
-    var val = d.score
-    var color = colors10[3];
-    return {
-      term: d.term,
-      y: parseFloat(d.score.toFixed(3)),
-      color: color
-    };
-  });
-  var enrich_series = Object.assign({name: 'combined score', data: enrich_data})
+  // helper function to get the series for enrichr
+  var get_lib_data = function(lib){
+    var enrich_data = _.map(sample_data.enrichment[lib], function(d){
+      return {
+        term: d.term,
+        y: parseFloat(d.score.toFixed(3)),
+        color: colors10[3]
+      };
+    });
+    var enrich_series = {name: 'combined score', data: enrich_data}
+    return enrich_series
+  }
+
+  var default_lib = gene_set_libs.slice(-1)
+  var enrich_series = get_lib_data(default_lib)
 
   var chart2 = new Highcharts.chart('enrichr-chart', {
     chart: {
@@ -167,10 +180,10 @@
       }
     },
     title: {
-      text: 'Top enriched terms'
+      text: 'Top enriched terms in ' + default_lib
     },
     xAxis: {
-      categories: _.pluck(enrich_data, 'term'),
+      categories: _.pluck(enrich_series.data, 'term'),
       labels: {
         step: 1,
         overflow: 'justify',
@@ -195,6 +208,14 @@
   });
   chart2.addSeries(enrich_series)
 
+  $("#enrichr-select").on('changed.bs.select', function(){
+    var selected_lib = $(this).val();
+    var selected_series = get_lib_data(selected_lib);
+    chart2.series[0].remove(false)
+    chart2.xAxis[0].setCategories(_.pluck(selected_series.data, 'term'), false)
+    chart2.setTitle({text: 'Top enriched terms in ' + selected_lib}, false)
+    chart2.addSeries(selected_series, true)
+  })
 
 
 </script>
