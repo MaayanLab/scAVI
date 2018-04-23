@@ -270,6 +270,42 @@ var Scatter3dCloud = Backbone.View.extend({
 		this.geometry.addAttribute( 'color', new THREE.BufferAttribute( colors.slice(), 3 ));
 	},
 
+	intersectBox: function(extent){
+		var positions = this.geometry.getAttribute('position');
+		var intersectingIdx = [];
+		var x_min = Math.min(extent[0][0], extent[1][0]),
+			x_max = Math.max(extent[0][0], extent[1][0]),
+			y_min = Math.min(extent[0][1], extent[1][1]),
+			y_max = Math.max(extent[0][1], extent[1][1]);
+
+		for (var i = 0, len = positions.count; i < len; i++) {
+			var x = positions.array[i*3],
+				y = positions.array[i*3 + 1];
+			// if (extent[0][0] <= x && x < extent[1][0] 
+			// 	&& extent[0][1] <= y && y < extent[1][1]){
+			if (x_min <= x && x < x_max
+				&& y_min <= y && y < y_max){
+				intersectingIdx.push(i)
+			}
+		}
+		return intersectingIdx;
+	},
+
+	highlightIntersectedPoints: function(extent){
+		var intersectingIdx = this.intersectBox(extent);
+		var geometry = this.geometry;
+
+		geometry.attributes.color.needsUpdate = true;
+
+		for (var i = 0; i < intersectingIdx.length; i++) {
+			var idx = intersectingIdx[i]
+			geometry.attributes.color.array[idx*3] = 0.1;
+			geometry.attributes.color.array[idx*3+1] = 0.8;
+			geometry.attributes.color.array[idx*3+2] = 0.1;
+		
+		}
+	}
+
 });
 
 var ScatterData = Backbone.Model.extend({
@@ -409,7 +445,7 @@ var Scatter3dView = Backbone.View.extend({
 		this.scene = new THREE.Scene();
 		// this.scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
 
-		this.renderer = new THREE.WebGLRenderer();
+		this.renderer = new THREE.WebGLRenderer({alpha: true, antialias: false});
 		// this.renderer.setClearColor( this.scene.fog.color );
 		// this.renderer.setClearColor( 0xcccccc );
 		this.renderer.setClearColor( 0xffffff );
@@ -420,11 +456,18 @@ var Scatter3dView = Backbone.View.extend({
 			this.camera = new THREE.PerspectiveCamera( 70, this.aspectRatio, 0.01, 1000000 );
 			this.camera.position.z = this.pointSize * 120;
 		} else { // 2d
-			ORTHO_CAMERA_FRUSTUM_HALF_EXTENT = 10.5;
-			var left = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			var right = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			var bottom = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			var top = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			ORTHO_CAMERA_FRUSTUM_HALF_EXTENT = 10;
+			// var left = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			// var right = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			// var bottom = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			// var top = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+
+			var left = 0;
+			var right = 2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			var bottom = -2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			var top = 0;
+
+
 			// Scale up the larger of (w, h) to match the aspect ratio.
 			var aspectRatio = this.aspectRatio;
 			if (aspectRatio > 1) {
@@ -435,6 +478,7 @@ var Scatter3dView = Backbone.View.extend({
 				bottom /= aspectRatio;
 			}
 			this.camera = new THREE.OrthographicCamera( left, right, top, bottom, -1000, 1000 );
+			this.camera.position.set(-ORTHO_CAMERA_FRUSTUM_HALF_EXTENT*aspectRatio, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT)
 		}
 
 		// Put the renderer's DOM into the container
@@ -443,17 +487,17 @@ var Scatter3dView = Backbone.View.extend({
 
 		var self = this;
 		// set up orbit controls
-		this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
-		this.controls.addEventListener( 'change', function(){
-			self.renderScatter()
-		} );
-		this.controls.enableZoom = true;
+		// this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
+		// this.controls.addEventListener( 'change', function(){
+		// 	self.renderScatter()
+		// } );
+		// this.controls.enableZoom = true;
 		
-		if (!this.is3d){
-			this.controls.mouseButtons.ORBIT = null;
-			this.controls.enableRotate = false;
-			this.controls.mouseButtons.PAN = THREE.MOUSE.LEFT;			
-		}
+		// if (!this.is3d){
+		// 	this.controls.mouseButtons.ORBIT = null;
+		// 	this.controls.enableRotate = false;
+		// 	this.controls.mouseButtons.PAN = THREE.MOUSE.LEFT;			
+		// }
 		// this.controls.dampingFactor = 0.5;
 
 		// this.controls = new THREE.TrackballControls( this.camera );
@@ -464,6 +508,125 @@ var Scatter3dView = Backbone.View.extend({
 		// this.controls.noPan = false;
 		// this.controls.staticMoving = true;
 		// this.controls.dynamicDampingFactor = 0.3;
+		var shiftKey = false;
+		// zoom and pan using d3
+		// http://bl.ocks.org/nitaku/b25e6f091e97667c6cae/569c5da78cf5c51577981a7e4d9f2dc6252dbeed
+		// this.view = d3.select(this.renderer.domElement);
+		var DZOOM = 10
+		var aspect = this.aspectRatio
+		var width = this.WIDTH
+		var height = this.HEIGHT
+
+		this.svg = d3.select("#body").append('svg')
+			.attr('id', 'brush')
+			.attr('width', width)
+			.attr('height', height)
+			.style('left', 0)
+			.style('top', 0)
+			.style('position', 'absolute')
+
+		var xScale = d3.scale.linear()
+			.domain([0, width])
+			.range([-10, 10])
+		var yScale = d3.scale.linear()
+			.domain([0, height])
+			.range([-10, 10])
+
+		// brush
+		this.brush = this.svg.append('g')
+			.datum(function() { return {selected: false, previouslySelected: false}; })
+			.attr('class', 'brush')
+			// .style('cursor', 'none')
+			.call( d3.svg.brush()
+				.x(d3.scale.identity().domain([0, width]))
+				.y(d3.scale.identity().domain([0, height]))
+				// .x(xScale)
+				// .y(yScale)
+				.on('brushstart', function(){
+					console.log('brushstart')
+					if (!shiftKey) {
+						d3.event.target.clear();
+						d3.select(this).call(d3.event.target);
+					}
+				})
+				.on('brush', function(){
+					if (shiftKey){
+						var extent = d3.event.target.extent();
+						// console.log(extent)
+						// console.log(xScale(extent[0][0]), xScale(extent[1][0]), 
+						// 	yScale(extent[0][1]), yScale(extent[1][1]) )
+						// var extent = [[]]
+						
+						extent = [[xScale(extent[0][0]), xScale(extent[1][0])], 
+							[yScale(extent[0][1]), yScale(extent[1][1])]];
+						
+						console.log(extent[0][0], extent[1][0]) // x
+						console.log(extent[0][1], extent[1][1]) // y
+
+						var intersectingIdx = self.clouds[0].intersectBox(extent)
+						// console.log(intersectingIdx.length)
+
+						if (intersectingIdx.length > 0) {
+							self.clouds[0].highlightIntersectedPoints(extent)
+							self.renderer.render( self.scene, self.camera )
+						}
+					} else {
+						d3.event.target.clear();
+						d3.select(this).call(d3.event.target);
+					}
+
+				})
+				.on('brushend', function(){
+					d3.event.target.clear();
+					d3.select(this).call(d3.event.target);
+					// console.log(d3.event.target.extent())
+				}))
+			.style('pointer-events', 'none')
+
+
+		zoom = d3.behavior.zoom().scaleExtent([0.2, 10])
+		// .x(xScale)
+		// .y(yScale)
+		.on('zoom', function() {
+			if (!shiftKey){
+				var x, y, z, _ref;
+				z = zoom.scale();
+				_ref = zoom.translate(), x = _ref[0], y = _ref[1];
+				x = x - width / 2;
+				y = y - height / 2;
+				self.camera.left = -DZOOM / z * aspect - x / width * DZOOM / z * 2 * aspect;
+				self.camera.right = DZOOM / z * aspect - x / width * DZOOM / z * 2 * aspect;
+				self.camera.top = DZOOM / z + y / height * DZOOM / z * 2;
+				self.camera.bottom = -DZOOM / z + y / height * DZOOM / z * 2;
+				self.camera.updateProjectionMatrix();
+				// console.log(d3.event)
+
+				self.brush.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+
+				self.renderer.render( self.scene, self.camera )
+
+			}
+		});
+
+
+
+		this.svg.call(zoom)
+
+
+
+		d3.select(window).on("keydown", function(){
+			shiftKey = d3.event.shiftKey;
+			console.log('shiftKey pressed', shiftKey)
+			self.brush.style('pointer-events', 'all')
+		})
+		d3.select(window).on("keyup", function(){
+			shiftKey = d3.event.shiftKey;
+			console.log('shiftKey depressed', shiftKey)
+			self.brush.style('pointer-events', 'none')
+		})
+
+
+
 
 		// set up raycaster, mouse
 		this.raycaster = new THREE.Raycaster();
@@ -473,7 +636,7 @@ var Scatter3dView = Backbone.View.extend({
 			if (this.is3d){
 				this.raycaster.params.Points.threshold = this.pointSize/5;	
 			} else {
-				this.raycaster.params.Points.threshold = this.pointSize/500;	
+				this.raycaster.params.Points.threshold = this.pointSize/200;	
 			}			
 		}
 		
