@@ -5,6 +5,25 @@ The models and views for the scatter plot.
 function isInt(n){
     return Number(n) === n && n % 1 === 0;
 }
+// From https://github.com/anvaka/three.map.control, used for panning
+function getCurrentScale() {
+  var vFOV = camera.fov * Math.PI / 180
+  var scale_height = 2 * Math.tan( vFOV / 2 ) * camera.position.z
+  var currentScale = height / scale_height
+  return currentScale
+}
+
+// Point generator function
+function phyllotaxis(radius) {
+  const theta = Math.PI * (3 - Math.sqrt(5));
+  return function(i) {
+    const r = radius * Math.sqrt(i), a = theta * i;
+    return [
+      width / 2 + r * Math.cos(a) - width / 2,
+      height / 2 + r * Math.sin(a) - height / 2
+    ];
+  };
+}
 
 function getType(n){
 	var type = typeof n;
@@ -444,21 +463,22 @@ var Scatter3dView = Backbone.View.extend({
 		this.renderer.setClearColor( 0xffffff );
 		this.renderer.setPixelRatio( this.DPR );
 		this.renderer.setSize( this.WIDTH, this.HEIGHT );
+		console.log(this.WIDTH, this.HEIGHT)
 
 		if (this.is3d){
 			this.camera = new THREE.PerspectiveCamera( 70, this.aspectRatio, 0.01, 1000000 );
 			this.camera.position.z = this.pointSize * 120;
 		} else { // 2d
-			ORTHO_CAMERA_FRUSTUM_HALF_EXTENT = 10;
-			// var left = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			// var right = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			// var bottom = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			// var top = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			ORTHO_CAMERA_FRUSTUM_HALF_EXTENT = 11.5;
+			var left = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			var right = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			var bottom = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			var top = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
 			
-			var left = 0;
-			var right = 2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			var bottom = -2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			var top = 0;
+			// var left = 0;
+			// var right = 2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			// var bottom = -2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+			// var top = 0;
 
 			// Scale up the larger of (w, h) to match the aspect ratio.
 			var aspectRatio = this.aspectRatio;
@@ -470,11 +490,23 @@ var Scatter3dView = Backbone.View.extend({
 				bottom /= aspectRatio;
 			}
 			this.camera = new THREE.OrthographicCamera( left, right, top, bottom, -1000, 1000 );
-			this.camera.position.set(-ORTHO_CAMERA_FRUSTUM_HALF_EXTENT*aspectRatio, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT)
+			// this.camera.up = new THREE.Vector3(0,0,1)
+			// this.camera.lookAt(new THREE.Vector3(0,0,0));
+
+			// console.log(-ORTHO_CAMERA_FRUSTUM_HALF_EXTENT*aspectRatio, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT)
+			// this.camera.position.set(-ORTHO_CAMERA_FRUSTUM_HALF_EXTENT*aspectRatio, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT)
+			// this.camera.position.set(ORTHO_CAMERA_FRUSTUM_HALF_EXTENT*aspectRatio, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT)
+			// this.camera.position.set(0, -bottom, 20)
+			// this.camera.zoom = 0.1
+			// this.camera.position.set(ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, 20)
+
 		}
 
 		// Put the renderer's DOM into the container
 		this.renderer.domElement.id = "renderer";
+		// this.renderer.setSize( this.WIDTH, this.HEIGHT, false );
+		console.log(this.renderer.domElement.width, this.renderer.domElement.height)
+
 		this.container.appendChild( this.renderer.domElement );
 
 		var self = this;
@@ -493,19 +525,23 @@ var Scatter3dView = Backbone.View.extend({
 			.style('left', 0)
 			.style('top', 0)
 			.style('position', 'absolute')
+			// .style('z-index', -100)
 
-		var xScale = d3.scale.linear()
-			.domain([0, width])
-			.range([-10, 10])
-		var yScale = d3.scale.linear()
-			.domain([height, 0])
-			.range([-10, 10])
+		// var xScale = d3.scale.linear()
+		// 	.domain([0, width])
+		// 	.range([-10, 10])
+		// var yScale = d3.scale.linear()
+		// 	.domain([height, 0])
+		// 	.range([-10, 10])
 
 
 		// brush
 		this.brush = d3.svg.brush()
-			.x(d3.scale.linear().range([0, width]).domain([-10, 10]))
-			.y(d3.scale.linear().range([height, 0]).domain([-10, 10]))
+			.x(d3.scale.linear().range([-width, width]).domain([-10, 10]))
+			.y(d3.scale.linear().range([height, -height]).domain([-10, 10]))
+
+			// .x(d3.scale.linear().range([0, width]))
+			// .y(d3.scale.linear().range([height, 0]))
 			.on('brushstart', function(){
 				if (!shiftKey) {
 					d3.event.target.clear();
@@ -521,7 +557,8 @@ var Scatter3dView = Backbone.View.extend({
 		function brushmove(){
 			if (shiftKey) {
 				var extent = self.brush.extent()
-				
+				console.log(extent[0][0], extent[1][0])
+				console.log(extent[0][1], extent[1][1])
 				// find points intersecting with the brush box
 				var intersectingIdx = [];
 				for (var i = 0; i < self.clouds.length; i++) {
@@ -543,46 +580,76 @@ var Scatter3dView = Backbone.View.extend({
 			.attr('class', 'brush')
 			.call(self.brush)
 			.style('pointer-events', 'none')
+			// .style('position', 'absolute')
+			// .style('top', '0px')
+			// .style('left', '0px')
+		this.center = this.svg.append('circle')
+			.attr('cx', width/2)
+			.attr('cy', height/2)
+			.attr('r', 10)
+			.style('fill', 'red')
+
 
 		// zoom and pan using d3
 		// http://bl.ocks.org/nitaku/b25e6f091e97667c6cae/569c5da78cf5c51577981a7e4d9f2dc6252dbeed
 		// this.view = d3.select(this.renderer.domElement);
+		DZOOM = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT
 		zoom = d3.behavior.zoom().scaleExtent([0.2, 10])
+			// .x(d3.scale.linear().range([-width/2, width/2]).domain([-10, 10]))
+			// .y(d3.scale.linear().range([height/2, -height/2]).domain([-10, 10]))
+			.size([width, height])
 			.on('zoom', function() {
 				if (!shiftKey){
 					var x, y, z, _ref;
 					z = zoom.scale();
 					_ref = zoom.translate(), x = _ref[0], y = _ref[1];
-					x = x - width / 2;
-					y = y - height / 2;
+					console.log('zoom.translate:', x, y, 'zoom scale', z)
+					// console.log('width', width, 'height', height)
+					// console.log(self.renderer.domElement)
+					// x = x - width / 2;
+					// y = y - height / 2;
+					// y = y / aspect
 					self.camera.left = -DZOOM / z * aspect - x / width * DZOOM / z * 2 * aspect;
-					self.camera.right = DZOOM / z * aspect - x / width * DZOOM / z * 2 * aspect;
+					self.camera.right =  DZOOM / z * aspect - x / width * DZOOM / z * 2 * aspect;
 					self.camera.top = DZOOM / z + y / height * DZOOM / z * 2;
 					self.camera.bottom = -DZOOM / z + y / height * DZOOM / z * 2;
+
+					// after simplications
+					var c = 2
+					// self.camera.left = -DZOOM / z * aspect * (1 + c*x/width);
+					// self.camera.right = DZOOM / z * aspect * (1 - c*x/width);
+					// self.camera.top = DZOOM / z * (1 + c*y/height);
+					// self.camera.bottom = -DZOOM / z *(1 - c*y/height);
+
+
 					self.camera.updateProjectionMatrix();
 					// console.log(d3.event)
 
 					self.brush_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-
+					// self.brush_g.attr("transform", "scale(" + d3.event.scale + ")");
+					self.center.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+					// self.center.attr("transform", "scale(" + d3.event.scale + ")");
 					self.renderer.render( self.scene, self.camera )
 
 				}
 			});
-
-
+		console.log(zoom.size())
 		this.svg.call(zoom)
-
+		// d3.select(self.renderer.domElement).call(zoom)
+		// d3.select(self.renderer.domElement).call(self.brush)
 
 
 		d3.select(window).on("keydown", function(){
 			shiftKey = d3.event.shiftKey;
 			console.log('shiftKey pressed', shiftKey)
 			self.brush_g.style('pointer-events', 'all')
+			// d3.select(self.renderer.domElement).style('pointer-events', 'all')
 		})
 		d3.select(window).on("keyup", function(){
 			shiftKey = d3.event.shiftKey;
 			console.log('shiftKey depressed', shiftKey)
 			self.brush_g.style('pointer-events', 'none')
+			// d3.select(self.renderer.domElement).style('pointer-events', 'none')
 		})
 
 
@@ -613,9 +680,10 @@ var Scatter3dView = Backbone.View.extend({
 		$(window).on( 'resize', function(event){
 			self.WIDTH = $(self.container).width(); 
 			self.HEIGHT = $(self.container).height(); 
+			self.renderer.setSize(self.WIDTH, self.HEIGHT)
 			self.camera.aspect = self.WIDTH / self.HEIGHT;
 			self.camera.updateProjectionMatrix();
-			self.renderer.setSize(self.WIDTH, self.HEIGHT)
+			
 		});
 		
 	},
@@ -765,6 +833,7 @@ var Scatter3dView = Backbone.View.extend({
 			    y: geometry.attributes.position.array[idx*3+1],
 			    z: geometry.attributes.position.array[idx*3+2],
 			}
+			// console.log(pointPosition)
 
 			// add text canvas
 			var textCanvas = this.makeTextCanvas( geometry.attributes.label.array[idx], 
@@ -777,6 +846,8 @@ var Scatter3dView = Backbone.View.extend({
 			// geometry.computeBoundingSphere();
 		}
 
+		this.renderer.domElement.width = this.WIDTH
+		this.renderer.domElement.height = this.HEIGHT
 		this.renderer.render( this.scene, this.camera );
 
 		if (this.showStats){
