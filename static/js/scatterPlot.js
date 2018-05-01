@@ -441,6 +441,7 @@ var Scatter3dView = Backbone.View.extend({
 
 			self.listenTo(self.model, 'sync', function(){
 				console.log('model synced')
+
 				self.setUpStage();
 				// self.colorBy(self.colorKey);
 				self.shapeBy(self.shapeKey);
@@ -457,55 +458,61 @@ var Scatter3dView = Backbone.View.extend({
 		this.scene = new THREE.Scene();
 		// this.scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
 
-		this.renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
+		this.renderer = new THREE.WebGLRenderer({
+			// canvas: document.getElementById('renderer'),
+			alpha: true, antialias: true});
 		// this.renderer.setClearColor( this.scene.fog.color );
 		// this.renderer.setClearColor( 0xcccccc );
 		this.renderer.setClearColor( 0xffffff );
 		this.renderer.setPixelRatio( this.DPR );
-		this.renderer.setSize( this.WIDTH, this.HEIGHT );
+		this.renderer.setSize( this.WIDTH, this.HEIGHT, false );
 		console.log(this.WIDTH, this.HEIGHT)
 
 		if (this.is3d){
 			this.camera = new THREE.PerspectiveCamera( 70, this.aspectRatio, 0.01, 1000000 );
 			this.camera.position.z = this.pointSize * 120;
 		} else { // 2d
+			// This is the radius of the camera frustum
 			ORTHO_CAMERA_FRUSTUM_HALF_EXTENT = 11.5;
-			var left = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			var right = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			var bottom = -ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			var top = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			
-			// var left = 0;
-			// var right = 2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			// var bottom = -2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-			// var top = 0;
-
+			// This is the half range of the x, y coords for the visualization
+			// x -> [0, 20]
+			// y -> [0, 20]
+			COORDS_HALF_RANGE = 10 
+			// Decide camera frustum
+			var left = 0,
+				right = 2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT,
+				bottom = -2*ORTHO_CAMERA_FRUSTUM_HALF_EXTENT,
+				top = 0;
 			// Scale up the larger of (w, h) to match the aspect ratio.
 			var aspectRatio = this.aspectRatio;
 			if (aspectRatio > 1) {
 				left *= aspectRatio;
 				right *= aspectRatio;
+				var margin_x = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT*aspectRatio - COORDS_HALF_RANGE
+				var margin_y = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT - COORDS_HALF_RANGE
+				var pos_y = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT + COORDS_HALF_RANGE
 			} else {
 				top /= aspectRatio;
 				bottom /= aspectRatio;
+				var margin_x = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT - COORDS_HALF_RANGE
+				var margin_y = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT/aspectRatio - COORDS_HALF_RANGE
+				var pos_y = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT/aspectRatio + COORDS_HALF_RANGE
 			}
 			this.camera = new THREE.OrthographicCamera( left, right, top, bottom, -1000, 1000 );
+			// Decide camera position
+			var pos_x = -margin_x,
+				pos_z = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
+
+			this.camera.position.set(pos_x, pos_y, pos_z)
 			// this.camera.up = new THREE.Vector3(0,0,1)
 			// this.camera.lookAt(new THREE.Vector3(0,0,0));
-
-			// console.log(-ORTHO_CAMERA_FRUSTUM_HALF_EXTENT*aspectRatio, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT)
-			// this.camera.position.set(-ORTHO_CAMERA_FRUSTUM_HALF_EXTENT*aspectRatio, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT)
-			// this.camera.position.set(ORTHO_CAMERA_FRUSTUM_HALF_EXTENT*aspectRatio, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT)
-			// this.camera.position.set(0, -bottom, 20)
-			// this.camera.zoom = 0.1
-			// this.camera.position.set(ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, ORTHO_CAMERA_FRUSTUM_HALF_EXTENT, 20)
-
 		}
 
 		// Put the renderer's DOM into the container
 		this.renderer.domElement.id = "renderer";
 		// this.renderer.setSize( this.WIDTH, this.HEIGHT, false );
-		console.log(this.renderer.domElement.width, this.renderer.domElement.height)
+		// console.log(this.renderer.domElement.width, this.renderer.domElement.height)
+		// console.log(this.renderer.getSize())
 
 		this.container.appendChild( this.renderer.domElement );
 
@@ -516,7 +523,6 @@ var Scatter3dView = Backbone.View.extend({
 		var aspect = this.aspectRatio
 		var width = this.WIDTH
 		var height = this.HEIGHT
-		var DZOOM = 10
 
 		this.svg = d3.select("#body").append('svg')
 			.attr('id', 'brush')
@@ -525,23 +531,11 @@ var Scatter3dView = Backbone.View.extend({
 			.style('left', 0)
 			.style('top', 0)
 			.style('position', 'absolute')
-			// .style('z-index', -100)
-
-		// var xScale = d3.scale.linear()
-		// 	.domain([0, width])
-		// 	.range([-10, 10])
-		// var yScale = d3.scale.linear()
-		// 	.domain([height, 0])
-		// 	.range([-10, 10])
-
 
 		// brush
 		this.brush = d3.svg.brush()
-			.x(d3.scale.linear().range([-width, width]).domain([-10, 10]))
-			.y(d3.scale.linear().range([height, -height]).domain([-10, 10]))
-
-			// .x(d3.scale.linear().range([0, width]))
-			// .y(d3.scale.linear().range([height, 0]))
+			.x(d3.scale.linear().range([0, width]).domain([-margin_x, -margin_x + right]))
+			.y(d3.scale.linear().range([height, 0]).domain([-margin_y, -margin_y - bottom]))
 			.on('brushstart', function(){
 				if (!shiftKey) {
 					d3.event.target.clear();
@@ -557,8 +551,8 @@ var Scatter3dView = Backbone.View.extend({
 		function brushmove(){
 			if (shiftKey) {
 				var extent = self.brush.extent()
-				console.log(extent[0][0], extent[1][0])
-				console.log(extent[0][1], extent[1][1])
+				// console.log('x:',extent[0][0], extent[1][0])
+				// console.log('y:',extent[0][1], extent[1][1])
 				// find points intersecting with the brush box
 				var intersectingIdx = [];
 				for (var i = 0; i < self.clouds.length; i++) {
@@ -580,9 +574,7 @@ var Scatter3dView = Backbone.View.extend({
 			.attr('class', 'brush')
 			.call(self.brush)
 			.style('pointer-events', 'none')
-			// .style('position', 'absolute')
-			// .style('top', '0px')
-			// .style('left', '0px')
+
 		this.center = this.svg.append('circle')
 			.attr('cx', width/2)
 			.attr('cy', height/2)
@@ -595,49 +587,31 @@ var Scatter3dView = Backbone.View.extend({
 		// this.view = d3.select(this.renderer.domElement);
 		DZOOM = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT
 		zoom = d3.behavior.zoom().scaleExtent([0.2, 10])
-			// .x(d3.scale.linear().range([-width/2, width/2]).domain([-10, 10]))
-			// .y(d3.scale.linear().range([height/2, -height/2]).domain([-10, 10]))
-			.size([width, height])
+			// .center([width/2, height/2])
+			// .size([width, height])
 			.on('zoom', function() {
 				if (!shiftKey){
 					var x, y, z, _ref;
 					z = zoom.scale();
 					_ref = zoom.translate(), x = _ref[0], y = _ref[1];
-					console.log('zoom.translate:', x, y, 'zoom scale', z)
-					// console.log('width', width, 'height', height)
-					// console.log(self.renderer.domElement)
-					// x = x - width / 2;
-					// y = y - height / 2;
-					// y = y / aspect
-					self.camera.left = -DZOOM / z * aspect - x / width * DZOOM / z * 2 * aspect;
-					self.camera.right =  DZOOM / z * aspect - x / width * DZOOM / z * 2 * aspect;
-					self.camera.top = DZOOM / z + y / height * DZOOM / z * 2;
-					self.camera.bottom = -DZOOM / z + y / height * DZOOM / z * 2;
-
+					// console.log('zoom.translate:', x, y, 'zoom scale', z)
+					x = x - width / 2;
+					y = y - height / 2;
 					// after simplications
-					var c = 2
-					// self.camera.left = -DZOOM / z * aspect * (1 + c*x/width);
-					// self.camera.right = DZOOM / z * aspect * (1 - c*x/width);
-					// self.camera.top = DZOOM / z * (1 + c*y/height);
-					// self.camera.bottom = -DZOOM / z *(1 - c*y/height);
-
+					var c = 2 
+					self.camera.left = -DZOOM / z * aspect * (1 + c*x/width);
+					self.camera.right = DZOOM / z * aspect * (1 - c*x/width);
+					self.camera.top = DZOOM / z * (1 + c*y/height);
+					self.camera.bottom = -DZOOM / z *(1 - c*y/height);
 
 					self.camera.updateProjectionMatrix();
-					// console.log(d3.event)
 
 					self.brush_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-					// self.brush_g.attr("transform", "scale(" + d3.event.scale + ")");
 					self.center.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-					// self.center.attr("transform", "scale(" + d3.event.scale + ")");
 					self.renderer.render( self.scene, self.camera )
-
 				}
 			});
-		console.log(zoom.size())
 		this.svg.call(zoom)
-		// d3.select(self.renderer.domElement).call(zoom)
-		// d3.select(self.renderer.domElement).call(self.brush)
-
 
 		d3.select(window).on("keydown", function(){
 			shiftKey = d3.event.shiftKey;
@@ -651,9 +625,6 @@ var Scatter3dView = Backbone.View.extend({
 			self.brush_g.style('pointer-events', 'none')
 			// d3.select(self.renderer.domElement).style('pointer-events', 'none')
 		})
-
-
-
 
 		// set up raycaster, mouse
 		this.raycaster = new THREE.Raycaster();
@@ -683,7 +654,7 @@ var Scatter3dView = Backbone.View.extend({
 			self.renderer.setSize(self.WIDTH, self.HEIGHT)
 			self.camera.aspect = self.WIDTH / self.HEIGHT;
 			self.camera.updateProjectionMatrix();
-			
+			// TODO: update camera frustum, position and the x, y scales of the brush
 		});
 		
 	},

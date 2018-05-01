@@ -55,7 +55,7 @@ def load_cell_meta_from_file():
 
 
 def _minmax_scaling(arr):
-	scl = MinMaxScaler((-10, 10))
+	scl = MinMaxScaler((0, 20))
 	arr = scl.fit_transform(arr.reshape(-1, 1))
 	return arr[:, 0]
 
