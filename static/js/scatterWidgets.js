@@ -797,6 +797,93 @@ var ResultModal = Backbone.View.extend({
 
 });
 
+var BrushBtns = Backbone.View.extend({
+	// The buttons to toggle the modal of the selected samples by d3 brush
+	defaults: {
+		container: document.body,
+		scatterPlot: Scatter3dView,
+	},
+
+	initialize: function(options){
+		if (options === undefined) {options = {}}
+		_.defaults(options, this.defaults)
+		_.defaults(this, options)
+
+		this.model = this.scatterPlot.model;
+
+		this.listenTo(this.model, 'sync', this.render);
+		
+		this.listenTo(this.scatterPlot, 'brushended', this.show)
+	},
+
+	render: function(){
+		// set up the btn-group div
+		this.div = $('<div id="modal-btn" class="btn-group" role="group"></div>')
+		// set up the modal button
+		this.button = $('<a class="btn btn-outline-info">Show selected samples</a>');
+		// var modal_url = 'brush/modal/' + this.result_id;
+
+		this.button.click(function(e){
+			e.preventDefault();
+			$('#brush-modal').modal('show')
+			// $(".modal-body").load(modal_url);
+		});
+
+		var self = this;
+		// set up the clear btn
+		this.clearBtn = $('<a class="btn btn-outline-secondary">Clear</a>');
+		this.clearBtn.click(function(e){
+			e.preventDefault();
+			self.trigger('clearBrush');
+			self.hide();
+			self.scatterPlot.clearBrush();
+		})
+
+		this.hide()
+		this.div.append(this.button)
+		this.div.append(this.clearBtn)
+		$(this.container).append(this.div);
+	},
+
+	show: function(){
+		this.div.css('display', 'inherit')
+	},
+	hide: function(){
+		this.div.css('display', 'none')
+	}
+
+});
+
+var BrushModal = Backbone.View.extend({
+	// Used for toggling the mouseEvents of the scatterPlot.
+	defaults: {
+		scatterPlot: Scatter3dView,
+	},
+
+	initialize: function(options){
+		if (options === undefined) {options = {}}
+		_.defaults(options, this.defaults)
+		_.defaults(this, options)
+
+		this.model = this.scatterPlot.model;
+		this.listenTo(this.model, 'sync', this.toggleScatterPlotMouseEvents);
+
+	},
+
+	toggleScatterPlotMouseEvents: function(){
+		this.$el = $('#brush-modal');
+		var scatterPlot = this.scatterPlot;
+		this.$el.on('show.bs.modal', function(e){
+			scatterPlot.removeMouseEvents()
+		});
+		this.$el.on('hide.bs.modal', function(e){
+			scatterPlot.addMouseEvents()
+		});
+	},
+
+});
+
+
 var Overlay = Backbone.View.extend({
 	// An overlay to display current status.
 	tagName: 'div',

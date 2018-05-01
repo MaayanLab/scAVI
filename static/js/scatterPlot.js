@@ -464,7 +464,9 @@ var Scatter3dView = Backbone.View.extend({
 		// this.renderer.setClearColor( this.scene.fog.color );
 		// this.renderer.setClearColor( 0xcccccc );
 		this.renderer.setClearColor( 0xffffff );
-		this.renderer.setPixelRatio( this.DPR );
+		// Do not set DPR for now: https://github.com/mrdoob/three.js/issues/2833
+		// devices with DPR > 1 may experience poorer canvas qualities
+		// this.renderer.setPixelRatio( this.DPR );
 		this.renderer.setSize( this.WIDTH, this.HEIGHT, false );
 		console.log(this.WIDTH, this.HEIGHT)
 
@@ -517,7 +519,7 @@ var Scatter3dView = Backbone.View.extend({
 		this.container.appendChild( this.renderer.domElement );
 
 		var self = this;
-
+		// flag indicating whether shiftKey is pressed
 		var shiftKey = false;
 
 		var aspect = this.aspectRatio
@@ -537,19 +539,19 @@ var Scatter3dView = Backbone.View.extend({
 			.x(d3.scale.linear().range([0, width]).domain([-margin_x, -margin_x + right]))
 			.y(d3.scale.linear().range([height, 0]).domain([-margin_y, -margin_y - bottom]))
 			.on('brushstart', function(){
+				console.log('brushstart')
 				if (!shiftKey) {
 					d3.event.target.clear();
+					// clear previous brushed region
 					d3.select(this).call(self.brush.clear())
 				}
 			})
 			.on('brush', brushmove)
-			.on('brushend', function(){
-				d3.event.target.clear();
-				d3.select(this).call(self.brush.clear())
-			});
+			.on('brushend', brushend);
 
 		function brushmove(){
 			if (shiftKey) {
+				self.removeMouseEvents()
 				var extent = self.brush.extent()
 				// console.log('x:',extent[0][0], extent[1][0])
 				// console.log('y:',extent[0][1], extent[1][1])
@@ -565,6 +567,27 @@ var Scatter3dView = Backbone.View.extend({
 				}
 				self.renderer.render( self.scene, self.camera )
 
+			}
+		}
+
+		function brushend(){
+			var extent = self.brush.extent()
+			self.addMouseEvents()
+			// find points intersecting with the brush box
+			var intersectingIdx = [];
+			for (var i = 0; i < self.clouds.length; i++) {
+				var cloud = self.clouds[i]
+				var idx = cloud.intersectBox(extent);
+				intersectingIdx = intersectingIdx.concat(idx)
+				if (idx.length > 0) {
+					cloud.highlightIntersectedPoints(idx)
+				}
+			}
+			self.renderer.render( self.scene, self.camera )
+			// console.log('brushended', intersectingIdx)
+
+			if (intersectingIdx.length > 0){
+				self.trigger('brushended', intersectingIdx)
 			}
 		}
 
@@ -615,15 +638,15 @@ var Scatter3dView = Backbone.View.extend({
 
 		d3.select(window).on("keydown", function(){
 			shiftKey = d3.event.shiftKey;
-			console.log('shiftKey pressed', shiftKey)
-			self.brush_g.style('pointer-events', 'all')
-			// d3.select(self.renderer.domElement).style('pointer-events', 'all')
+			if (shiftKey){
+				self.brush_g.style('pointer-events', 'all')	
+			} else {
+				self.brush_g.style('pointer-events', 'none')
+			}
 		})
 		d3.select(window).on("keyup", function(){
 			shiftKey = d3.event.shiftKey;
-			console.log('shiftKey depressed', shiftKey)
 			self.brush_g.style('pointer-events', 'none')
-			// d3.select(self.renderer.domElement).style('pointer-events', 'none')
 		})
 
 		// set up raycaster, mouse
@@ -657,6 +680,10 @@ var Scatter3dView = Backbone.View.extend({
 			// TODO: update camera frustum, position and the x, y scales of the brush
 		});
 		
+	},
+
+	clearBrush: function(){
+		this.brush_g.call(this.brush.clear())
 	},
 
 	addMouseEvents: function(){

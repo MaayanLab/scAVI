@@ -29,7 +29,7 @@ var legend = new Legend({scatterPlot: sdv, h: window.innerHeight + 'px', contain
 
 var controler = new Controler({scatterPlot: sdv, h: window.innerHeight + 'px', w: '200px', container: container})
 
-
+// seletize(s) for searching single genes, pathways, gene-set libraries
 var geneSearchSelectize = new SearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
@@ -49,10 +49,8 @@ var libSearchSelectize = new LibSearchSelectize({
 	synonymsUrl: 'library/query'
 })
 
-// var sigSimSearch = new SigSimSearchForm({
-// 	scatterPlot: sdv, 
-// 	container: "#controls",
-// 	action: 'search/' + graph_name
-// })
+// DOMs for brush selection
+var brushModalBtn = new BrushBtns({scatterPlot: sdv, container: container})
+var brushModal = new BrushModal({scatterPlot: sdv});
 
 var overlay = new Overlay({scatterPlot: sdv})
