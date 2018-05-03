@@ -802,6 +802,7 @@ var BrushBtns = Backbone.View.extend({
 	defaults: {
 		container: document.body,
 		scatterPlot: Scatter3dView,
+		modal_url: null,
 	},
 
 	initialize: function(options){
@@ -824,12 +825,15 @@ var BrushBtns = Backbone.View.extend({
 		this.div = $('<div id="modal-btn" class="btn-group" role="group"></div>')
 		// set up the modal button
 		this.button = $('<a class="btn btn-outline-info">Show selected samples</a>');
-		// var modal_url = 'brush/modal/' + this.result_id;
+		var self = this;
 
 		this.button.click(function(e){
 			e.preventDefault();
 			$('#brush-modal').modal('show')
-			// $(".modal-body").load(modal_url);
+			if ($('.modal-body').is(':empty')){
+				// load content when modal-body is empty
+				$(".modal-body").load(self.modal_url);
+			}
 
 		});
 
@@ -860,7 +864,9 @@ var BrushBtns = Backbone.View.extend({
 	brushended: function(ids){
 		// show the buttons and POST the sample_ids to the 
 		// server to get the url for the modal.
-		this.show()
+		this.show();
+		$('.modal-body').empty();
+		var self = this;
 		$.ajax({
 			method: 'POST',
 			url: 'brush',
@@ -868,10 +874,10 @@ var BrushBtns = Backbone.View.extend({
 			data: JSON.stringify({ids: ids}),
 			dataType: 'json',
 			success: function(resp_data){
-				var modal_url = 'brush/' + resp_data.hash;
-				console.log(modal_url)
-				console.log(resp_data.hash.length)
-				$('.modal-body').load(modal_url)
+				self.modal_url = 'brush/' + resp_data.hash;
+				// $(".modal-body").load(self.modal_url);
+				// console.log(modal_url)
+				// console.log(resp_data.hash.length)
 			}
 		})
 	}

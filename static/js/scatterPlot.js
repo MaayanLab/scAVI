@@ -551,7 +551,7 @@ var Scatter3dView = Backbone.View.extend({
 
 		function brushmove(){
 			if (shiftKey) {
-				self.removeMouseEvents()
+				// self.removeMouseEvents()
 				var extent = self.brush.extent()
 				// console.log('x:',extent[0][0], extent[1][0])
 				// console.log('y:',extent[0][1], extent[1][1])
@@ -572,7 +572,7 @@ var Scatter3dView = Backbone.View.extend({
 
 		function brushend(){
 			var extent = self.brush.extent()
-			self.addMouseEvents()
+			// self.addMouseEvents()
 			// find points intersecting with the brush box
 			var intersectingIds = []; // this collects the 'id' attributes
 			for (var i = 0; i < self.clouds.length; i++) {
@@ -594,7 +594,6 @@ var Scatter3dView = Backbone.View.extend({
 			self.renderer.render( self.scene, self.camera )
 
 			if (intersectingIds.length > 0){
-				console.log('brushended', intersectingIds)
 				self.trigger('brushended', intersectingIds)
 			}
 		}
@@ -606,12 +605,11 @@ var Scatter3dView = Backbone.View.extend({
 			.call(self.brush)
 			.style('pointer-events', 'none')
 
-		this.center = this.svg.append('circle')
-			.attr('cx', width/2)
-			.attr('cy', height/2)
-			.attr('r', 10)
-			.style('fill', 'red')
-
+		// this.center = this.svg.append('circle')
+		// 	.attr('cx', width/2)
+		// 	.attr('cy', height/2)
+		// 	.attr('r', 10)
+		// 	.style('fill', 'red')
 
 		// zoom and pan using d3
 		// http://bl.ocks.org/nitaku/b25e6f091e97667c6cae/569c5da78cf5c51577981a7e4d9f2dc6252dbeed
@@ -638,7 +636,7 @@ var Scatter3dView = Backbone.View.extend({
 					self.camera.updateProjectionMatrix();
 
 					self.brush_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-					self.center.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+					// self.center.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 					self.renderer.render( self.scene, self.camera )
 				}
 			});
