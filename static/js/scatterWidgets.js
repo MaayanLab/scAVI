@@ -813,7 +813,10 @@ var BrushBtns = Backbone.View.extend({
 
 		this.listenTo(this.model, 'sync', this.render);
 		
-		this.listenTo(this.scatterPlot, 'brushended', this.show)
+		var self = this;
+		this.listenTo(this.scatterPlot, 'brushended', function(ids){
+			self.brushended(ids)
+		})
 	},
 
 	render: function(){
@@ -827,6 +830,7 @@ var BrushBtns = Backbone.View.extend({
 			e.preventDefault();
 			$('#brush-modal').modal('show')
 			// $(".modal-body").load(modal_url);
+
 		});
 
 		var self = this;
@@ -848,8 +852,28 @@ var BrushBtns = Backbone.View.extend({
 	show: function(){
 		this.div.css('display', 'inherit')
 	},
+
 	hide: function(){
 		this.div.css('display', 'none')
+	},
+
+	brushended: function(ids){
+		// show the buttons and POST the sample_ids to the 
+		// server to get the url for the modal.
+		this.show()
+		$.ajax({
+			method: 'POST',
+			url: 'brush',
+			contentType: 'application/json',
+			data: JSON.stringify({ids: ids}),
+			dataType: 'json',
+			success: function(resp_data){
+				var modal_url = 'brush/' + resp_data.hash;
+				console.log(modal_url)
+				console.log(resp_data.hash.length)
+				$('.modal-body').load(modal_url)
+			}
+		})
 	}
 
 });

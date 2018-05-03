@@ -216,6 +216,61 @@ def sample_landing_page(sample_id):
 		graphs=graphs,
 		)
 
+
+'''
+Endpoints for brush selection
+'''
+@app.route(ENTER_POINT + '/brush', methods=['POST'])
+def encrypt_sample_ids():
+	if request.method == 'POST':
+		req_data = json.loads(request.data)
+		# print req_data
+		sample_ids = req_data['ids']
+		sample_ids_str = ','.join(sorted(sample_ids))
+		sample_ids_hash = encrypt.aes_encrypt(sample_ids_str)
+		return jsonify({'hash': sample_ids_hash})
+
+@app.route(ENTER_POINT + '/brush/<string:sample_ids_hash>', methods=['GET'])
+def decrypt_sample_ids(sample_ids_hash):
+	'''Decrypt sample_ids from the hash then render template for the brush modal.
+	'''
+	sample_ids = encrypt.aes_decrypt(sample_ids_hash).split(',')
+
+	samples_meta = meta_df.loc[sample_ids]
+
+	# pick to top expressed genes
+	sorted_zscores = zscores_df[sample_ids].median(axis=1).sort_values()
+	top_up_genes = sorted_zscores[-20:][::-1].index
+	top_dn_genes = sorted_zscores[:20][::-1].index
+	top_genes = list(top_up_genes) + list(top_dn_genes)
+	top_genes_zscores_df = zscores_df.loc[top_genes, sample_ids]
+
+	# prepare enrichment
+	enrichment = {}
+	for lib in d_lib_combined_score_df:
+
+		sorted_scores = d_lib_combined_score_df[lib][sample_ids].median(axis=1).sort_values(ascending=False)
+		top_terms = sorted_scores[:10].index
+		top_terms_scores_df = d_lib_combined_score_df[lib].loc[top_terms, sample_ids]
+		top_terms_scores = top_terms_scores_df.transpose().melt().to_dict(orient='list') # {term: [values]}
+		enrichment[lib] = top_terms_scores
+
+	# assert 1== 2
+	plot_data = { 
+		'samples_meta': samples_meta.to_dict(orient='list'),
+		'genes': top_genes_zscores_df.transpose().melt().to_dict(orient='list'), # {'gene': [genes], 'value': [values]}
+		'enrichment' : enrichment,
+	}
+
+	return render_template('brush-modal.html',
+		meta_df=meta_df.loc[sample_ids],
+		plot_data=json.dumps(plot_data),
+		ENTER_POINT=ENTER_POINT,
+		)
+
+
+
+
 from jinja2 import Markup
 app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])
 

@@ -574,20 +574,28 @@ var Scatter3dView = Backbone.View.extend({
 			var extent = self.brush.extent()
 			self.addMouseEvents()
 			// find points intersecting with the brush box
-			var intersectingIdx = [];
+			var intersectingIds = []; // this collects the 'id' attributes
 			for (var i = 0; i < self.clouds.length; i++) {
 				var cloud = self.clouds[i]
+				var sample_ids = cloud.geometry.getAttribute('id').array
 				var idx = cloud.intersectBox(extent);
-				intersectingIdx = intersectingIdx.concat(idx)
+				var ids = []; // collects 'id' attributes from this cloud
+
+				for (var j = 0; j < idx.length; j++) {
+					var id = sample_ids[ [idx[j]] ];
+					ids.push(id)
+				}
+
+				intersectingIds = intersectingIds.concat(ids)
 				if (idx.length > 0) {
 					cloud.highlightIntersectedPoints(idx)
 				}
 			}
 			self.renderer.render( self.scene, self.camera )
-			// console.log('brushended', intersectingIdx)
 
-			if (intersectingIdx.length > 0){
-				self.trigger('brushended', intersectingIdx)
+			if (intersectingIds.length > 0){
+				console.log('brushended', intersectingIds)
+				self.trigger('brushended', intersectingIds)
 			}
 		}
 
