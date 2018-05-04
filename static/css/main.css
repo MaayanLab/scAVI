@@ -174,12 +174,6 @@ text.legendTitle{
   min-width: 200px;
 }
 
-.alert-info {
-  color: black;
-  background-color: #f8f8f8;
-  border-color: #e7e7e7;
-}
-
 .sig-name{
   color: red;
 }

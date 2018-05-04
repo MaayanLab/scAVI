@@ -520,7 +520,7 @@ var Scatter3dView = Backbone.View.extend({
 
 		var self = this;
 		// flag indicating whether shiftKey is pressed
-		var shiftKey = false;
+		shiftKey = false;
 
 		var aspect = this.aspectRatio
 		var width = this.WIDTH
@@ -690,6 +690,7 @@ var Scatter3dView = Backbone.View.extend({
 
 	clearBrush: function(){
 		this.brush_g.call(this.brush.clear())
+			.style('pointer-events', 'none')
 	},
 
 	addMouseEvents: function(){
