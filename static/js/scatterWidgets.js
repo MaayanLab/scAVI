@@ -837,7 +837,6 @@ var BrushBtns = Backbone.View.extend({
 
 		});
 
-		var self = this;
 		// set up the clear btn
 		this.clearBtn = $('<a class="btn btn-outline-secondary">Clear</a>');
 		this.clearBtn.click(function(e){
@@ -876,8 +875,6 @@ var BrushBtns = Backbone.View.extend({
 			success: function(resp_data){
 				self.modal_url = 'brush/' + resp_data.hash;
 				// $(".modal-body").load(self.modal_url);
-				// console.log(modal_url)
-				// console.log(resp_data.hash.length)
 			}
 		})
 	}
@@ -910,6 +907,42 @@ var BrushModal = Backbone.View.extend({
 			scatterPlot.addMouseEvents()
 		});
 	},
+
+});
+
+var BrushController = Backbone.View.extend({
+	// Used for enabling and disabling brush selection.
+	defaults: {
+		container: document.body,
+		scatterPlot: Scatter3dView,
+	},
+
+	initialize: function(options){
+		if (options === undefined) {options = {}}
+		_.defaults(options, this.defaults)
+		_.defaults(this, options)
+
+		this.model = this.scatterPlot.model;
+		this.listenTo(this.model, 'sync', this.render);
+	},
+
+	render: function(){
+		this.button = $('<button class="btn btn-info btn-sm" data-toggle="button" aria-pressed="false"><i class="fas fa-crosshairs"></i>Select samples</button>');
+		this.button.click(function(e){
+			e.preventDefault()
+			if (self.sdv.shiftKey){
+				self.sdv.disableBrush()
+			} else {
+				self.sdv.enableBrush()
+			}
+		});
+		$(this.container).append(this.button);
+	},
+
+	depress: function(){
+		this.button.attr('aria-pressed', 'false')
+		this.button.removeClass('active')
+	}
 
 });
 

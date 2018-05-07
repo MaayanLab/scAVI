@@ -520,7 +520,7 @@ var Scatter3dView = Backbone.View.extend({
 
 		var self = this;
 		// flag indicating whether shiftKey is pressed
-		shiftKey = false;
+		this.shiftKey = false;
 
 		var aspect = this.aspectRatio
 		var width = this.WIDTH
@@ -539,8 +539,8 @@ var Scatter3dView = Backbone.View.extend({
 			.x(d3.scale.linear().range([0, width]).domain([-margin_x, -margin_x + right]))
 			.y(d3.scale.linear().range([height, 0]).domain([-margin_y, -margin_y - bottom]))
 			.on('brushstart', function(){
-				console.log('brushstart')
-				if (!shiftKey) {
+				// console.log('brushstart')
+				if (!self.shiftKey) {
 					d3.event.target.clear();
 					// clear previous brushed region
 					d3.select(this).call(self.brush.clear())
@@ -550,7 +550,7 @@ var Scatter3dView = Backbone.View.extend({
 			.on('brushend', brushend);
 
 		function brushmove(){
-			if (shiftKey) {
+			if (self.shiftKey) {
 				// self.removeMouseEvents()
 				var extent = self.brush.extent()
 				// console.log('x:',extent[0][0], extent[1][0])
@@ -619,7 +619,7 @@ var Scatter3dView = Backbone.View.extend({
 			// .center([width/2, height/2])
 			// .size([width, height])
 			.on('zoom', function() {
-				if (!shiftKey){
+				if (!self.shiftKey){
 					var x, y, z, _ref;
 					z = zoom.scale();
 					_ref = zoom.translate(), x = _ref[0], y = _ref[1];
@@ -641,19 +641,6 @@ var Scatter3dView = Backbone.View.extend({
 				}
 			});
 		this.svg.call(zoom)
-
-		d3.select(window).on("keydown", function(){
-			shiftKey = d3.event.shiftKey;
-			if (shiftKey){
-				self.brush_g.style('pointer-events', 'all')	
-			} else {
-				self.brush_g.style('pointer-events', 'none')
-			}
-		})
-		d3.select(window).on("keyup", function(){
-			shiftKey = d3.event.shiftKey;
-			self.brush_g.style('pointer-events', 'none')
-		})
 
 		// set up raycaster, mouse
 		this.raycaster = new THREE.Raycaster();
@@ -688,7 +675,18 @@ var Scatter3dView = Backbone.View.extend({
 		
 	},
 
+	enableBrush: function(){
+		this.shiftKey = true
+		this.brush_g.style('pointer-events', 'all')
+	},
+
+	disableBrush: function(){
+		this.shiftKey = false
+		this.brush_g.style('pointer-events', 'none')
+	},
+
 	clearBrush: function(){
+		this.shiftKey = false
 		this.brush_g.call(this.brush.clear())
 			.style('pointer-events', 'none')
 	},

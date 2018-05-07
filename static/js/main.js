@@ -50,7 +50,10 @@ var libSearchSelectize = new LibSearchSelectize({
 })
 
 // DOMs for brush selection
+var brushController = new BrushController({scatterPlot: sdv, container: "#controls"})
 var brushModalBtn = new BrushBtns({scatterPlot: sdv, container: container})
 var brushModal = new BrushModal({scatterPlot: sdv});
+
+brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)
 
 var overlay = new Overlay({scatterPlot: sdv})
