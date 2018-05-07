@@ -6,7 +6,13 @@
 		<dt class="col-3">Number of samples</dt>
 		<dd class="col-9">{{ meta_df.shape[0] }}</dd>
 		<dt class="col-3">Sample IDs</dt>
-		<dd class="col-9"><textarea>{{ meta_df.index.tolist()|join(', ') }}</textarea></dd>
+		<dd class="col-9">
+      <p>
+      {% for sample_id in meta_df.index.tolist() %}
+        <a href="sample/{{sample_id}}" target="_blank">{{ sample_id }}</a> 
+      {% endfor %}
+      </p>
+    </dd>
 	</dl>
 	<div class="row">
 		<h3>Samples meta</h3>
