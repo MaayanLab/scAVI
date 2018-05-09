@@ -49,10 +49,11 @@ var libSearchSelectize = new LibSearchSelectize({
 	synonymsUrl: 'library/query/' + dataset_id
 })
 
-// var sigSimSearch = new SigSimSearchForm({
-// 	scatterPlot: sdv, 
-// 	container: "#controls",
-// 	action: 'search/' + graph_name
-// })
+// DOMs for brush selection
+var brushController = new BrushController({scatterPlot: sdv, container: "#controls"})
+var brushModalBtn = new BrushBtns({scatterPlot: sdv, container: container})
+var brushModal = new BrushModal({scatterPlot: sdv});
+
+brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)
 
 var overlay = new Overlay({scatterPlot: sdv})

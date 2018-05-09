@@ -312,30 +312,14 @@ var SearchSelectize = Backbone.View.extend({
 			}
 			});
 
-		// The button to clear highlighted points
-		this.btn = $('<button class="btn btn-default btn-xs">Clear</button>').click(function(e){
-			self.scatterPlot.removeHighlightedPoints();
-			self.hideButton();
-		});
-		$(this.container).append(this.btn);
-		this.hideButton();
-
 		// on change, trigger('searched', query)
 		this.$el[0].selectize.on('change', function(value){
 			if (value !== ''){
 				self.trigger('searched', value);
-				self.showButton();
 			}
 		});
 	},
 
-	showButton: function(){
-		this.btn.show();
-	},
-
-	hideButton: function(){
-		this.btn.hide();
-	},
 });
 
 
@@ -427,27 +411,12 @@ var TermSearchSelectize = Backbone.View.extend({
 			self.$el[0].selectize.on('change', function(value){
 				if (value !== ''){
 					self.trigger('searched', value);
-					self.showButton();
 				}
 			});
 		});
 
-		// The button to clear highlighted points
-		this.btn = $('<button class="btn btn-default btn-xs">Clear</button>').click(function(e){
-			self.scatterPlot.removeHighlightedPoints();
-			self.hideButton();
-		});
-		$(this.container).append(this.btn);
-		this.hideButton();
 	},
 
-	showButton: function(){
-		this.btn.show();
-	},
-
-	hideButton: function(){
-		this.btn.hide();
-	},
 });
 
 var LibSearchSelectize = Backbone.View.extend({
@@ -521,30 +490,14 @@ var LibSearchSelectize = Backbone.View.extend({
 			}
 			});
 
-		// The button to clear highlighted points
-		this.btn = $('<button class="btn btn-default btn-xs">Clear</button>').click(function(e){
-			self.scatterPlot.removeHighlightedPoints();
-			self.hideButton();
-		});
-		$(this.container).append(this.btn);
-		this.hideButton();
-
 		// on change, trigger('searched', query)
 		this.$el[0].selectize.on('change', function(value){
 			if (value !== ''){
 				self.trigger('searched', value);
-				self.showButton();
 			}
 		});
 	},
 
-	showButton: function(){
-		this.btn.show();
-	},
-
-	hideButton: function(){
-		this.btn.hide();
-	},
 });
 
 var SigSimSearch = Backbone.View.extend({
@@ -843,6 +796,156 @@ var ResultModal = Backbone.View.extend({
 	},
 
 });
+
+var BrushBtns = Backbone.View.extend({
+	// The buttons to toggle the modal of the selected samples by d3 brush
+	defaults: {
+		container: document.body,
+		scatterPlot: Scatter3dView,
+		modal_url: null,
+	},
+
+	initialize: function(options){
+		if (options === undefined) {options = {}}
+		_.defaults(options, this.defaults)
+		_.defaults(this, options)
+
+		this.model = this.scatterPlot.model;
+
+		this.listenTo(this.model, 'sync', this.render);
+		
+		var self = this;
+		this.listenTo(this.scatterPlot, 'brushended', function(ids){
+			self.brushended(ids)
+		})
+	},
+
+	render: function(){
+		// set up the btn-group div
+		this.div = $('<div id="modal-btn" class="btn-group" role="group"></div>')
+		// set up the modal button
+		this.button = $('<a class="btn btn-outline-info">Show selected samples</a>');
+		var self = this;
+
+		this.button.click(function(e){
+			e.preventDefault();
+			$('#brush-modal').modal('show')
+			if ($('.modal-body').is(':empty')){
+				// load content when modal-body is empty
+				$(".modal-body").load(self.modal_url);
+			}
+
+		});
+
+		// set up the clear btn
+		this.clearBtn = $('<a class="btn btn-outline-secondary">Clear</a>');
+		this.clearBtn.click(function(e){
+			e.preventDefault();
+			self.trigger('clearBrush');
+			self.hide();
+			self.scatterPlot.clearBrush();
+		})
+
+		this.hide()
+		this.div.append(this.button)
+		this.div.append(this.clearBtn)
+		$(this.container).append(this.div);
+	},
+
+	show: function(){
+		this.div.css('display', 'inherit')
+	},
+
+	hide: function(){
+		this.div.css('display', 'none')
+	},
+
+	brushended: function(ids){
+		// show the buttons and POST the sample_ids to the 
+		// server to get the url for the modal.
+		this.show();
+		$('.modal-body').empty();
+		var self = this;
+		$.ajax({
+			method: 'POST',
+			url: 'brush',
+			contentType: 'application/json',
+			data: JSON.stringify({ids: ids}),
+			dataType: 'json',
+			success: function(resp_data){
+				self.modal_url = 'brush/' + resp_data.hash;
+				// $(".modal-body").load(self.modal_url);
+			}
+		})
+	}
+
+});
+
+var BrushModal = Backbone.View.extend({
+	// Used for toggling the mouseEvents of the scatterPlot.
+	defaults: {
+		scatterPlot: Scatter3dView,
+	},
+
+	initialize: function(options){
+		if (options === undefined) {options = {}}
+		_.defaults(options, this.defaults)
+		_.defaults(this, options)
+
+		this.model = this.scatterPlot.model;
+		this.listenTo(this.model, 'sync', this.toggleScatterPlotMouseEvents);
+
+	},
+
+	toggleScatterPlotMouseEvents: function(){
+		this.$el = $('#brush-modal');
+		var scatterPlot = this.scatterPlot;
+		this.$el.on('show.bs.modal', function(e){
+			scatterPlot.removeMouseEvents()
+		});
+		this.$el.on('hide.bs.modal', function(e){
+			scatterPlot.addMouseEvents()
+		});
+	},
+
+});
+
+var BrushController = Backbone.View.extend({
+	// Used for enabling and disabling brush selection.
+	defaults: {
+		container: document.body,
+		scatterPlot: Scatter3dView,
+	},
+
+	initialize: function(options){
+		if (options === undefined) {options = {}}
+		_.defaults(options, this.defaults)
+		_.defaults(this, options)
+
+		this.model = this.scatterPlot.model;
+		this.listenTo(this.model, 'sync', this.render);
+	},
+
+	render: function(){
+		this.button = $('<button class="btn btn-info btn-sm" data-toggle="button" aria-pressed="false"><i class="fas fa-crosshairs"></i>Select samples</button>');
+		this.button.click(function(e){
+			e.preventDefault()
+			if (self.sdv.shiftKey){
+				self.sdv.disableBrush()
+			} else {
+				self.sdv.enableBrush()
+			}
+		});
+		$(this.container).append(this.button);
+	},
+
+	depress: function(){
+		this.button.attr('aria-pressed', 'false')
+		this.button.removeClass('active')
+	}
+
+});
+
 
 var Overlay = Backbone.View.extend({
 	// An overlay to display current status.

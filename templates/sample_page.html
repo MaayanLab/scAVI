@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<style type="text/css">
+#gene-chart {
+  min-width: 310px; 
+  max-width: 800px; 
+  min-height: 600px; 
+  margin: 0 auto;
+}
+#enrichr-chart {
+  min-width: 310px; 
+  max-width: 800px; 
+  min-height: 500px; 
+  margin: 0 auto;
+}
+</style>
+
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-10">
+
+      <div class="row">
+        <h1>Sample {{sample_meta['sample_id'] }}</h1>
+        <dl class="row">
+          {% for key, val in sample_meta.items() %}
+          <dt class="col-sm-3">{{ key }}</dt>
+          <dd class="col-sm-9">{{ val }}</dd>
+          {% endfor %}
+        </dl>
+      </div>
+
+      <div class="row">
+        <h1>Gene expression</h1>
+      </div>
+      <div class="row" id="gene-chart"></div>
+      <button id="gene-btn" class="btn btn-outline-info">Toggle CPM/Z-score</button>
+
+      <div class="row">
+        <h1>Enrichment analysis</h1>
+      </div>
+      
+      <select id="enrichr-select" class="selectpicker" data-style="btn btn-outline-info"></select>
+      <div class="row" id="enrichr-chart"></div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="node_modules/highcharts/highcharts.js"></script>
+<script src="node_modules/highcharts/modules/exporting.js"></script>
+<script src="node_modules/highcharts/modules/export-data.js"></script>
+
+<script type="text/javascript">
+  var sample_data = {{ sample_data|safe }};
+</script>
+<script src="js/sample_page.js"></script>
+{% endblock %}

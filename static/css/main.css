@@ -172,6 +172,12 @@ text.legendTitle{
   float: none;
 }
 
+.brush {
+  fill-opacity: .1;
+  stroke: #fff;
+  shape-rendering: crispEdges;
+}
+
 #footer {
   background-color: #f8f8f8;
   border-top: solid #e7e7e7;
@@ -201,12 +207,6 @@ text.legendTitle{
 .tooltip-inner {
   white-space: pre-wrap;
   min-width: 200px;
-}
-
-.alert-info {
-  color: black;
-  background-color: #f8f8f8;
-  border-color: #e7e7e7;
 }
 
 .sig-name{

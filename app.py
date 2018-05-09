@@ -269,6 +269,55 @@ def retrieve_library_top_terms(dataset_id, library):
 	return jsonify(doc)
 
 
+'''
+Pages for samples
+'''
+@app.route(ENTER_POINT + '/sample/<string:sample_id>', methods=['GET'])
+def sample_landing_page(sample_id):
+	# find the dataset id using the sample_id
+	dataset_id = mongo.db['dataset'].find_one({'sample_ids': sample_id}, {'id':True, '_id':False})['id']
+
+	if dataset_id.startswith('GSE'):
+		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+	else:
+		gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
+	# prepare meta
+	sample_meta = gds.meta_df.loc[sample_id]#.to_dict()
+	sample_meta['sample_id'] = sample_id
+
+	# get the idx of the sample in the dataset
+	idx = gds.sample_ids.tolist().index(sample_id)
+
+	# prepare gene expression
+	cur = mongo.db['expression'].find(
+		{'dataset_id': dataset_id},
+		{'gene':True, 'values': {'$slice':[idx, 1]}}
+	)
+	
+	recs = [{'gene':doc['gene'], 'val': doc['values'][0]} for doc in cur]
+	sorted_zscores = pd.DataFrame.from_records(recs).sort_values('val')
+
+	top_up_genes = sorted_zscores[-20:][::-1].to_dict(orient='records')
+	top_dn_genes = sorted_zscores[:20][::-1].to_dict(orient='records')
+
+	# # prepare enrichment
+	# enrichment = {}
+	# for lib in d_lib_combined_score_df:
+	# 	top_terms = d_lib_combined_score_df[lib][sample_id].sort_values(ascending=False)[:10]
+	# 	top_terms = [{'term':term, 'score':score} for term, score in top_terms.iteritems()]
+	# 	enrichment[lib] = top_terms
+
+	sample_data = {
+		'genes': 	top_up_genes + top_dn_genes,
+		# 'enrichment': enrichment
+	}
+	return render_template('sample_page.html', 
+		sample_meta=sample_meta,
+		sample_data=json.dumps(sample_data),
+		ENTER_POINT=ENTER_POINT,
+		)
+
+
 
 '''
 Error handlers.

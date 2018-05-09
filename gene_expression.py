@@ -9,6 +9,7 @@ import h5py
 import requests
 import numpy as np
 import pandas as pd
+from bson.codec_options import CodecOptions
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -145,7 +146,8 @@ class GeneExpressionDataset(object):
 		else:
 			doc = db[self.coll].find_one({'id': self.id},
 				{'d_sample_userListId':True, '_id':False},
-				as_class=OrderedDict
+				# as_class=OrderedDict
+				codec_options=CodecOptions(OrderedDict)
 				)
 			d_sample_userListId = doc['d_sample_userListId']
 
