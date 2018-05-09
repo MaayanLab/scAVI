@@ -5,25 +5,6 @@ The models and views for the scatter plot.
 function isInt(n){
     return Number(n) === n && n % 1 === 0;
 }
-// From https://github.com/anvaka/three.map.control, used for panning
-function getCurrentScale() {
-  var vFOV = camera.fov * Math.PI / 180
-  var scale_height = 2 * Math.tan( vFOV / 2 ) * camera.position.z
-  var currentScale = height / scale_height
-  return currentScale
-}
-
-// Point generator function
-function phyllotaxis(radius) {
-  const theta = Math.PI * (3 - Math.sqrt(5));
-  return function(i) {
-    const r = radius * Math.sqrt(i), a = theta * i;
-    return [
-      width / 2 + r * Math.cos(a) - width / 2,
-      height / 2 + r * Math.sin(a) - height / 2
-    ];
-  };
-}
 
 function getType(n){
 	var type = typeof n;
