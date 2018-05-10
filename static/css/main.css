@@ -90,14 +90,6 @@ text.legendTitle{
   font-size: 16px;
 }
 
-#footer {
-  position: absolute;
-  left: 0;
-  top: 120%;
-  bottom: 0;
-  height: 210px;
-  width: 100%;
-}
 #header {
   background-color: #ddd;
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);

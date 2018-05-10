@@ -74,20 +74,20 @@ var chart = new Highcharts.chart('gene-chart', {
 });
 chart.addSeries(gene_series_z)
 
-$("#gene-btn").click(function(){
-  var currentAttr = chart.yAxis[0].axisTitle.textStr;
-  if (currentAttr == 'z-score'){ // switch to CPM
-    chart.series[0].remove(false)
-    chart.addSeries(gene_series_cpm, false)
-    chart.setTitle({text: 'Absolute expression'}, false)
-    chart.yAxis[0].setTitle({text:'CPM'}, true);
-  }else{
-    chart.series[0].remove(false)
-    chart.addSeries(gene_series_z, false)
-    chart.setTitle({text: 'Relative expression'}, false)
-    chart.yAxis[0].setTitle({text:'z-score'}, true);
-  }
-})
+// $("#gene-btn").click(function(){
+//   var currentAttr = chart.yAxis[0].axisTitle.textStr;
+//   if (currentAttr == 'z-score'){ // switch to CPM
+//     chart.series[0].remove(false)
+//     chart.addSeries(gene_series_cpm, false)
+//     chart.setTitle({text: 'Absolute expression'}, false)
+//     chart.yAxis[0].setTitle({text:'CPM'}, true);
+//   }else{
+//     chart.series[0].remove(false)
+//     chart.addSeries(gene_series_z, false)
+//     chart.setTitle({text: 'Relative expression'}, false)
+//     chart.yAxis[0].setTitle({text:'z-score'}, true);
+//   }
+// })
 
 
 // Parse data for Enrichment bar plot

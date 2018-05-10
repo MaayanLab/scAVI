@@ -293,23 +293,27 @@ def sample_landing_page(sample_id):
 		{'dataset_id': dataset_id},
 		{'gene':True, 'values': {'$slice':[idx, 1]}}
 	)
-	
+
 	recs = [{'gene':doc['gene'], 'val': doc['values'][0]} for doc in cur]
 	sorted_zscores = pd.DataFrame.from_records(recs).sort_values('val')
 
 	top_up_genes = sorted_zscores[-20:][::-1].to_dict(orient='records')
 	top_dn_genes = sorted_zscores[:20][::-1].to_dict(orient='records')
 
-	# # prepare enrichment
-	# enrichment = {}
-	# for lib in d_lib_combined_score_df:
-	# 	top_terms = d_lib_combined_score_df[lib][sample_id].sort_values(ascending=False)[:10]
-	# 	top_terms = [{'term':term, 'score':score} for term, score in top_terms.iteritems()]
-	# 	enrichment[lib] = top_terms
+	# prepare enrichment
+	enrichment = {}
+	cur = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
+		{'gene_set_library':True, 'scores': True, '_id':False})
+	for doc in cur:
+		lib = doc['gene_set_library']
+		recs = [{'term': term, 'score': scores[idx]} for term, scores in doc['scores'].iteritems()]
+		sorted_scores = pd.DataFrame.from_records(recs).sort_values('score', na_position='first')
+		top_terms = sorted_scores[-10:][::-1].to_dict(orient='records')
+		enrichment[lib] = top_terms
 
 	sample_data = {
 		'genes': 	top_up_genes + top_dn_genes,
-		# 'enrichment': enrichment
+		'enrichment': enrichment
 	}
 	return render_template('sample_page.html', 
 		sample_meta=sample_meta,
