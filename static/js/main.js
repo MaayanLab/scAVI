@@ -51,7 +51,7 @@ var libSearchSelectize = new LibSearchSelectize({
 
 // DOMs for brush selection
 var brushController = new BrushController({scatterPlot: sdv, container: "#controls"})
-var brushModalBtn = new BrushBtns({scatterPlot: sdv, container: container})
+var brushModalBtn = new BrushBtns({scatterPlot: sdv, container: container, base_url: 'brush/'+dataset_id})
 var brushModal = new BrushModal({scatterPlot: sdv});
 
 brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)

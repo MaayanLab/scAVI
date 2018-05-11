@@ -803,6 +803,7 @@ var BrushBtns = Backbone.View.extend({
 		container: document.body,
 		scatterPlot: Scatter3dView,
 		modal_url: null,
+		base_url: 'brush/'
 	},
 
 	initialize: function(options){
@@ -868,12 +869,12 @@ var BrushBtns = Backbone.View.extend({
 		var self = this;
 		$.ajax({
 			method: 'POST',
-			url: 'brush',
+			url: self.base_url,
 			contentType: 'application/json',
 			data: JSON.stringify({ids: ids}),
 			dataType: 'json',
 			success: function(resp_data){
-				self.modal_url = 'brush/' + resp_data.hash;
+				self.modal_url = self.base_url + '/' + resp_data.hash;
 				// $(".modal-body").load(self.modal_url);
 			}
 		})

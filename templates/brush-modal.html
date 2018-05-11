@@ -1,0 +1,237 @@
+<div class="container">
+	<div class="row">
+		<h3>Summary</h3>
+	</div>
+	<dl class="row">
+		<dt class="col-3">Number of samples</dt>
+		<dd class="col-9">{{ meta_df.shape[0] }}</dd>
+		<dt class="col-3">Sample IDs</dt>
+		<dd class="col-9">
+      <p>
+      {% for sample_id in meta_df.index.tolist() %}
+        <a href="sample/{{sample_id}}" target="_blank">{{ sample_id }}</a> 
+      {% endfor %}
+      </p>
+    </dd>
+	</dl>
+	<div class="row">
+		<h3>Samples meta</h3>
+	</div>
+  <select id="pie-chart-select" class="selectpicker" data-style="btn btn-outline-info"></select>
+  <div class="row" id="pie-chart"></div>
+	<div class="row">
+		<h3>Gene expression</h3>
+	</div>
+  <div class="row" id="gene-chart"></div>
+	<div class="row">
+		<h3>Enrichment analysis</h3>
+	</div>
+  <select id="enrichr-chart-select" class="selectpicker" data-style="btn btn-outline-info"></select>
+  <div class="row" id="enrichr-chart"></div>
+	
+</div>
+
+<script src="node_modules/highcharts/highcharts.js"></script>
+<script src="node_modules/highcharts/modules/exporting.js"></script>
+<script src="node_modules/highcharts/modules/export-data.js"></script>
+
+<script src="node_modules/plotly.js/dist/plotly.min.js"></script>
+
+<script type="text/javascript">
+  var colors10 = _.map(_.range(10), d3.scale.category10());
+  var plot_data = {{ plot_data|safe }};
+  // Parse data for pie chart
+  var samples_meta = plot_data.samples_meta;
+
+  // helper function to get series data for pie chart given the array
+  function generatePieSeriesData(samples_arr){
+    var value_counts = _.countBy(samples_arr, function(d){return d;});
+    var n = samples_arr.length;
+
+    var seires_data = [];
+    for (var key in value_counts){
+      var rec = {name: key, y: value_counts[key]/n, count: value_counts[key]}
+      seires_data.push(rec)
+    }
+    return seires_data;
+  }
+
+  // add options in <select>
+  var samples_meta_keys = _.keys(samples_meta)
+  for (var i = samples_meta_keys.length - 1; i >= 0; i--) {
+    var key = samples_meta_keys[i];
+    $("#pie-chart-select").append($('<option>'+ key +'</option>'));  
+  }
+
+
+  var pie_series_base = {
+        colorByPoint: true,
+    };
+
+  var pie_chart = Highcharts.chart('pie-chart', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: ''
+    },
+    tooltip: {
+        pointFormat: '<b>{point.percentage:.1f}%</b> </br> count: <b>{point.count}</b>'
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: false
+            },
+            showInLegend: true
+        }
+    },
+    credits: {
+      enabled: false
+    },    
+    series: []
+  });
+
+  // Set the default meta_key for the pie chart
+  var meta_key = _.keys(samples_meta)[0];
+  var pie_series = Object.assign(
+    {name: meta_key, data: generatePieSeriesData(samples_meta[meta_key])},
+    pie_series_base
+    );
+  $('#pie-chart-select').selectpicker('val', meta_key);
+  pie_chart.setTitle({text: meta_key}, false)
+  pie_chart.addSeries(pie_series)
+  
+  // control pie chart by the selectpicker
+  $("#pie-chart-select").on('changed.bs.select', function(){
+    var selected_meta_key = $(this).val();    
+    var selected_series_data = generatePieSeriesData(samples_meta[selected_meta_key]);
+    var selected_series = Object.assign(
+      {name: meta_key, data: selected_series_data},
+      pie_series_base)
+    pie_chart.series[0].remove(false)
+    pie_chart.setTitle({text: selected_meta_key}, false)
+    pie_chart.addSeries(selected_series, true)
+  });
+
+  // Parse data for gene expression box plot
+  var genes_data = plot_data.genes;
+  var uniq_genes = _.uniq(genes_data.variable);
+
+  var genes_data_violin = [{
+    type: 'violin',
+    x: genes_data['variable'],
+    y: genes_data['value'],
+    points: 'none',
+    box: {
+      visible: true,
+      width: 0.25
+    },
+    line: {
+      color: 'green',
+    },
+    meanline: {
+      visible: false
+    },
+    bandwidth: 1.,
+    scalemode: 'count',
+    spanmode: 'hard',
+    transforms: [{
+       type: 'groupby',
+       groups: genes_data['variable'],
+       styles: _.map(uniq_genes, function(gene, i){ 
+        var color = colors10[0];
+        if (i < 20) {
+          color = colors10[3];
+        }
+        return {target: gene, value: {line: {color: color}}}; }),
+    }]
+  }];
+
+  var layout = {
+    title: "Relative expression",
+    yaxis: {
+      zeroline: false,
+      title: 'z-score'
+    },
+    xaxis: {
+      title: 'Genes'
+    },
+    violingap: 0,
+    showlegend: false
+  }
+  Plotly.plot('gene-chart', genes_data_violin, layout, {displaylogo: false});
+
+  // Parse data for enrichment
+  var enrich_data = plot_data.enrichment;
+  // add options in <select>
+  var enrichr_libs = _.keys(enrich_data)
+  for (var i = enrichr_libs.length - 1; i >= 0; i--) {
+    var key = enrichr_libs[i];
+    $("#enrichr-chart-select").append($('<option>'+ key +'</option>'));  
+  }
+  $('.selectpicker').selectpicker();
+
+  function generateEnrichrViolinDataAndLayout(lib){
+    var data = enrich_data[lib];
+    var uniq_terms = _.uniq(data['variable']);
+    var max_label_length = _.max(_.map(uniq_terms, function(d){return d.length}));
+
+    var data_violin = [{
+      type: 'violin',
+      y: data['variable'].reverse(),
+      x: data['value'].reverse(),
+      points: 'none',
+      box: {
+        visible: true,
+        width: 0.25
+      },
+      orientation: 'h',
+      line: {
+        color: colors10[3],
+      },
+      meanline: {
+        visible: false
+      },
+      // bandwidth: 1.,
+      scalemode: 'count',
+      spanmode: 'hard',
+    }];
+
+    var layout = {
+      title: "Top enriched terms in "+ lib,
+      yaxis: {
+        zeroline: false,
+        showticklabels: true,
+      },
+      xaxis: {
+        zeroline: false,
+        title: 'combined score'
+      },
+      violingap: 0,
+      showlegend: false,
+      margin: {l: max_label_length * 8},
+    }
+
+    return {layout: layout, data: data_violin};
+  }
+
+  // create the violin plot for default_lib
+  var default_lib = enrichr_libs.slice(-1);
+  var default_data = generateEnrichrViolinDataAndLayout(default_lib)
+  Plotly.plot('enrichr-chart', default_data.data, default_data.layout, {displaylogo: false});
+
+  // control enrichr chart by the selectpicker
+  $("#enrichr-chart-select").on('changed.bs.select', function(){
+    var selected_lib = $(this).val();    
+    var selected_data = generateEnrichrViolinDataAndLayout(selected_lib);
+    Plotly.newPlot('enrichr-chart', selected_data.data, selected_data.layout, {displaylogo: false})
+
+  });
+
+</script>

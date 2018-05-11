@@ -13,6 +13,7 @@ from flask import Flask, request, redirect, render_template, \
 from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO, emit
 
+import encrypt
 from utils import *
 
 from database import *
@@ -291,7 +292,7 @@ def sample_landing_page(sample_id):
 	# prepare gene expression
 	cur = mongo.db['expression'].find(
 		{'dataset_id': dataset_id},
-		{'gene':True, 'values': {'$slice':[idx, 1]}}
+		{'gene':True, 'values': {'$slice':[idx, 1]}, '_id': False}
 	)
 
 	recs = [{'gene':doc['gene'], 'val': doc['values'][0]} for doc in cur]
@@ -321,6 +322,74 @@ def sample_landing_page(sample_id):
 		ENTER_POINT=ENTER_POINT,
 		)
 
+'''
+Endpoints for brush selection
+'''
+@app.route(ENTER_POINT + '/brush/<string:dataset_id>', methods=['POST'])
+def encrypt_sample_ids(dataset_id):
+	if request.method == 'POST':
+		req_data = json.loads(request.data)
+		# print req_data
+		sample_ids = req_data['ids']
+		sample_ids_str = ','.join(sorted(sample_ids))
+		sample_ids_hash = encrypt.encrypt(sample_ids_str)
+		return jsonify({'hash': sample_ids_hash})
+
+@app.route(ENTER_POINT + '/brush/<string:dataset_id>/<string:sample_ids_hash>', methods=['GET'])
+def decrypt_sample_ids(dataset_id, sample_ids_hash):
+	'''Decrypt sample_ids from the hash then render template for the brush modal.
+	'''
+	sample_ids = encrypt.decrypt(sample_ids_hash).split(',')
+
+	if dataset_id.startswith('GSE'):
+		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+	else:
+		gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
+	# prepare meta
+	samples_meta = gds.meta_df.loc[sample_ids]
+	# filter out columns with equal number of unique values
+	samples_meta = samples_meta.loc[:, samples_meta.nunique() < len(sample_ids)]
+
+	# get the mask of the selected samples in the dataset
+	mask = np.in1d(gds.sample_ids, sample_ids)
+
+	# prepare gene expression
+	cur = mongo.db['expression'].find(
+		{'dataset_id': dataset_id},
+		{'gene':True, 'values': True, '_id': False}
+	)
+	# pick to top expressed genes
+	zscores_df = pd.DataFrame.from_dict({doc['gene'] : np.array(doc['values'])[mask] for doc in cur})
+	sorted_zscores = zscores_df.median().sort_values()
+	top_up_genes = sorted_zscores[-20:][::-1].index
+	top_dn_genes = sorted_zscores[:20][::-1].index
+	top_genes = list(top_up_genes) + list(top_dn_genes)
+	top_genes_zscores_df = zscores_df.loc[:, top_genes]
+
+	# prepare enrichment
+	enrichment = {}
+	cur = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
+		{'gene_set_library':True, 'scores': True, '_id':False})
+	for doc in cur:
+		lib = doc['gene_set_library']
+		scores_df = pd.DataFrame.from_dict({term: np.array(scores)[mask] for term, scores in doc['scores'].iteritems() })\
+			.fillna(0)
+		sorted_scores = scores_df.median().sort_values(ascending=False, na_position='last')
+		top_terms = sorted_scores[:10].index
+		top_terms_scores = scores_df.loc[:, top_terms].melt().to_dict(orient='list') # {term: [values]}
+		enrichment[lib] = top_terms_scores
+
+	plot_data = { 
+		'samples_meta': samples_meta.to_dict(orient='list'),
+		'genes': top_genes_zscores_df.melt().to_dict(orient='list'), # {'gene': [genes], 'value': [values]}
+		'enrichment' : enrichment,
+	}
+
+	return render_template('brush-modal.html',
+		meta_df=samples_meta,
+		plot_data=json.dumps(plot_data),
+		ENTER_POINT=ENTER_POINT,
+		)
 
 
 '''
