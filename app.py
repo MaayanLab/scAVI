@@ -44,14 +44,19 @@ def all_datasets():
 	dataset_ids = mongo.db['dataset'].distinct('id')
 
 	geo_datasets = []
+	n_cells = 0
 	for dataset_id in dataset_ids:
 		if dataset_id.startswith('GSE'):
 			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+			gds.retrieve_series_meta(mongo.db)
 			geo_datasets.append(gds)
+			n_cells += len(gds.sample_ids)
 
+	stats = {'n_studies': len(geo_datasets), 'n_cells': n_cells}
 	return render_template('datasets.html', 
 			ENTER_POINT=ENTER_POINT,
-			geo_datasets=geo_datasets
+			geo_datasets=geo_datasets,
+			stats=stats
 			)
 
 

@@ -275,6 +275,12 @@ class GEODataset(GeneExpressionDataset):
 		_ = db[self.coll_expr].insert(gene_expression_docs)
 		return insert_result.inserted_id
 
+	def retrieve_series_meta(self, db):
+		'''Retrieve series-level meta from `geo` collection.'''
+		projection = {'_id':False, 'Series_title': True, 'Series_summary': True,
+			'Series_pubmed_id': True, 'Series_submission_date': True}
+		self.series = db['geo'].find_one({'Series_geo_accession': self.id}, projection)
+
 	@classmethod
 	def load(cls, gse_id, db, meta_only=False):
 		'''Load from h5 file.'''

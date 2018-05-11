@@ -1,22 +1,29 @@
 {% extends "base-center.html" %}
 {% block content_center %}
+    <div id="stats" class="alert alert-primary my-3" role="alert">
+        Now collected {{ stats['n_studies'] }} studies with {{ stats['n_cells'] }} cells.
+    </div>
     <table class="table table-hover table-sm">
         <thead>
             <tr>
                 <th>GEO accession</th>
-                <th>Number of samples</th>
+                <th>Title</th>
+                <th>Samples</th>
                 <th>Organism</th>
-                <th>Link to GEO</th>
+                <th>Submission date</th>
+                <th>Link to PubMed</th>
             </tr>
         </thead>
         <tbody>
             {% for gds in geo_datasets %}
             <tr>
                 <td><a href="graph_page/{{ gds.id }}/tSNE">{{ gds.id }}</a></td>
+                <td><a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ gds.id }}" target="_blank">{{ gds.series['Series_title'] }} <i class="fas fa-external-link-alt"></i></a></td>
                 <td>{{ gds.sample_ids|length }}</td>
                 <td>{{ gds.organism }}</td>
-                <td><a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ gds.id }}"
-                    target="_blank">{{ gds.id }}</a></td>
+                <td>{{ gds.series['Series_submission_date'] }}</td>
+                <td><a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={{ gds.series['Series_pubmed_id'] }}"
+                    target="_blank">{{ gds.series['Series_pubmed_id'] }}</a></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -27,7 +34,8 @@
 <script src="node_modules/datatables.net-bs4/js/dataTables.bootstrap4.js"></script>
 <script type="text/javascript">
     $('.table').DataTable({
-        ordering: true
+        ordering: true,
+        pageLength: 25,
     })
 </script>
 {% endblock %}
