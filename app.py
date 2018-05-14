@@ -171,10 +171,12 @@ def graph_page(graph_name, dataset_id):
 	n_samples = len(gds.sample_ids)
 	d_col_nuniques = {}
 	for col in gds.meta_df.columns:
-		d_col_nuniques[col] = gds.meta_df[col].nunique()
+		n_uniques = gds.meta_df[col].nunique()
+		if n_uniques < n_samples:
+			d_col_nuniques[col] = n_uniques
 
 	d_col_nuniques = sorted(d_col_nuniques.items(), key=lambda x:x[1])
-	sdvConfig['colorKey'] = d_col_nuniques[1][0]
+	sdvConfig['colorKey'] = d_col_nuniques[0][0]
 	# sdvConfig['shapeKey'] = d_col_nuniques[0][0]
 	sdvConfig['shapeKey'] = None
 			
