@@ -148,11 +148,10 @@ var Controler = Backbone.View.extend({
 		var metas = _.filter(model.metas, function(meta){ return meta.nUnique < model.n; });
 		var self = this;
 		// filter out metas not suitable for shapes
-		// var metasShape = _.filter(metas, function(meta){ return meta.nUnique < 6 || meta.type !=='string'});
+		var metasShape = _.filter(metas, function(meta){ return meta.nUnique < 7 });
 		// Only retrain these attributes as shapes
-		var metasShapeNames = ['p-value', 'Dose', 'Time'];
-		var metasShape = _.filter(metas, function(meta){return metasShapeNames.indexOf(meta.name) !== -1 });
-
+		// var metasShapeNames = ['p-value', 'Dose', 'Time'];
+		// var metasShape = _.filter(metas, function(meta){return metasShapeNames.indexOf(meta.name) !== -1 });
 		if (metasShape.length > 0){
 			// Shapes: 
 			var shapeControl = this.el.append('div')
