@@ -400,7 +400,7 @@ var Scatter3dView = Backbone.View.extend({
 		container: document.body,
 		labelKey: ['sig_id'], // which metaKey to use as labels
 		colorKey: 'dose', // which metaKey to use as colors
-		shapeKey: 'cell',
+		shapeKey: null,
 		clouds: [], // to store Scatter3dCloud objects
 		textures: null, // the Textures collection instance
 		pointSize: 0.01, // the size of the points
@@ -716,56 +716,71 @@ var Scatter3dView = Backbone.View.extend({
 		var symbols = _.map(d3.svg.symbolTypes, function(t){
 			return d3.svg.symbol().type(t)();});
 
-		// make shapeScale for d3.legend
-		var meta = _.findWhere(this.model.metas, {name: metaKey});
-
-		if (meta.type === 'number' && meta.nUnique > 6) {
-			if (meta.name === 'p-value'){
-				// get grouped datasets, each group is going to be a cloud
-				var pValueDomain = [0.001, 0.01, 0.05, 0.1, 1];
-				var scatterDataSubsets = this.model.binBy2(metaKey, pValueDomain);
-				// Make a threshold scale
-				var binnedValues = binValues2(_.pluck(this.model.data, metaKey), pValueDomain);
-				// overwrite the symbols map to make it having the same length with pValueDomain
-				var symbols = _.map(d3.svg.symbolTypes.slice(0, pValueDomain.length), function(t){
-					return d3.svg.symbol().type(t)();});
-			} else{
-				// get grouped datasets, each group is going to be a cloud
-				var scatterDataSubsets = this.model.binBy(metaKey, 6);
-				// Make a threshold scale
-				var binnedValues = binValues(_.pluck(this.model.data, metaKey), 6);				
-			}
-
-			this.shapeScale = d3.scale.threshold()
-				.domain(binnedValues.domain)
-				.range(symbols);
-			this.shapeLabels = binnedValues.labels;
-		} else{ // categorical data
-			// get grouped datasets, each group is going to be a cloud
-			var scatterDataSubsets = this.model.groupBy(metaKey);
-			this.shapeLabels = undefined;
-			this.shapeScale = d3.scale.ordinal()
-				.domain(Object.keys(scatterDataSubsets))
-				.range(symbols);			
-		};
-
-		
-		// symbolTypeScale is used for retrieving a texture instance from textures collection
-		var symbolTypeScale = d3.scale.ordinal()
-			.domain(Object.keys(scatterDataSubsets))
-			.range(textures.pluck('symbolType'));
-		
-		for (var key in scatterDataSubsets){
+		if (metaKey == null){
+			var scatterDataSubsets = new _ScatterDataSubset({data: this.model.data});
 			var cloud = new Scatter3dCloud({
-				model: scatterDataSubsets[key],
-				texture: textures.getTexture(symbolTypeScale(key)), 
+				model: scatterDataSubsets,
+				texture: textures.getTexture('circle'), 
 				pointSize: this.pointSize,
 				sizeAttenuation: this.is3d,
 				labelKey: this.labelKey,
 			});
-
 			this.clouds.push(cloud)
 			this.scene.add( cloud.points );	
+
+		} else {
+			// make shapeScale for d3.legend
+			var meta = _.findWhere(this.model.metas, {name: metaKey});
+
+			if (meta.type === 'number' && meta.nUnique > 6) {
+				if (meta.name === 'p-value'){
+					// get grouped datasets, each group is going to be a cloud
+					var pValueDomain = [0.001, 0.01, 0.05, 0.1, 1];
+					var scatterDataSubsets = this.model.binBy2(metaKey, pValueDomain);
+					// Make a threshold scale
+					var binnedValues = binValues2(_.pluck(this.model.data, metaKey), pValueDomain);
+					// overwrite the symbols map to make it having the same length with pValueDomain
+					var symbols = _.map(d3.svg.symbolTypes.slice(0, pValueDomain.length), function(t){
+						return d3.svg.symbol().type(t)();});
+				} else{
+					// get grouped datasets, each group is going to be a cloud
+					var scatterDataSubsets = this.model.binBy(metaKey, 6);
+					// Make a threshold scale
+					var binnedValues = binValues(_.pluck(this.model.data, metaKey), 6);				
+				}
+
+				this.shapeScale = d3.scale.threshold()
+					.domain(binnedValues.domain)
+					.range(symbols);
+				this.shapeLabels = binnedValues.labels;
+			} else{ // categorical data
+				// get grouped datasets, each group is going to be a cloud
+				var scatterDataSubsets = this.model.groupBy(metaKey);
+				this.shapeLabels = undefined;
+				this.shapeScale = d3.scale.ordinal()
+					.domain(Object.keys(scatterDataSubsets))
+					.range(symbols);			
+			};
+
+			
+			// symbolTypeScale is used for retrieving a texture instance from textures collection
+			var symbolTypeScale = d3.scale.ordinal()
+				.domain(Object.keys(scatterDataSubsets))
+				.range(textures.pluck('symbolType'));
+			
+			for (var key in scatterDataSubsets){
+				var cloud = new Scatter3dCloud({
+					model: scatterDataSubsets[key],
+					texture: textures.getTexture(symbolTypeScale(key)), 
+					pointSize: this.pointSize,
+					sizeAttenuation: this.is3d,
+					labelKey: this.labelKey,
+				});
+
+				this.clouds.push(cloud)
+				this.scene.add( cloud.points );	
+			}
+
 		}
 
 		// re-coloring nodes

@@ -34,11 +34,11 @@ var Legend = Backbone.View.extend({
 			.attr('class', 'legend')
 			.attr('transform', 'translate(10, 20)');
 		this.g.append('g')
-			.attr('id', 'legendShape')
+			.attr('id', 'legendColor')
 			.attr("class", "legendPanel")
 			.attr("transform", "translate(0, 0)");
 		this.g.append('g')
-			.attr('id', 'legendColor')
+			.attr('id', 'legendShape')
 			.attr("class", "legendPanel")
 			.attr("transform", "translate(110, 0)");
 
@@ -46,17 +46,19 @@ var Legend = Backbone.View.extend({
 
 	render: function(){
 		// set up legend
-		// shape legend
 		var scatterPlot = this.scatterPlot;
-		var legendShape = d3.legend.symbol()
-			.scale(scatterPlot.shapeScale)
-			.orient("vertical")
-			.title(scatterPlot.shapeKey);
-		if (scatterPlot.shapeLabels){
-			legendShape.labels(scatterPlot.shapeLabels)
+		if (scatterPlot.shapeKey != null){
+			// shape legend
+			var legendShape = d3.legend.symbol()
+				.scale(scatterPlot.shapeScale)
+				.orient("vertical")
+				.title(scatterPlot.shapeKey);
+			if (scatterPlot.shapeLabels){
+				legendShape.labels(scatterPlot.shapeLabels)
+			}
+			this.g.select("#legendShape")
+				.call(legendShape);			
 		}
-		this.g.select("#legendShape")
-			.call(legendShape);
 
 		// color legend
 		var legendColor = d3.legend.color()
@@ -151,33 +153,35 @@ var Controler = Backbone.View.extend({
 		var metasShapeNames = ['p-value', 'Dose', 'Time'];
 		var metasShape = _.filter(metas, function(meta){return metasShapeNames.indexOf(meta.name) !== -1 });
 
-		// Shapes: 
-		var shapeControl = this.el.append('div')
-			.attr('class', 'form-group my-1');
-		shapeControl.append('label')
-			.attr('class', 'control-label')
-			.text('Shape by:');
+		if (metasShape.length > 0){
+			// Shapes: 
+			var shapeControl = this.el.append('div')
+				.attr('class', 'form-group my-1');
+			shapeControl.append('label')
+				.attr('class', 'control-label')
+				.text('Shape by:');
 
-		var shapeSelect = shapeControl.append('select')
-			.attr('id', 'shape')
-			.attr('class', 'form-control selectpicker')
-			.on('change', function(){
-				var selectedMetaKey = d3.select('#shape').property('value');
-				self.trigger('shapeChanged', selectedMetaKey)
-			});
+			var shapeSelect = shapeControl.append('select')
+				.attr('id', 'shape')
+				.attr('class', 'form-control selectpicker')
+				.on('change', function(){
+					var selectedMetaKey = d3.select('#shape').property('value');
+					self.trigger('shapeChanged', selectedMetaKey)
+				});
 
-		var shapeOptions = shapeSelect
-			.selectAll('option')
-			.data(_.pluck(metasShape, 'name')).enter()
-			.append('option')
-			.text(function(d){return d;})
-			.attr('value', function(d){return d;})
-			.attr('data-content', function(d){
-				if (tooltipTexts.hasOwnProperty(d)) {
-					return '<div title="'+tooltipTexts[d]+
-						'" data-toggle="tooltip">'+d+'</div>';
-				};
-			});
+			var shapeOptions = shapeSelect
+				.selectAll('option')
+				.data(_.pluck(metasShape, 'name')).enter()
+				.append('option')
+				.text(function(d){return d;})
+				.attr('value', function(d){return d;})
+				.attr('data-content', function(d){
+					if (tooltipTexts.hasOwnProperty(d)) {
+						return '<div title="'+tooltipTexts[d]+
+							'" data-toggle="tooltip">'+d+'</div>';
+					};
+				});
+		}
 
 		// Colors
 		var colorControl = this.el.append('div')

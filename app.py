@@ -175,7 +175,8 @@ def graph_page(graph_name, dataset_id):
 
 	d_col_nuniques = sorted(d_col_nuniques.items(), key=lambda x:x[1])
 	sdvConfig['colorKey'] = d_col_nuniques[1][0]
-	sdvConfig['shapeKey'] = d_col_nuniques[0][0]
+	# sdvConfig['shapeKey'] = d_col_nuniques[0][0]
+	sdvConfig['shapeKey'] = None
 			
 	# get available visualizations in the DB
 	visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
