@@ -34,10 +34,15 @@
 {% block scripts %}
 <script src="node_modules/datatables.net/js/jquery.dataTables.js"></script>
 <script src="node_modules/datatables.net-bs4/js/dataTables.bootstrap4.js"></script>
+<script src="node_modules/moment/min/moment.min.js"></script>
+<script src="//cdn.datatables.net/plug-ins/1.10.19/sorting/datetime-moment.js"></script>
 <script type="text/javascript">
+    // init moment.js date column
+    $.fn.dataTable.moment('MMM DD YYYY');
     $('.table').DataTable({
         ordering: true,
         pageLength: 25,
+        order: [[4, 'desc']]
     })
 </script>
 {% endblock %}
