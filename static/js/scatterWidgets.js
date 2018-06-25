@@ -79,25 +79,25 @@ var Legend = Backbone.View.extend({
 // This is a map for the tooltips displayed to explain the 
 // colorBy and shapeBy options.
 var tooltipTexts = { 
-	'p-value': 'An empirical p-value measuring the consistency between drug treatment replicates used for calculating the drug-induced signature.',
-	'Scores': 'Similarity score measuring the overlap between the input DE genes and the signature DE genes divided by the effective input. The range of the score is [-1, 1]. Positive scores indicate similar signature whereas negative scores indicate opposite signature.',
-	'Cell': 'Cell line for the drug perturbation',
-	'Dose': 'Concentration of the drug',
-	'Perturbation_ID': 'ID of the drug/small molecule compound',
-	'Time': 'Duration of drug treatment',
-	'Perturbation': 'Name of drug/small molecule compound',
-	'EHR_Coprescribed_Drugs': 'Most frequently associated co-prescribed drug',
-	'EHR_Diagnoses': 'Most frequently associated diagnosis',
-	'Phase': 'Drug development phase',
-	'MOA': 'Mechanisms of action',
-	'Batch': 'Experimental batch',
-	'DBSCAN-clustering': 'Signature clustering result using DBSCAN algorithm',
-	'KMeans-clustering': 'Signature clustering result using KMeans algorithm',
-	'rings': "The molecule's rings in the drug/compounds",
-	'scaffolds': "The chemical scaffolds of the drugs/compounds",
-	'n_rings': 'Number of rings in the drugs/compounds',
-	'n_scaffolds': 'Number of scaffolds in the drugs/compounds',
-	'predicted_MOA': 'Mechanisms of action predicted based on gene expression and chemical signatures',
+	// 'p-value': 'An empirical p-value measuring the consistency between drug treatment replicates used for calculating the drug-induced signature.',
+	// 'Scores': 'Similarity score measuring the overlap between the input DE genes and the signature DE genes divided by the effective input. The range of the score is [-1, 1]. Positive scores indicate similar signature whereas negative scores indicate opposite signature.',
+	// 'Cell': 'Cell line for the drug perturbation',
+	// 'Dose': 'Concentration of the drug',
+	// 'Perturbation_ID': 'ID of the drug/small molecule compound',
+	// 'Time': 'Duration of drug treatment',
+	// 'Perturbation': 'Name of drug/small molecule compound',
+	// 'EHR_Coprescribed_Drugs': 'Most frequently associated co-prescribed drug',
+	// 'EHR_Diagnoses': 'Most frequently associated diagnosis',
+	// 'Phase': 'Drug development phase',
+	// 'MOA': 'Mechanisms of action',
+	// 'Batch': 'Experimental batch',
+	// 'DBSCAN-clustering': 'Signature clustering result using DBSCAN algorithm',
+	// 'KMeans-clustering': 'Signature clustering result using KMeans algorithm',
+	// 'rings': "The molecule's rings in the drug/compounds",
+	// 'scaffolds': "The chemical scaffolds of the drugs/compounds",
+	// 'n_rings': 'Number of rings in the drugs/compounds',
+	// 'n_scaffolds': 'Number of scaffolds in the drugs/compounds',
+	// 'predicted_MOA': 'Mechanisms of action predicted based on gene expression and chemical signatures',
 };
 
 var Controler = Backbone.View.extend({
@@ -356,7 +356,7 @@ var TermSearchSelectize = Backbone.View.extend({
 		// set up the DOMs
 		// wrapper for SearchSelectize
 		var searchControl = $('<div class="form-group" id="search-control"></div>')
-		searchControl.append($('<label class="control-label">Search a term:</label>'))
+		searchControl.append($('<label class="control-label">Search a term: <i class="fas fa-info-circle" data-toggle="tooltip" title="Search a biological term such as a pathway and the viewer will overlay the enrichment scores of the searched term on the cells."></i></label>'))
 
 		this.$el = $('<select id="search" class="form-control"></select>');
 		searchControl.append(this.$el)
@@ -416,6 +416,13 @@ var TermSearchSelectize = Backbone.View.extend({
 					self.trigger('searched', value);
 				}
 			});
+			// add tooltips
+			$('[data-toggle="tooltip"]').tooltip({
+				placement: 'auto',
+				container: 'body',
+			});
+
+
 		});
 
 	},

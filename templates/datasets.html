@@ -6,24 +6,26 @@
     <table class="table table-hover table-sm">
         <thead>
             <tr>
-                <th>GEO accession</th>
+                <th></th>
                 <th>Title</th>
                 <th>Samples</th>
                 <th>Organism</th>
                 <th>Submission date</th>
                 <th>Link to PubMed</th>
+                <th>GEO accession</th>
             </tr>
         </thead>
         <tbody>
             {% for gds in geo_datasets %}
             <tr>
-                <td><a href="graph_page/{{ gds.id }}/tSNE">{{ gds.id }}</a></td>
-                <td><a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ gds.id }}" target="_blank">{{ gds.series['Series_title'] }} <i class="fas fa-external-link-alt"></i></a></td>
+                <td><a href="graph_page/{{ gds.id }}/tSNE" class="btn btn-outline-info btn-sm">Launch Viewer</a></td>
+                <td><a href="graph_page/{{ gds.id }}/tSNE">{{ gds.series['Series_title'] }} </a></td>
                 <td>{{ gds.sample_ids|length }}</td>
                 <td>{{ gds.organism }}</td>
                 <td>{{ gds.series['Series_submission_date'] }}</td>
                 <td><a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={{ gds.series['Series_pubmed_id'] }}"
                     target="_blank">{{ gds.series['Series_pubmed_id'] }}</a></td>
+                <td><a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ gds.id }}" target="_blank">{{ gds.id }}</a></td>
             </tr>
             {% endfor %}
         </tbody>

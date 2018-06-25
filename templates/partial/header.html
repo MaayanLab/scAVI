@@ -16,11 +16,8 @@
 
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="upload">Upload dataset <span class="sr-only">(current)</span></a>
-        </li>
           {% if graphs is defined %}
-          <li id="graph_page" class="nav-item dropdown">
+          <li id="graph_page" class="nav-item dropdown active">
             <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Layouts</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
               
@@ -32,6 +29,9 @@
           </li>
           {% endif %}
       </ul>
+      <form class="form-inline my-2 my-lg-0">
+        <a class="nav-link btn btn-outline-info" href="upload">upload your own dataset <span class="sr-only">(current)</span></a>
+      </form>
     </div>
   </nav>
 </div>
