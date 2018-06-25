@@ -1,14 +1,14 @@
-FROM python:2.7
+FROM python:2.7-slim
 
 # Get pip and install numpy/scipy dependencies
-RUN apt-get update && apt-get install -y build-essential gfortran libatlas-base-dev libmysqlclient-dev
+RUN apt-get update && apt-get install -y build-essential gfortran libatlas-base-dev
 
 # Update pip
 RUN pip install --upgrade pip
 
 # Install required python packages
 RUN pip install \
-	pandas==0.20.1\
+	pandas==0.21.0\
 	gevent==1.2.2\
 	Flask==0.12.2\
 	Flask-PyMongo==0.5.1\
