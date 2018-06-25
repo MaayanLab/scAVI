@@ -828,7 +828,7 @@ var BrushBtns = Backbone.View.extend({
 		// set up the btn-group div
 		this.div = $('<div id="modal-btn" class="btn-group" role="group"></div>')
 		// set up the modal button
-		this.button = $('<a class="btn btn-outline-info">Show selected samples</a>');
+		this.button = $('<a class="btn btn-outline-info">View Selected Samples Report</a>');
 		var self = this;
 
 		this.button.click(function(e){
@@ -931,7 +931,7 @@ var BrushController = Backbone.View.extend({
 	},
 
 	render: function(){
-		this.button = $('<button class="btn btn-info btn-sm" data-toggle="button" aria-pressed="false"><i class="fas fa-crosshairs"></i>Select samples</button>');
+		this.button = $('<button class="btn btn-info btn-sm" data-toggle="button" aria-pressed="false"><i class="fas fa-crosshairs"></i> Free Selection (Lasso)</button>');
 		this.button.click(function(e){
 			e.preventDefault()
 			if (self.sdv.shiftKey){
