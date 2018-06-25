@@ -1,0 +1,48 @@
+{
+  "id": "/scavi",
+  "cmd": null,
+  "cpus": 1,
+  "mem": 1024,
+  "disk": 0,
+  "instances": 1,
+  "container": {
+    "type": "DOCKER",
+    "volumes": [
+      {
+        "containerPath": "/my_application/data",
+        "hostPath": "/hadoop/hdfs-mount/apps/scv/data",
+        "mode": "RW"
+      }
+    ],
+    "docker": {
+      "image": "maayanlab/scv:slim",
+      "network": "BRIDGE",
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "hostPort": 0,
+          "servicePort": 10118,
+          "protocol": "tcp",
+          "labels": {}
+        }
+      ],
+      "privileged": false,
+      "parameters": [],
+      "forcePullImage": true
+    }
+  },
+  "env": {
+    "ENTER_POINT": "/scavi",
+    "MONGOURI": "secret.mongodb.uri"
+  },
+  "labels": {
+    "public": "true"
+  },
+  "portDefinitions": [
+    {
+      "port": 10118,
+      "protocol": "tcp",
+      "labels": {}
+    }
+  ]
+}
