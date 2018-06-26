@@ -5,7 +5,10 @@ import warnings
 
 with warnings.catch_warnings():
 	warnings.simplefilter("ignore")
-	import geo_query as gq
+	try:
+		import geo_query as gq
+	except ImportError:
+		pass
 
 import pandas as pd
 
