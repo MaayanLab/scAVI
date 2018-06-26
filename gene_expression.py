@@ -288,6 +288,7 @@ class GEODataset(GeneExpressionDataset):
 		meta_df = gse.construct_sample_meta_df()
 		# order/subset the samples
 		meta_df = meta_df.loc[df.columns]
+		meta_df = meta_df.loc[:, meta_df.nunique() > 1]
 		meta_doc = gse.meta
 		meta_doc['meta_df'] = meta_df.reset_index().to_dict(orient='list')
 		return meta_doc
@@ -307,6 +308,7 @@ class GEODataset(GeneExpressionDataset):
 		meta_df = gse.construct_sample_meta_df()
 		# order/subset the samples
 		meta_df = meta_df.loc[doc['sample_ids']]
+		meta_df = meta_df.loc[:, meta_df.nunique() > 1]
 		meta_doc = gse.meta
 		meta_doc['meta_df'] = meta_df.reset_index().to_dict(orient='list')
 

@@ -161,7 +161,7 @@ def check_progress(dataset_id):
 def graph_page(graph_name, dataset_id):
 	# defaults
 	sdvConfig = {
-		'labelKey': ['sample_id', 'Sample_source_name_ch1'],
+		'labelKey': ['sample_id', 'title'],
 	}
 	# pick the attributes for default shaping and coloring
 	if dataset_id.startswith('GSE'):
@@ -176,6 +176,7 @@ def graph_page(graph_name, dataset_id):
 			d_col_nuniques[col] = n_uniques
 
 	d_col_nuniques = sorted(d_col_nuniques.items(), key=lambda x:x[1])
+
 	sdvConfig['colorKey'] = d_col_nuniques[0][0]
 	# sdvConfig['shapeKey'] = d_col_nuniques[0][0]
 	sdvConfig['shapeKey'] = None
