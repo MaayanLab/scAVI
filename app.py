@@ -48,7 +48,7 @@ def all_datasets():
 	for dataset_id in dataset_ids:
 		if dataset_id.startswith('GSE'):
 			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
-			gds.retrieve_series_meta(mongo.db)
+			gds.load_series_meta(mongo.db)
 			geo_datasets.append(gds)
 			n_cells += len(gds.sample_ids)
 

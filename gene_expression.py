@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 from bson.codec_options import CodecOptions
 
+from geo_meta import *
+
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -44,6 +46,7 @@ def load_read_counts_and_meta(organism='human', gsms=[], gse=None, retrive_meta=
 
 	meta_doc = None
 	if retrive_meta:
+		## !! deprecate this part. will retrieve the meta from GEO directly using geo_query
 		# Retrieve metadata
 		meta_doc = {'meta_df':{}} 
 		for meta_key in f['meta'].keys():
@@ -232,12 +235,13 @@ class GEODataset(GeneExpressionDataset):
 		self.id = gse_id
 		self.organism = organism
 		if not meta_only:
+			# retrieve the expression matrix from the h5 file
+			df, _ = self.retrieve_expression_and_meta(retrive_meta=False)
 			if meta_doc is None:
-				df, meta_doc = self.retrieve_expression_and_meta(retrive_meta=True)
-			else:
-				df, _ = self.retrieve_expression_and_meta(retrive_meta=False)
+				# df, meta_doc = self.retrieve_expression_and_meta(retrive_meta=True)
+				meta_doc = self.retrieve_meta(df)
 		else:
-			df = pd.DataFrame(index=[], columns=meta_doc['meta_df']['Sample_geo_accession'])
+			df = pd.DataFrame(index=[], columns=meta_doc['meta_df']['geo_accession'])
 
 		GeneExpressionDataset.__init__(self, df, meta=meta_doc)
 		self.id = gse_id
@@ -248,8 +252,10 @@ class GEODataset(GeneExpressionDataset):
 
 
 	def retrieve_expression_and_meta(self, retrive_meta=True):
-		df, meta_doc = load_read_counts_and_meta(organism=self.organism, gse=self.id,
-			retrive_meta=retrive_meta)
+		df, _ = load_read_counts_and_meta(organism=self.organism, gse=self.id,
+			retrive_meta=False)
+		# retrieve meta from GEO using the GSE class
+		meta_doc = self.retrieve_meta(df)
 		df = compute_CPMs(df)
 		return df, meta_doc
 	
@@ -275,21 +281,36 @@ class GEODataset(GeneExpressionDataset):
 		_ = db[self.coll_expr].insert(gene_expression_docs)
 		return insert_result.inserted_id
 
-	def retrieve_series_meta(self, db):
-		'''Retrieve series-level meta from `geo` collection.'''
-		projection = {'_id':False, 'Series_title': True, 'Series_summary': True,
-			'Series_pubmed_id': True, 'Series_submission_date': True}
-		self.series = db['geo'].find_one({'Series_geo_accession': self.id}, projection)
+	def retrieve_meta(self, df):
+		'''Retrieve metadata from GEO through the GSE class'''
+		gse = GSE(self.id)
+		gse.retrieve()
+		meta_df = gse.construct_sample_meta_df()
+		# order/subset the samples
+		meta_df = meta_df.loc[df.columns]
+		meta_doc = gse.meta
+		meta_doc['meta_df'] = meta_df.reset_index().to_dict(orient='list')
+		return meta_doc
+
+	def load_series_meta(self, db):
+		'''Load series-level meta from `geo` collection.'''
+		self.series = GSE.load(self.id, db).meta
 
 	@classmethod
 	def load(cls, gse_id, db, meta_only=False):
 		'''Load from h5 file.'''
-		projection = None
-		if meta_only:
-			projection = {'_id':False, 'df':False}
+		projection = {'_id':False, 'meta':False} # not use the meta field in 'dataset' collection
 
 		doc = db[cls.coll].find_one({'id': gse_id}, projection)
-		obj = cls(doc['id'], organism=doc['organism'], meta_doc=doc['meta'], meta_only=meta_only)
+
+		gse = GSE.load(gse_id, db)
+		meta_df = gse.construct_sample_meta_df()
+		# order/subset the samples
+		meta_df = meta_df.loc[doc['sample_ids']]
+		meta_doc = gse.meta
+		meta_doc['meta_df'] = meta_df.reset_index().to_dict(orient='list')
+
+		obj = cls(doc['id'], organism=doc['organism'], meta_doc=meta_doc, meta_only=meta_only)
 		return obj
 
 
