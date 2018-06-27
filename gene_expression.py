@@ -236,12 +236,13 @@ class GEODataset(GeneExpressionDataset):
 		self.organism = organism
 		if not meta_only:
 			# retrieve the expression matrix from the h5 file
-			df, _ = self.retrieve_expression_and_meta(retrive_meta=False)
-			if meta_doc is None:
-				# df, meta_doc = self.retrieve_expression_and_meta(retrive_meta=True)
-				meta_doc = self.retrieve_meta(df)
+			df = self.retrieve_expression()
 		else:
 			df = pd.DataFrame(index=[], columns=meta_doc['meta_df']['geo_accession'])
+
+		if meta_doc is None:
+			# retrieve meta from GEO using the GSE class
+			meta_doc = self.retrieve_meta(df)
 
 		GeneExpressionDataset.__init__(self, df, meta=meta_doc)
 		self.id = gse_id
@@ -250,14 +251,12 @@ class GEODataset(GeneExpressionDataset):
 		# 	.set_index('Sample_geo_accession')
 		
 
-
-	def retrieve_expression_and_meta(self, retrive_meta=True):
+	def retrieve_expression(self):
+		'''Retrieve gene expression from the h5 file'''
 		df, _ = load_read_counts_and_meta(organism=self.organism, gse=self.id,
 			retrive_meta=False)
-		# retrieve meta from GEO using the GSE class
-		meta_doc = self.retrieve_meta(df)
 		df = compute_CPMs(df)
-		return df, meta_doc
+		return df
 	
 	def save(self, db):
 		if hasattr(self, 'd_sample_userListId'): 
@@ -290,7 +289,7 @@ class GEODataset(GeneExpressionDataset):
 		meta_df = meta_df.loc[df.columns]
 		meta_df = meta_df.loc[:, meta_df.nunique() > 1]
 		meta_doc = gse.meta
-		meta_doc['meta_df'] = meta_df.reset_index().to_dict(orient='list')
+		meta_doc['meta_df'] = meta_df.to_dict(orient='list')
 		return meta_doc
 
 	def load_series_meta(self, db):
