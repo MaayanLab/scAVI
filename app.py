@@ -296,7 +296,7 @@ def sample_landing_page(sample_id):
 	sample_meta['sample_id'] = sample_id
 
 	# get the idx of the sample in the dataset
-	idx = gds.sample_ids.tolist().index(sample_id)
+	idx = gds.sample_ids.index(sample_id)
 
 	# prepare gene expression
 	cur = mongo.db['expression'].find(
