@@ -129,11 +129,10 @@ class GeneExpressionDataset(object):
 				d_sample_userListId[sample_id] = user_list_id
 
 		else:
-			doc = db[self.coll].find_one({'id': self.id},
-				{'d_sample_userListId':True, '_id':False},
-				# as_class=OrderedDict
-				codec_options=CodecOptions(OrderedDict)
-				)
+			doc = db.get_collection(self.coll, codec_options=CodecOptions(OrderedDict))\
+				.find_one({'id': self.id},
+					{'d_sample_userListId':True, '_id':False},
+					)
 			d_sample_userListId = doc['d_sample_userListId']
 
 		self.d_sample_userListId = d_sample_userListId

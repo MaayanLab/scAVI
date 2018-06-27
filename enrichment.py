@@ -130,7 +130,7 @@ class EnrichmentResults(object):
 
 	def remove_intermediates(self, db):
 		db['enrichr_temp'].remove({'$and': [
-				{'sample_id': {'$in': self.ged.sample_ids.tolist()}},
+				{'sample_id': {'$in': self.ged.sample_ids}},
 				{'gene_set_library': self.gene_set_library}
 			]})
 		return
