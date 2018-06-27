@@ -294,6 +294,12 @@ def sample_landing_page(sample_id):
 	# prepare meta
 	sample_meta = gds.meta_df.loc[sample_id]#.to_dict()
 	sample_meta['sample_id'] = sample_id
+	# dataset-level meta
+	dataset_meta = gds.meta.copy()
+	# remove redundant sample-level meta
+	dataset_meta.pop('meta_df', None)
+	dataset_meta.pop('sample_id', None)
+	dataset_meta['id'] = dataset_id
 
 	# get the idx of the sample in the dataset
 	idx = gds.sample_ids.index(sample_id)
@@ -327,6 +333,7 @@ def sample_landing_page(sample_id):
 	}
 	return render_template('sample_page.html', 
 		sample_meta=sample_meta,
+		dataset_meta=dataset_meta,
 		sample_data=json.dumps(sample_data),
 		ENTER_POINT=ENTER_POINT,
 		)

@@ -30,6 +30,21 @@
       </div>
 
       <div class="row">
+        <h1>Dataset <a href="graph_page/{{ dataset_meta['id'] }}/tSNE">{{dataset_meta['id'] }}</a></h1>
+        <dl class="row">
+          {% for key, val in dataset_meta.items() %}
+          <dt class="col-sm-3">{{ key }}</dt>
+            {% if val is iterable and val is not string %}
+              <dd class="col-sm-9">{{ val | join('\n') }}</dd>
+            {% else %}
+              <dd class="col-sm-9">{{ val }}</dd>
+            {% endif %}
+          {% endfor %}
+        </dl>
+      </div>
+
+
+      <div class="row">
         <h1>Gene expression</h1>
       </div>
       <div class="row" id="gene-chart"></div>
