@@ -40,7 +40,7 @@ var Legend = Backbone.View.extend({
 		this.g.append('g')
 			.attr('id', 'legendShape')
 			.attr("class", "legendPanel")
-			.attr("transform", "translate(110, 0)");
+			.attr("transform", "translate(0, 0)");
 
 	},
 
@@ -71,8 +71,25 @@ var Legend = Backbone.View.extend({
 		this.g.select("#legendColor")
 			.call(legendColor);
 
+		var self = this
+		// a hack here because d3.legend has no callback
+		setTimeout(function(){self.moveShapeLegend();}, 500)
+
 		return this;
 	},
+	
+	moveShapeLegend: function(){
+		var bbox = this.g.select('#legendColor')
+			.node()
+			.getBBox();
+		// move legendShape accordingly
+		console.log(bbox.height)
+		var dy = bbox.height + 10;
+		this.g.select('#legendShape')
+			.transition()
+			.attr('transform', 'translate(0, ' + dy + ')')
+			.duration(500)
+	}
 
 });
 
