@@ -266,6 +266,9 @@ class GEODataset(GeneExpressionDataset):
 			{'dataset_id': self.id, 'gene':gene, 'values': values.tolist()} for gene, values in self.df.iterrows()
 		]
 		_ = db[self.coll_expr].insert(gene_expression_docs)
+
+		if hasattr(self, 'gse'):
+			self.gse.save(db)
 		return insert_result.inserted_id
 
 	def retrieve_meta(self):
@@ -273,6 +276,7 @@ class GEODataset(GeneExpressionDataset):
 		gse = GSE(self.id)
 		gse.retrieve()
 		meta_df = gse.construct_sample_meta_df()
+		self.gse = gse
 		# # order/subset the samples
 		# meta_df = meta_df.loc[df.columns]
 		# meta_df = meta_df.loc[:, meta_df.nunique() > 1]

@@ -12,7 +12,8 @@ coll = db['dataset']
 
 from classes import *
 
-gene_set_libraries = ['KEGG_2016', 'ARCHS4_Cell-lines']
+gene_set_libraries = ['KEGG_2016', 'ChEA_2016', 'KEA_2015',
+	'ARCHS4_Cell-lines', 'ARCHS4_Tissues']
 
 # gse = 'GSE96870'
 # organism = 'mouse'
@@ -22,7 +23,7 @@ gene_set_libraries = ['KEGG_2016', 'ARCHS4_Cell-lines']
 # gses = ['GSE57872', 'GSE75140']
 # organisms = ['human'] * len(gses)
 
-gses = ['GSE96870']
+gses = ['GSE96630']
 organisms = ['mouse']
 
 for gse, organism in zip(gses, organisms):

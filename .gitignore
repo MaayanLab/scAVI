@@ -3,3 +3,4 @@ data/
 .ipynb_checkpoints/
 static/node_modules
 secrets.sh
+scripts/*.csv
