@@ -22,24 +22,28 @@ def load_read_counts(organism='human', gsms=[], retrive_meta=True):
 	fn = os.path.join(SCRIPT_DIR, 'data/%s_matrix.h5' % organism)
 	f = h5py.File(fn, 'r')
 	mat = f['data']['expression']
-	genes = f['meta']['genes']
-	# to prevent MongoDB error
-	genes = map(lambda x:x.replace('.', '_'), genes)
 
 	all_gsms = f['meta']['Sample_geo_accession']
 	sample_mask = np.in1d(all_gsms, gsms)
-	sample_ids = all_gsms[sample_mask]
-	# Retrieve gene by sample matrix
-	expr_df = pd.DataFrame(mat[sample_mask, :].T, index=genes, columns=sample_ids)
+	if sample_mask.sum() == 0:
+		raise RuntimeError('None of the gsms %s exists in the h5 file %s_matrix.h5' % 
+			(gsms, organism))
+	else:
+		sample_ids = all_gsms[sample_mask]
+		genes = f['meta']['genes']
+		# to prevent MongoDB error
+		genes = map(lambda x:x.replace('.', '_'), genes)		
+		# Retrieve gene by sample matrix
+		expr_df = pd.DataFrame(mat[sample_mask, :].T, index=genes, columns=sample_ids)
 
-	# Filter out non-expressed genes
-	expr_df = expr_df.loc[expr_df.sum(axis=1) > 0, :] 
+		# Filter out non-expressed genes
+		expr_df = expr_df.loc[expr_df.sum(axis=1) > 0, :] 
 
-	# Filter out samples with very low read counts
-	valid_sample_mask = expr_df.sum(axis=0) > 100
-	expr_df = expr_df.loc[:, valid_sample_mask]
+		# Filter out samples with very low read counts
+		valid_sample_mask = expr_df.sum(axis=0) > 100
+		expr_df = expr_df.loc[:, valid_sample_mask]
 
-	return expr_df
+		return expr_df
 
 
 def compute_CPMs(expr_df, CPM_cutoff=0.3, at_least_in_persent_samples=10):
