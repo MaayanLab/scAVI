@@ -451,6 +451,8 @@ var LibSearchSelectize = Backbone.View.extend({
 		container: document.body,
 		scatterPlot: Scatter3dView,
 		synonymsUrl: 'query_libs',
+		options: [],
+		label: ''
 	},
 
 	initialize: function(options){
@@ -474,7 +476,7 @@ var LibSearchSelectize = Backbone.View.extend({
 		// set up the DOMs
 		// wrapper for SearchSelectize
 		var searchControl = $('<div class="form-group" id="search-control"></div>')
-		searchControl.append($('<label class="control-label">Search a gene-set library:</label>'))
+		searchControl.append($('<label class="control-label">' + this.label + '</label>'))
 
 		this.$el = $('<select id="search" class="form-control"></select>');
 		searchControl.append(this.$el)
@@ -491,7 +493,7 @@ var LibSearchSelectize = Backbone.View.extend({
 			searchField: 'name',
 			sortField: 'name',
 			preload: 'focus',
-			options: [],
+			options: self.options,
 			create:false,
 			placeholder: 'Type a gene-set library',
 			render: {
@@ -501,19 +503,19 @@ var LibSearchSelectize = Backbone.View.extend({
 						'</ul>';
 				}
 			},
-			load: function(query, callback){
-				$.ajax({
-					url: self.synonymsUrl,
-					type: 'GET',
-					dataType: 'json',
-					error: function(){
-						callback();
-					},
-					success: function(res){
-						return callback(res);
-					}
-				});
-			}
+			// load: function(query, callback){
+			// 	$.ajax({
+			// 		url: self.synonymsUrl,
+			// 		type: 'GET',
+			// 		dataType: 'json',
+			// 		error: function(){
+			// 			callback();
+			// 		},
+			// 		success: function(res){
+			// 			return callback(res);
+			// 		}
+			// 	});
+			// }
 			});
 
 		// on change, trigger('searched', query)

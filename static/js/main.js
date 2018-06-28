@@ -46,7 +46,17 @@ var termSearchSelectize = new TermSearchSelectize({
 var libSearchSelectize = new LibSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
-	synonymsUrl: 'library/query/' + dataset_id
+	synonymsUrl: 'library/query/' + dataset_id,
+	label: 'Predict cell type and tissue:',
+	options: [{name: 'ARCHS4_Tissues'}, {name: 'ARCHS4_Cell-lines'}]
+})
+
+var libSearchSelectize2 = new LibSearchSelectize({
+	scatterPlot: sdv, 
+	container: "#controls", 
+	synonymsUrl: 'library/query/' + dataset_id,
+	label: 'Predict pathways and upstream regulators:',
+	options: [{name: 'ChEA_2016'}, {name: 'KEA_2015'}, {name: 'KEGG_2016'}]
 })
 
 // DOMs for brush selection
