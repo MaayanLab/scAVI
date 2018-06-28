@@ -226,15 +226,17 @@ class GEODataset(GeneExpressionDataset):
 		else:
 			df = pd.DataFrame(index=[], columns=self.sample_ids)
 
+		# order/subset the samples
+		meta_df = pd.DataFrame(meta_doc['meta_df'], index=self.sample_ids)
+		meta_df = meta_df.loc[df.columns]
+		self.sample_ids = df.columns.tolist()
+		meta_df = meta_df.loc[:, meta_df.nunique() > 1]
+		# update meta_doc
+		meta_doc['meta_df'] = meta_df.to_dict(orient='list')
+		meta_doc['sample_id'] = self.sample_ids
 
 		GeneExpressionDataset.__init__(self, df, meta=meta_doc)
-		self.id = gse_id
-		
-		# order/subset the samples
-		self.meta_df = pd.DataFrame(meta_doc['meta_df'], index=self.sample_ids)
-		self.sample_ids = df.columns.tolist()
-		self.meta_df = self.meta_df.loc[df.columns]
-		self.meta_df = self.meta_df.loc[:, self.meta_df.nunique() > 1]
+		self.id = gse_id		
 		# self.meta = meta_doc
 		# self.meta_df = pd.DataFrame(meta_doc['meta_df'])\
 		# 	.set_index('Sample_geo_accession')
