@@ -58,10 +58,10 @@ for c, gse_id in enumerate(existing_GSE_ids):
 		{'_id':False, 'gene_set_library':True})
 	gene_sets_avail = [doc['gene_set_library'] for doc in cur]
 
-	if set(visualizations) != set(visualization_names):
+	if not set(visualization_names).issubset(set(visualizations)):
 		is_complete = False
 
-	if set(gene_sets_avail) != set(gene_set_libraries):
+	if not set(gene_set_libraries).issubset(set(gene_sets_avail)):
 		is_complete = False
 
 	if not is_complete:
@@ -84,10 +84,13 @@ for c, gse_id in enumerate(existing_GSE_ids):
 			for gene_set_name in set(gene_set_libraries) - set(gene_sets_avail):
 				print 'Performing enrichment analysis on %s for dataset %s' % (gene_set_name, gse_id)
 				er = EnrichmentResults(gds, gene_set_name)
-				er.do_enrichment(db)
-				er.summarize(db)
-				print 'Finished enrichment analysis on %s for dataset %s' % (gene_set_name, gse_id)
-				print er.save(db)
-				er.remove_intermediates(db)
+				try:
+					er.do_enrichment(db)
+					er.summarize(db)
+					print 'Finished enrichment analysis on %s for dataset %s' % (gene_set_name, gse_id)
+					print er.save(db)
+					er.remove_intermediates(db)
+				except:
+					pass
 
 

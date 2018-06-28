@@ -83,7 +83,6 @@ var Legend = Backbone.View.extend({
 			.node()
 			.getBBox();
 		// move legendShape accordingly
-		console.log(bbox.height)
 		var dy = bbox.height + 10;
 		this.g.select('#legendShape')
 			.transition()

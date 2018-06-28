@@ -51,7 +51,7 @@ def get_enrichment(user_list_id, gene_set_library):
 		)
 	if not response.ok:
 		print 'Error fetching enrichment results for list: %s' % user_list_id
-		raise Exception('Error fetching enrichment results.')
+		raise Exception('Error fetching enrichment results for list: %s' % user_list_id)
 
 	data = json.loads(response.text)
 	return data
@@ -111,6 +111,8 @@ class EnrichmentResults(object):
 						left_index=True,
 						right_index=True,
 						how='outer')
+		# to prevent MongoDB error			
+		combined_scores_df.index = combined_scores_df.index.map(lambda x: x.replace('.', '_'))
 		self.combined_scores_df = combined_scores_df
 		self.top1_terms = get_most_enriched_terms(combined_scores_df)
 		return combined_scores_df
