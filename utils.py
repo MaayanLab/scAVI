@@ -106,9 +106,10 @@ def load_vis_df(vis, gds):
 	graph_df['y'] = minmax_scaling(graph_df['y'].values)
 	# Perform clustering
 	graph_df['DBSCAN-clustering'] = clustering(graph_df['x'].values, graph_df['y'].values,
-		clstr = cluster.DBSCAN(min_samples=10, eps=0.33))
+		clstr = cluster.DBSCAN(min_samples=5, 
+			eps=0.7))
 	graph_df['KMeans-clustering'] = clustering(graph_df['x'].values, graph_df['y'].values, 
-		cluster.KMeans(n_clusters=30))
+		cluster.KMeans(n_clusters=10))
 	# Merge with meta_df
 	graph_df = graph_df.merge(gds.meta_df, how='left', left_index=True, right_index=True)
 	return graph_df
