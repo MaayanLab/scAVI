@@ -451,7 +451,7 @@ var LibSearchSelectize = Backbone.View.extend({
 		container: document.body,
 		scatterPlot: Scatter3dView,
 		synonymsUrl: 'query_libs',
-		options: [],
+		optionsShow: [],
 		label: ''
 	},
 
@@ -493,7 +493,7 @@ var LibSearchSelectize = Backbone.View.extend({
 			searchField: 'name',
 			sortField: 'name',
 			preload: 'focus',
-			options: self.options,
+			options: [],
 			create:false,
 			placeholder: 'Type a gene-set library',
 			render: {
@@ -503,19 +503,20 @@ var LibSearchSelectize = Backbone.View.extend({
 						'</ul>';
 				}
 			},
-			// load: function(query, callback){
-			// 	$.ajax({
-			// 		url: self.synonymsUrl,
-			// 		type: 'GET',
-			// 		dataType: 'json',
-			// 		error: function(){
-			// 			callback();
-			// 		},
-			// 		success: function(res){
-			// 			return callback(res);
-			// 		}
-			// 	});
-			// }
+			load: function(query, callback){
+				$.ajax({
+					url: self.synonymsUrl,
+					type: 'GET',
+					dataType: 'json',
+					error: function(){
+						callback();
+					},
+					success: function(res){
+						res = _.filter(res, function(rec){ return self.optionsShow.indexOf(rec.name) !== -1 })
+						return callback(res)
+					}
+				});
+			}
 			});
 
 		// on change, trigger('searched', query)

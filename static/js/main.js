@@ -48,7 +48,7 @@ var libSearchSelectize = new LibSearchSelectize({
 	container: "#controls", 
 	synonymsUrl: 'library/query/' + dataset_id,
 	label: 'Predict cell type and tissue:',
-	options: [{name: 'ARCHS4_Tissues'}, {name: 'ARCHS4_Cell-lines'}]
+	optionsShow: ['ARCHS4_Tissues', 'ARCHS4_Cell-lines']
 })
 
 var libSearchSelectize2 = new LibSearchSelectize({
@@ -56,7 +56,7 @@ var libSearchSelectize2 = new LibSearchSelectize({
 	container: "#controls", 
 	synonymsUrl: 'library/query/' + dataset_id,
 	label: 'Predict pathways and upstream regulators:',
-	options: [{name: 'ChEA_2016'}, {name: 'KEA_2015'}, {name: 'KEGG_2016'}]
+	optionsShow: ['ChEA_2016', 'KEA_2015', 'KEGG_2016']
 })
 
 // DOMs for brush selection
