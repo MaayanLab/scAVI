@@ -177,8 +177,12 @@ def graph_page(graph_name, dataset_id):
 
 	d_col_nuniques = sorted(d_col_nuniques.items(), key=lambda x:x[1])
 
-	sdvConfig['colorKey'] = d_col_nuniques[0][0]
-	# sdvConfig['shapeKey'] = d_col_nuniques[0][0]
+	if len(d_col_nuniques) == 0: 
+		# color by clustering if no meta col properly group cells
+		sdvConfig['colorKey'] = 'KMeans-clustering'
+	else:
+		sdvConfig['colorKey'] = d_col_nuniques[0][0]
+
 	sdvConfig['shapeKey'] = None
 			
 	# get available visualizations in the DB
