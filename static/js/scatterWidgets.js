@@ -861,6 +861,7 @@ var BrushBtns = Backbone.View.extend({
 			e.preventDefault();
 			$('#brush-modal').modal('show')
 			if ($('.modal-body').is(':empty')){
+				$(".modal-body").append($('<p id="wait-msg">please wait loading report...</p>'))
 				// load content when modal-body is empty
 				$(".modal-body").load(self.modal_url);
 			}
