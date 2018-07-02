@@ -18,14 +18,21 @@
         <tbody>
             {% for gds in geo_datasets %}
             <tr>
-                <td><a href="graph_page/{{ gds.id }}/tSNE" class="btn btn-outline-info btn-sm">Launch Viewer</a></td>
-                <td><a href="graph_page/{{ gds.id }}/tSNE">{{ gds.series['title'] }} </a></td>
-                <td>{{ gds.sample_ids|length }}</td>
-                <td>{{ gds.organism }}</td>
-                <td>{{ gds.series['submission_date'] }}</td>
-                <td><a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={{ gds.series['pubmed_id'] }}"
-                    target="_blank">{{ gds.series['pubmed_id'] }}</a></td>
-                <td><a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ gds.id }}" target="_blank">{{ gds.id }}</a></td>
+                <td><a href="graph_page/{{ gds['geo_accession'] }}/tSNE" class="btn btn-outline-info btn-sm">Launch Viewer</a></td>
+                <td><a href="graph_page/{{ gds['geo_accession'] }}/tSNE">{{ gds['title'] }} </a></td>
+                <td>{{ gds['n_cells'] }}</td>
+                <td>{{ gds['organism'] }}</td>
+                <td>{{ gds['submission_date'] }}</td>
+                <td>
+                    {% if gds['pubmed_id'] is iterable and gds['pubmed_id'] is not string %}
+                        {% for pmid in gds['pubmed_id'] %}
+                            <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={{ pmid }}" target="_blank">{{ pmid }}</a> 
+                        {% endfor %}
+                    {% else %}
+                        <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={{ gds['pubmed_id'] }}" target="_blank">{{ gds['pubmed_id'] }}</a>
+                    {% endif %}
+                </td>
+                <td><a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ gds['geo_accession'] }}" target="_blank">{{ gds['geo_accession'] }}</a></td>
             </tr>
             {% endfor %}
         </tbody>

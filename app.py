@@ -41,18 +41,38 @@ def index_page():
 
 @app.route(ENTER_POINT + '/all')
 def all_datasets():
-	dataset_ids = mongo.db['dataset'].distinct('id')
-
-	geo_datasets = []
 	n_cells = 0
-	for dataset_id in dataset_ids:
-		if dataset_id.startswith('GSE'):
-			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
-			gds.load_series_meta(mongo.db)
-			geo_datasets.append(gds)
-			n_cells += len(gds.sample_ids)
+	dataset_ids = mongo.db['dataset'].find({'id': {'$regex': r'^GSE'}}).distinct('id')
+	projection = {'_id':False, 
+		'pubmed_id':True, 
+		'title':True, 
+		'submission_date':True,
+		'platform_taxid':True,
+		'geo_accession':True,
+		'sample_id':True
+		}
 
-	stats = {'n_studies': len(geo_datasets), 'n_cells': n_cells}
+	cur = mongo.db['geo'].find({'geo_accession': {'$in': dataset_ids}}, 
+		projection,
+		cursor_type=CursorType.EXHAUST
+		)
+
+	n_studies = cur.count()
+	geo_datasets = [None] * n_studies
+
+	i = 0
+	for doc in cur:
+		n_cells += len(doc['sample_id'])
+		doc['n_cells'] = len(doc['sample_id'])
+		organism = 'human'
+		if str(doc['platform_taxid']) == '10090':
+			organism = 'mouse'
+		doc['organism'] = organism
+		doc.pop('sample_id', None)
+		geo_datasets[i] = doc
+		i += 1
+
+	stats = {'n_studies': n_studies, 'n_cells': n_cells}
 	return render_template('datasets.html', 
 			ENTER_POINT=ENTER_POINT,
 			geo_datasets=geo_datasets,
