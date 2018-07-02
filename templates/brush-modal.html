@@ -41,7 +41,8 @@
 <script src="node_modules/highcharts/modules/exporting.js"></script>
 <script src="node_modules/highcharts/modules/export-data.js"></script>
 
-<script src="node_modules/plotly.js/dist/plotly.min.js"></script>
+<!-- <script src="node_modules/plotly.js/dist/plotly.min.js"></script> -->
+<script src="lib/plotly-1.38.min.js"></script>
 
 <script type="text/javascript">
   var colors10 = _.map(_.range(10), d3.scale.category10());
@@ -190,8 +191,8 @@
 
     var data_violin = [{
       type: 'violin',
-      y: data['variable'].reverse(),
-      x: data['value'].reverse(),
+      y: data['variable'].slice().reverse(),
+      x: data['value'].slice().reverse(),
       points: 'none',
       box: {
         visible: true,
@@ -230,13 +231,13 @@
   // create the violin plot for default_lib
   var default_lib = enrichr_libs.slice(-1);
   var default_data = generateEnrichrViolinDataAndLayout(default_lib)
-  Plotly.plot('enrichr-chart', default_data.data, default_data.layout, {displaylogo: false});
+  Plotly.newPlot('enrichr-chart', default_data.data, default_data.layout, {displaylogo: false});
 
   // control enrichr chart by the selectpicker
   $("#enrichr-chart-select").on('changed.bs.select', function(){
     var selected_lib = $(this).val();    
     var selected_data = generateEnrichrViolinDataAndLayout(selected_lib);
-    Plotly.newPlot('enrichr-chart', selected_data.data, selected_data.layout, {displaylogo: false})
+    Plotly.react('enrichr-chart', selected_data.data, selected_data.layout, {displaylogo: false})
 
   });
 
