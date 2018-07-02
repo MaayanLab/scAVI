@@ -376,20 +376,23 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 	# prepare gene expression
 	cur = mongo.db['expression'].find(
 		{'dataset_id': dataset_id},
-		{'gene':True, 'values': True, '_id': False}
+		{'gene':True, 'values': True, '_id': False},
+		cursor_type=CursorType.EXHAUST
 	)
 	# pick to top expressed genes
 	zscores_df = pd.DataFrame.from_dict({doc['gene'] : np.array(doc['values'])[mask] for doc in cur})
-	sorted_zscores = zscores_df.median().sort_values()
-	top_up_genes = sorted_zscores[-20:][::-1].index
-	top_dn_genes = sorted_zscores[:20][::-1].index
+	sorted_zscores = np.median(zscores_df.values, axis=0)
+	sorted_genes = zscores_df.columns[sorted_zscores.argsort()]
+	top_up_genes = sorted_genes[-20:][::-1]
+	top_dn_genes = sorted_genes[:20][::-1]
 	top_genes = list(top_up_genes) + list(top_dn_genes)
 	top_genes_zscores_df = zscores_df.loc[:, top_genes]
 
 	# prepare enrichment
 	enrichment = {}
 	cur = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
-		{'gene_set_library':True, 'scores': True, '_id':False})
+		{'gene_set_library':True, 'scores': True, '_id':False},
+		cursor_type=CursorType.EXHAUST)
 	for doc in cur:
 		lib = doc['gene_set_library']
 		scores_df = pd.DataFrame.from_dict({term: np.array(scores)[mask] for term, scores in doc['scores'].iteritems() })\
