@@ -10,9 +10,12 @@ parser.add_argument('-v', '--vis', help='Visualizations (comma separated strings
 	default='PCA,tSNE')
 parser.add_argument('-i', '--input', help='Input csv file with columns `GSE` and `organism`', 
 	default='')
+parser.add_argument('-t', '--cpu', help='Number of CPUs to use', 
+	default=1)
 
 import sys
 sys.path.append('../')
+from joblib import Parallel, delayed
 from database import *
 from pymongo import MongoClient
 mongo = MongoClient(MONGOURI)
@@ -26,6 +29,7 @@ args = parser.parse_args()
 gene_set_libraries = args.gsl.split(',')
 visualization_names = args.vis.split(',')
 input_file = args.input
+n_cpus = int(args.cpu)
 
 input_df = pd.read_csv(input_file)
 print '# GSEs in %s: %d' %(input_file, input_df.shape[0])
@@ -41,10 +45,13 @@ existing_GSE_ids = filter(lambda x: x.startswith('GSE'), db['dataset'].distinct(
 input_df = input_df.loc[~input_df['GSE'].isin(existing_GSE_ids)]
 print '# GSEs in %s to insert: %d' %(input_file, input_df.shape[0])
 
+# Shuffle rows
+input_df = input_df.sample(frac=1)
+
 gses = input_df['GSE']
 organisms = input_df['organism']
 
-for gse_id, organism in zip(gses, organisms):
+def inner_func(gse_id, organism):
 	print 'Retrieving expression data from h5 for %s' % gse_id
 	try:
 		gds = GEODataset(gse_id=gse_id, organism=organism)
@@ -80,4 +87,18 @@ for gse_id, organism in zip(gses, organisms):
 				er.remove_intermediates(db)
 			except:
 				pass
+	return
 
+if n_cpus == 1:
+	for gse_id, organism in zip(gses, organisms):
+		try:
+			inner_func(gse_id, organism)
+		except Exception as e:
+			print e
+			pass
+
+else:
+	Parallel(n_jobs=n_cpus, 
+		backend='multiprocessing',
+		verbose=10
+		)(delayed(inner_func(gse_id, organism)) for gse_id, organism in zip(gses, organisms))
