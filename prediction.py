@@ -5,6 +5,7 @@ import os
 import cPickle as pickle
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import scale
 
 from gene_expression import *
 from utils import nan_to_none
@@ -54,7 +55,8 @@ class Prediction(object):
 		assert not self.ged.is_zscored()
 
 		mat = mat.loc[self.genes].fillna(0)
-		mat = mat.values.T # sample by genes
+		mat = np.log10(mat + 1)
+		mat = scale(mat, with_mean=True, with_std=True).T # sample by genes
 		mat = self.preprocessor.transform(mat)
 
 		# samples by predicted attrs

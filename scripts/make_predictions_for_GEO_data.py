@@ -20,6 +20,7 @@ coll.create_index('labels') # keywords index
 from classes import *
 from prediction import *
 
+prediction_name = 'human_cell_type'
 
 # Get a list of existing GSEs in the DB
 existing_GSE_ids = db['dataset'].find(
@@ -30,6 +31,12 @@ existing_GSE_ids = db['dataset'].find(
 	).distinct('id')
 
 print '# GSEs in DB: %d' % len(existing_GSE_ids)
+
+GSE_ids_with_predictions = coll.find({'name': prediction_name}).distinct('dataset_id')
+
+existing_GSE_ids = set(existing_GSE_ids) - set(GSE_ids_with_predictions)
+print '# GSEs needs prediction', len(existing_GSE_ids)
+
 
 print 'loading prediction model'
 rp, model, npzf = load_objects_from_files('GaussianRandomProjection_human_N1000.pkl',
@@ -43,10 +50,11 @@ print npzf['genes'].shape
 for gse_id in existing_GSE_ids:
 	print 'Loading', gse_id
 	# load data from h5 file
-	ged = GEODataset(gse_id=gse_id, organism='human')
+	ged = GEODataset(gse_id=gse_id, organism='human', 
+		expression_kwargs={'CPM_cutoff':0., 'at_least_in_persent_samples':0})
 	print ged.df.shape
 
-	pred_obj = Prediction(ged=ged, name='human_cell_type',
+	pred_obj = Prediction(ged=ged, name=prediction_name,
 		preprocessor=rp, model=model,
 		npz=npzf)
 

@@ -16,7 +16,7 @@ from geo_meta import *
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-def load_read_counts(organism='human', gsms=[], retrive_meta=True):
+def load_read_counts(organism='human', gsms=[]):
 	'''Load data from h5 file using a list of GSMs.
 	'''
 	fn = os.path.join(SCRIPT_DIR, 'data/%s_matrix.h5' % organism)
@@ -40,8 +40,8 @@ def load_read_counts(organism='human', gsms=[], retrive_meta=True):
 		expr_df = expr_df.loc[expr_df.sum(axis=1) > 0, :] 
 
 		# Filter out samples with very low read counts
-		valid_sample_mask = expr_df.sum(axis=0) > 100
-		expr_df = expr_df.loc[:, valid_sample_mask]
+		# valid_sample_mask = expr_df.sum(axis=0) > 100
+		# expr_df = expr_df.loc[:, valid_sample_mask]
 
 		return expr_df
 
@@ -216,7 +216,7 @@ class GeneExpressionDataset(object):
 
 class GEODataset(GeneExpressionDataset):
 	"""docstring for GEODataset"""
-	def __init__(self, gse_id, organism='human', meta_doc=None, meta_only=False):
+	def __init__(self, gse_id, organism='human', meta_doc=None, meta_only=False, expression_kwargs={}):
 		self.id = gse_id
 		self.organism = organism
 		if meta_doc is None:
@@ -226,7 +226,7 @@ class GEODataset(GeneExpressionDataset):
 		self.sample_ids = meta_doc['sample_id']
 		if not meta_only:
 			# retrieve the expression matrix from the h5 file
-			df = self.retrieve_expression()
+			df = self.retrieve_expression(expression_kwargs=expression_kwargs)
 		else:
 			df = pd.DataFrame(index=[], columns=self.sample_ids)
 
@@ -246,10 +246,10 @@ class GEODataset(GeneExpressionDataset):
 		# 	.set_index('Sample_geo_accession')
 		
 
-	def retrieve_expression(self):
+	def retrieve_expression(self, expression_kwargs={}):
 		'''Retrieve gene expression from the h5 file'''
 		df= load_read_counts(organism=self.organism, gsms=self.sample_ids)
-		df = compute_CPMs(df)
+		df = compute_CPMs(df, **expression_kwargs)
 		return df
 	
 	def save(self, db):
