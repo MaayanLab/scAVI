@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from gene_expression import *
+from utils import nan_to_none
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -66,7 +67,17 @@ class Prediction(object):
 		return Y_probas
 
 	def save(self, db):
-		pass
+		probas = self.Y_probas.to_dict('list')
+		doc = {
+			'probas': probas,
+			'sample_ids': self.Y_probas.index.tolist(),
+			'labels': self.labels.tolist(),
+			'name': self.name,
+			'dataset_id': self.ged.id,
+			'top1_labels': self.top1_labels
+		}
+		insert_result = db[self.coll].insert_one(doc)
+		return insert_result.inserted_id
 
 	@classmethod
 	def load(cls, dataset_id, name, db):
@@ -77,22 +88,22 @@ class Prediction(object):
 				{'name': name}
 			]})
 		obj = cls(ged=None, name=name)
-		obj.Y_probas = pd.DataFrame(doc['scores'], index=doc['sample_ids'])
+		obj.Y_probas = pd.DataFrame(doc['probas'], index=doc['sample_ids'])
 		obj.top1_labels = doc['top1_labels']
 		return obj
 
 	@classmethod
 	def get_label_probas(cls, dataset_id, name, label, db):
-		'''Given dataset_id, name, term, find the scores of the samples.
+		'''Given dataset_id, name, term, find the probabilities of the samples.
 		'''
 		doc = db[cls.coll].find_one({'$and': [
 				{'dataset_id': dataset_id},
 				{'name': name}
 			]}, 
-			{'scores.%s'%term:True, '_id': False}
+			{'probas.%s'%term:True, '_id': False}
 			)
-		doc['scores'][term] = map(nan_to_none, doc['scores'][term])
-		return doc['scores']
+		doc['probas'][term] = map(nan_to_none, doc['probas'][term])
+		return doc['probas']
 
 	@classmethod
 	def get_top_labels(cls, dataset_id, name, db):
