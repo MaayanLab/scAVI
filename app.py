@@ -319,7 +319,7 @@ def search_labels(query_string, dataset_id):
 		for doc in docs:
 			for label in doc['labels']:
 				if query_string.lower() in label.lower():
-					label = {'name': doc['name'], 'label': label}
+					label = {'name': doc['name'], 'term': label}
 					array_of_labels.append(label)
 		return jsonify(array_of_labels)
 

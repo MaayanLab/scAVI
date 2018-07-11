@@ -26,7 +26,7 @@ var legend = new Legend({scatterPlot: sdv, h: window.innerHeight + 'px', contain
 
 var controler = new Controler({scatterPlot: sdv, h: window.innerHeight + 'px', w: '200px', container: container})
 
-
+// search expression of single genes
 var geneSearchSelectize = new SearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
@@ -34,6 +34,7 @@ var geneSearchSelectize = new SearchSelectize({
 	retrieveUrl: 'gene/get/' + dataset_id 
 })
 
+// search enrichment scores of single terms
 var termSearchSelectize = new TermSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
@@ -42,12 +43,22 @@ var termSearchSelectize = new TermSearchSelectize({
 	retrieveUrl: 'term/get/' + dataset_id
 })
 
+// search probabilities for single predicted labels
+// var labelSearchSelectize = new TermSearchSelectize({
+// 	scatterPlot: sdv, 
+// 	container: "#controls", 
+// 	synonymsUrl: 'label/query/' + dataset_id,
+// 	optGroupUrl: 'prediction/query/' + dataset_id,
+// 	retrieveUrl: 'label/get/' + dataset_id
+// })
+
+// search top enriched terms
 var libSearchSelectize = new LibSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
 	synonymsUrl: 'library/query/' + dataset_id,
 	retrieveUrl: 'library/get/' + dataset_id,
-	label: 'Predict cell type and tissue:',
+	label: 'Enriched cell type and tissue:',
 	optionsShow: ['ARCHS4_Tissues', 'ARCHS4_Cell-lines']
 })
 
@@ -59,6 +70,17 @@ var libSearchSelectize2 = new LibSearchSelectize({
 	label: 'Predict pathways and upstream regulators:',
 	optionsShow: ['ChEA_2016', 'KEA_2015', 'KEGG_2016']
 })
+
+// search top predicted labels
+var predSearchSelectize = new LibSearchSelectize({
+	scatterPlot: sdv, 
+	container: "#controls", 
+	synonymsUrl: 'prediction/query/' + dataset_id,
+	retrieveUrl: 'prediction/get/' + dataset_id,
+	label: 'Predicted cell types from expression vectors:',
+	optionsShow: ['human_cell_type', 'mouse_cell_type']
+})
+
 
 // DOMs for brush selection
 var brushController = new BrushController({scatterPlot: sdv, container: "#controls"})
