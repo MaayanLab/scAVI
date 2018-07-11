@@ -90,74 +90,94 @@ chart.addSeries(gene_series_z)
 // })
 
 
-// Parse data for Enrichment bar plot
-var gene_set_libs = _.keys(sample_data.enrichment);
+function makeAndManageSelectBarChart(selectSelector, chartSelector, title, scoreName, data){
+  // init and handling select events for bar charts given data
 
-// add options in <select>
-for (var i = gene_set_libs.length - 1; i >= 0; i--) {
-  var lib = gene_set_libs[i];
-  $("#enrichr-select").append($('<option>'+ lib +'</option>'));
-}
+  // Parse data for Enrichment bar plot
+  var gene_set_libs = _.keys(data);
 
-// helper function to get the series for enrichr
-var get_lib_data = function(lib){
-  var enrich_data = _.map(sample_data.enrichment[lib], function(d){
-    return {
-      term: d.term,
-      y: parseFloat(d.score.toFixed(3)),
-      color: colors10[3]
-    };
-  });
-  var enrich_series = {name: 'combined score', data: enrich_data}
-  return enrich_series
-}
+  // add options in <select>
+  for (var i = gene_set_libs.length - 1; i >= 0; i--) {
+    var lib = gene_set_libs[i];
+    $(selectSelector).append($('<option>'+ lib +'</option>'));
+  }
 
-var default_lib = gene_set_libs.slice(-1)
-var enrich_series = get_lib_data(default_lib)
+  // helper function to get the series for enrichr
+  var get_lib_data = function(lib){
+    var enrichData = _.map(data[lib], function(d){
+      return {
+        term: d.term,
+        y: parseFloat(d.score.toFixed(3)),
+        color: colors10[3]
+      };
+    });
+    var enrich_series = {name: scoreName, data: enrichData}
+    return enrich_series
+  }
 
-var chart2 = new Highcharts.chart('enrichr-chart', {
-  chart: {
-    type: 'bar'
-  },
-  plotOptions: {
-    series: {
-      pointWidth: 30,
-    }
-  },
-  title: {
-    text: 'Top enriched terms in ' + default_lib
-  },
-  xAxis: {
-    categories: _.pluck(enrich_series.data, 'term'),
-    labels: {
-      step: 1,
-      overflow: 'justify',
-      align: 'left',
-      x: 5,
-      reserveSpace: false,
-      style: {
-        color: colors10[9],
-        fontWeight: 'bold',
-        fontSize: '14px',
-        whiteSpace: 'nowrap'
+  var default_lib = gene_set_libs.slice(-1)
+  var enrich_series = get_lib_data(default_lib)
+
+  var chart2 = new Highcharts.chart(chartSelector, {
+    chart: {
+      type: 'bar'
+    },
+    plotOptions: {
+      series: {
+        pointWidth: 30,
       }
-    }
-  },
-  yAxis: {
-    title: {text: 'combined score'}
-  },
-  credits: {
-    enabled: false
-  },
-  series: []
-});
-chart2.addSeries(enrich_series)
+    },
+    title: {
+      text: title + default_lib
+    },
+    xAxis: {
+      categories: _.pluck(enrich_series.data, 'term'),
+      labels: {
+        step: 1,
+        overflow: 'justify',
+        align: 'left',
+        x: 5,
+        reserveSpace: false,
+        style: {
+          color: colors10[9],
+          fontWeight: 'bold',
+          fontSize: '14px',
+          whiteSpace: 'nowrap'
+        }
+      }
+    },
+    yAxis: {
+      title: {text: scoreName}
+    },
+    credits: {
+      enabled: false
+    },
+    series: []
+  });
+  chart2.addSeries(enrich_series)
 
-$("#enrichr-select").on('changed.bs.select', function(){
-  var selected_lib = $(this).val();
-  var selected_series = get_lib_data(selected_lib);
-  chart2.series[0].remove(false)
-  chart2.xAxis[0].setCategories(_.pluck(selected_series.data, 'term'), false)
-  chart2.setTitle({text: 'Top enriched terms in ' + selected_lib}, false)
-  chart2.addSeries(selected_series, true)
-})
+  $(selectSelector).on('changed.bs.select', function(){
+    var selected_lib = $(this).val();
+    var selected_series = get_lib_data(selected_lib);
+    chart2.series[0].remove(false)
+    chart2.xAxis[0].setCategories(_.pluck(selected_series.data, 'term'), false)
+    chart2.setTitle({text: title + selected_lib}, false)
+    chart2.addSeries(selected_series, true)
+  })
+}
+
+makeAndManageSelectBarChart('#enrichr-select', 
+  'enrichr-chart',
+  'Top enriched terms in ',
+  'combined score',
+  sample_data.enrichment
+  );
+
+makeAndManageSelectBarChart('#predict-select', 
+  'predict-chart',
+  'Most probably predictions from ',
+  'probability',
+  sample_data.prediction
+  );
+
+

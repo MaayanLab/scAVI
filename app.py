@@ -392,9 +392,21 @@ def sample_landing_page(sample_id):
 		top_terms = sorted_scores[-10:][::-1].to_dict(orient='records')
 		enrichment[lib] = top_terms
 
+	# prepare prediction
+	prediction = {}
+	cur = mongo.db['preds'].find({'dataset_id': dataset_id},
+		{'name':True, 'probas': True, '_id':False})
+	for doc in cur:
+		pred = doc['name']
+		recs = [{'term': label, 'score': probas[idx]} for label, probas in doc['probas'].iteritems()]
+		sorted_probas = pd.DataFrame.from_records(recs).sort_values('score', na_position='first')
+		top_labels = sorted_probas[-10:][::-1].to_dict(orient='records')
+		prediction[pred] = top_labels
+
 	sample_data = {
 		'genes': 	top_up_genes + top_dn_genes,
-		'enrichment': enrichment
+		'enrichment': enrichment,
+		'prediction': prediction
 	}
 	return render_template('sample_page.html', 
 		sample_meta=sample_meta,
