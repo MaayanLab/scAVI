@@ -175,7 +175,7 @@ makeAndManageSelectBarChart('#enrichr-select',
 
 makeAndManageSelectBarChart('#predict-select', 
   'predict-chart',
-  'Most probably predictions from ',
+  'Most probable predictions from ',
   'probability',
   sample_data.prediction
   );

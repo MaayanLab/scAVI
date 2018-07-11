@@ -26,6 +26,7 @@
     <p>The top 10 most highly expressed genes and top 10 most lowly expressed genes among the selected cells relative to all the cells within the dataset are displayed in the violin plot below. </p>
 	</div>
   <div class="row" id="gene-chart"></div>
+
 	<div class="row">
 		<h3>Enrichment analysis</h3>
   </div>
@@ -34,7 +35,16 @@
 	</div>
   <select id="enrichr-chart-select" class="selectpicker" data-style="btn btn-outline-info"></select>
   <div class="row" id="enrichr-chart"></div>
-	
+
+  <div class="row">
+    <h3>Predicted attributes</h3>
+  </div>
+  <div class="row">
+    <p>The top 10 most probable predictions among the selected cells are displayed in the violin plot below. </p>
+  </div>
+  <select id="prediction-chart-select" class="selectpicker" data-style="btn btn-outline-info"></select>
+  <div class="row" id="prediction-chart"></div>
+  	
 </div>
 
 <script src="node_modules/highcharts/highcharts.js"></script>
@@ -174,71 +184,88 @@
   }
   Plotly.plot('gene-chart', genes_data_violin, layout, {displaylogo: false});
 
-  // Parse data for enrichment
-  var enrich_data = plot_data.enrichment;
-  // add options in <select>
-  var enrichr_libs = _.keys(enrich_data)
-  for (var i = enrichr_libs.length - 1; i >= 0; i--) {
-    var key = enrichr_libs[i];
-    $("#enrichr-chart-select").append($('<option>'+ key +'</option>'));  
-  }
-  $('.selectpicker').selectpicker();
 
-  function generateEnrichrViolinDataAndLayout(lib){
-    var data = enrich_data[lib];
-    var uniq_terms = _.uniq(data['variable']);
-    var max_label_length = _.max(_.map(uniq_terms, function(d){return d.length}));
+  function makeAndManageSelectViolinPlot(selectSelector, chartSelector, title, scoreName, inputData){
+    // add options in <select>
+    var enrichr_libs = _.keys(inputData)
+    for (var i = enrichr_libs.length - 1; i >= 0; i--) {
+      var key = enrichr_libs[i];
+      $(selectSelector).append($('<option>'+ key +'</option>'));  
+    }
+    $('.selectpicker').selectpicker();
 
-    var data_violin = [{
-      type: 'violin',
-      y: data['variable'].slice().reverse(),
-      x: data['value'].slice().reverse(),
-      points: 'none',
-      box: {
-        visible: true,
-        width: 0.25
-      },
-      orientation: 'h',
-      line: {
-        color: colors10[3],
-      },
-      meanline: {
-        visible: false
-      },
-      // bandwidth: 1.,
-      scalemode: 'count',
-      spanmode: 'hard',
-    }];
+    function generateEnrichrViolinDataAndLayout(lib){
+      var data = inputData[lib];
+      var uniq_terms = _.uniq(data['variable']);
+      var max_label_length = _.max(_.map(uniq_terms, function(d){return d.length}));
 
-    var layout = {
-      title: "Top enriched terms in "+ lib,
-      yaxis: {
-        zeroline: false,
-        showticklabels: true,
-      },
-      xaxis: {
-        zeroline: false,
-        title: 'combined score'
-      },
-      violingap: 0,
-      showlegend: false,
-      margin: {l: max_label_length * 8},
+      var data_violin = [{
+        type: 'violin',
+        y: data['variable'].slice().reverse(),
+        x: data['value'].slice().reverse(),
+        points: 'none',
+        box: {
+          visible: true,
+          width: 0.25
+        },
+        orientation: 'h',
+        line: {
+          color: colors10[3],
+        },
+        meanline: {
+          visible: false
+        },
+        // bandwidth: 1.,
+        scalemode: 'count',
+        spanmode: 'hard',
+      }];
+
+      var layout = {
+        title: title + lib,
+        yaxis: {
+          zeroline: false,
+          showticklabels: true,
+        },
+        xaxis: {
+          zeroline: false,
+          title: scoreName
+        },
+        violingap: 0,
+        showlegend: false,
+        margin: {l: max_label_length * 8},
+      }
+
+      return {layout: layout, data: data_violin};
     }
 
-    return {layout: layout, data: data_violin};
+    // create the violin plot for default_lib
+    var default_lib = enrichr_libs.slice(-1);
+    var default_data = generateEnrichrViolinDataAndLayout(default_lib)
+    Plotly.newPlot(chartSelector, default_data.data, default_data.layout, {displaylogo: false});
+
+    // control enrichr chart by the selectpicker
+    $(selectSelector).on('changed.bs.select', function(){
+      var selected_lib = $(this).val();    
+      var selected_data = generateEnrichrViolinDataAndLayout(selected_lib);
+      Plotly.react(chartSelector, selected_data.data, selected_data.layout, {displaylogo: false})
+
+    });
   }
 
-  // create the violin plot for default_lib
-  var default_lib = enrichr_libs.slice(-1);
-  var default_data = generateEnrichrViolinDataAndLayout(default_lib)
-  Plotly.newPlot('enrichr-chart', default_data.data, default_data.layout, {displaylogo: false});
+  // enrichr violin
+  makeAndManageSelectViolinPlot('#enrichr-chart-select', 
+    'enrichr-chart', 
+    'Top enriched terms in ',
+    'combined score',
+    plot_data.enrichment
+    );
+  // prediction violin
+  makeAndManageSelectViolinPlot('#prediction-chart-select', 
+    'prediction-chart', 
+    'Most probable predictions from ',
+    'probability',
+    plot_data.prediction
+    );
 
-  // control enrichr chart by the selectpicker
-  $("#enrichr-chart-select").on('changed.bs.select', function(){
-    var selected_lib = $(this).val();    
-    var selected_data = generateEnrichrViolinDataAndLayout(selected_lib);
-    Plotly.react('enrichr-chart', selected_data.data, selected_data.layout, {displaylogo: false})
-
-  });
 
 </script>

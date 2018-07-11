@@ -471,14 +471,31 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 		scores_df = pd.DataFrame.from_dict({term: np.array(scores)[mask] for term, scores in doc['scores'].iteritems() })\
 			.fillna(0)
 		sorted_scores = scores_df.median().sort_values(ascending=False, na_position='last')
-		top_terms = sorted_scores[:10].index
+		n = min(10, (sorted_scores>0).sum())
+		top_terms = sorted_scores[:n].index
 		top_terms_scores = scores_df.loc[:, top_terms].melt().to_dict(orient='list') # {term: [values]}
 		enrichment[lib] = top_terms_scores
+
+	# prepare prediction
+	prediction = {}
+	cur = mongo.db['preds'].find({'dataset_id': dataset_id}, 
+		{'name':True, 'probas': True, '_id':False},
+		cursor_type=CursorType.EXHAUST)
+	for doc in cur:
+		pred = doc['name']
+		scores_df = pd.DataFrame.from_dict({label: np.array(probas)[mask] for label, probas in doc['probas'].iteritems() })\
+			.fillna(0)
+		sorted_scores = scores_df.median().sort_values(ascending=False, na_position='last')
+		n = min(10, (sorted_scores>0).sum())
+		top_labels = sorted_scores[:n].index
+		top_labels_scores = scores_df.loc[:, top_labels].melt().to_dict(orient='list') # {label: [values]}
+		prediction[pred] = top_labels_scores
 
 	plot_data = { 
 		'samples_meta': samples_meta.to_dict(orient='list'),
 		'genes': top_genes_zscores_df.melt().to_dict(orient='list'), # {'gene': [genes], 'value': [values]}
 		'enrichment' : enrichment,
+		'prediction': prediction,
 	}
 
 	return render_template('brush-modal.html',
