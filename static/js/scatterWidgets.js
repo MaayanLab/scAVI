@@ -263,7 +263,8 @@ var SearchSelectize = Backbone.View.extend({
 	defaults: {
 		container: document.body,
 		scatterPlot: Scatter3dView,
-		synonymsUrl: 'query_genes',
+		synonymsUrl: 'query_genes', // the url to retrieve available options
+		retrieveUrl: 'get_gene', // the url to retrieve a single item
 	},
 
 	initialize: function(options){
@@ -277,8 +278,9 @@ var SearchSelectize = Backbone.View.extend({
 
 		var scatterPlot = this.scatterPlot;
 		// scatterPlot highlightQuery once selectize is searched
+		var retrieveUrl = this.retrieveUrl;
 		scatterPlot.listenTo(this, 'searched', function(query){
-			scatterPlot.colorByGeneExpression(query);
+			scatterPlot.colorByScoresFromUrl(retrieveUrl, query);
 		});
 
 	},
@@ -348,7 +350,8 @@ var TermSearchSelectize = Backbone.View.extend({
 		container: document.body,
 		scatterPlot: Scatter3dView,
 		synonymsUrl: 'query_terms',
-		optGroupUrl: ''
+		optGroupUrl: '',
+		retrieveUrl: 'get_terms'
 	},
 
 	initialize: function(options){
@@ -362,8 +365,9 @@ var TermSearchSelectize = Backbone.View.extend({
 
 		var scatterPlot = this.scatterPlot;
 		// scatterPlot highlightQuery once selectize is searched
+		var retrieveUrl = this.retrieveUrl
 		scatterPlot.listenTo(this, 'searched', function(query){
-			scatterPlot.colorByTermScores(query);
+			scatterPlot.colorByScoresFromUrl(retrieveUrl, query);
 		});
 
 	},
@@ -451,6 +455,7 @@ var LibSearchSelectize = Backbone.View.extend({
 		container: document.body,
 		scatterPlot: Scatter3dView,
 		synonymsUrl: 'query_libs',
+		retrieveUrl: 'get_lib',
 		optionsShow: [],
 		label: ''
 	},
@@ -466,8 +471,9 @@ var LibSearchSelectize = Backbone.View.extend({
 
 		var scatterPlot = this.scatterPlot;
 		// scatterPlot highlightQuery once selectize is searched
+		var retrieveUrl = this.retrieveUrl;
 		scatterPlot.listenTo(this, 'searched', function(query){
-			scatterPlot.colorByGeneSetLibrary(query);
+			scatterPlot.colorByCategoriesFromUrl(retrieveUrl, query);
 		});
 
 	},

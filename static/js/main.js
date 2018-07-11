@@ -16,9 +16,6 @@ var sdvDefaultConfig = {
 	textures: textures,
 	pointSize: 12,
 	is3d: false,
-	geneUrl: 'gene/get/' + dataset_id,
-	termUrl: 'term/get/' + dataset_id,
-	libUrl: 'library/get/' + dataset_id
 }
 
 sdvConfig = $.extend(sdvDefaultConfig, sdvConfig)
@@ -33,20 +30,23 @@ var controler = new Controler({scatterPlot: sdv, h: window.innerHeight + 'px', w
 var geneSearchSelectize = new SearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
-	synonymsUrl: 'gene/query/' + dataset_id 
+	synonymsUrl: 'gene/query/' + dataset_id,
+	retrieveUrl: 'gene/get/' + dataset_id 
 })
 
 var termSearchSelectize = new TermSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
 	synonymsUrl: 'term/query/' + dataset_id,
-	optGroupUrl: 'library/query/' + dataset_id
+	optGroupUrl: 'library/query/' + dataset_id,
+	retrieveUrl: 'term/get/' + dataset_id
 })
 
 var libSearchSelectize = new LibSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
 	synonymsUrl: 'library/query/' + dataset_id,
+	retrieveUrl: 'library/get/' + dataset_id,
 	label: 'Predict cell type and tissue:',
 	optionsShow: ['ARCHS4_Tissues', 'ARCHS4_Cell-lines']
 })
@@ -55,6 +55,7 @@ var libSearchSelectize2 = new LibSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
 	synonymsUrl: 'library/query/' + dataset_id,
+	retrieveUrl: 'library/get/' + dataset_id,
 	label: 'Predict pathways and upstream regulators:',
 	optionsShow: ['ChEA_2016', 'KEA_2015', 'KEGG_2016']
 })

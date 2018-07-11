@@ -407,9 +407,6 @@ var Scatter3dView = Backbone.View.extend({
 		showStats: false, // whether to show Stats
 		is3d: true, // 3d or 2d
 		raycasterThreshold: undefined, // raycaster.Points.threshold
-		geneUrl: 'gene',
-		termUrl: 'term',
-		libUrl: 'library',
 	},
 
 	initialize: function(options){
@@ -1008,44 +1005,20 @@ var Scatter3dView = Backbone.View.extend({
 		this.renderScatter();
 	},
 
-	colorByScores: function(searchResult){
-		// To color nodes by similarity scores. 
-		// The input is the response from the /search endpoint.
-		this.colorKey = 'scores';
-		// store the scores in the model
-		this.model.setAttr('scores', searchResult.scores);
-		// update the clouds by calling shapeBy
-		this.shapeBy(this.shapeKey);
-	},
-
-	colorByGeneExpression: function(gene){
-		// To retrieve the expression values for a gene,
-		// then color the dots by the expression values
+	colorByScoresFromUrl: function(url, term){
 		var self = this;
-
-		$.getJSON(this.geneUrl + '/' + gene, function(result){
-			self.colorKey = gene;
-			self.model.setAttr(gene, result[gene]);
-			self.shapeBy(self.shapeKey);
-		});
-	},
-
-	colorByTermScores: function(term){
-		var self = this;
-
-		$.getJSON(this.termUrl + '/' + term, function(result){
+		$.getJSON(url + '/' + term, function(result){
 			self.colorKey = term;
 			self.model.setAttr(term, result[term]);
 			self.shapeBy(self.shapeKey)
 		});
 	},
 
-	colorByGeneSetLibrary: function(lib){
+	colorByCategoriesFromUrl: function(url, lib){
 		if (this.labelKey.indexOf(lib) === -1){
 			// retrieve from server if not in the labelKey
 			var self = this;
-			$.getJSON(this.libUrl + '/' + lib, function(result){
-				
+			$.getJSON(url + '/' + lib, function(result){
 				self.colorKey = lib;
 				self.model.setAttr(lib, result[lib]);
 				// Add this lib to labelKey for hovering display
