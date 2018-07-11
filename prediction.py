@@ -29,6 +29,9 @@ def get_top1_labels(Y_probas):
 	mask = np.argmax(Y_probas.values, axis=1)
 	return Y_probas.columns[mask].tolist()
 
+def find_prediction_name_for_label(label, db):
+	doc = db['preds'].find_one({'labels': label}, {'_id':False, 'name':True})
+	return doc['name']
 
 class Prediction(object):
 	"""docstring for Prediction"""
@@ -102,9 +105,9 @@ class Prediction(object):
 				{'dataset_id': dataset_id},
 				{'name': name}
 			]}, 
-			{'probas.%s'%term:True, '_id': False}
+			{'probas.%s'%label:True, '_id': False}
 			)
-		doc['probas'][term] = map(nan_to_none, doc['probas'][term])
+		doc['probas'][label] = map(nan_to_none, doc['probas'][label])
 		return doc['probas']
 
 	@classmethod

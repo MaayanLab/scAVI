@@ -302,6 +302,47 @@ def retrieve_library_top_terms(dataset_id, library):
 	doc = EnrichmentResults.get_top_terms(dataset_id, library, mongo.db)
 	return jsonify(doc)
 
+'''
+Predicted labels search endpoints
+'''
+@app.route(ENTER_POINT + '/label/query/<string:dataset_id>/<string:query_string>', methods=['GET'])
+def search_labels(query_string, dataset_id):
+	if request.method == 'GET':
+		docs = mongo.db['preds'].find(
+			{'$and': [
+				{'dataset_id': dataset_id},
+				{'labels': {'$elemMatch': {'$regex': ".*%s.*" % query_string, '$options': 'i'} }}
+			]}, 
+			{'_id':False, 'labels': True, 'name':True})
+
+		array_of_labels = []
+		for doc in docs:
+			for label in doc['labels']:
+				if query_string.lower() in label.lower():
+					label = {'name': doc['name'], 'label': label}
+					array_of_labels.append(label)
+		return jsonify(array_of_labels)
+
+@app.route(ENTER_POINT + '/label/get/<string:dataset_id>/<string:label>', methods=['GET'])
+def retrieve_label_probas(dataset_id, label):
+	name = find_prediction_name_for_label(label, mongo.db)
+	doc = Prediction.get_label_probas(dataset_id, name, label, mongo.db)
+	return jsonify(doc)
+
+'''
+Most probable labels from a prediction
+'''
+@app.route(ENTER_POINT + '/prediction/query/<string:dataset_id>', methods=['GET'])
+def get_predictions(dataset_id):
+	if request.method == 'GET':
+		'''Return a list of available predictions for the dataset'''
+		docs = mongo.db['preds'].find({'dataset_id': dataset_id}, {'name':True, '_id':False})
+		return jsonify([{'name': doc['name']} for doc in docs])
+
+@app.route(ENTER_POINT + '/prediction/get/<string:dataset_id>/<string:pred_name>', methods=['GET'])
+def retrieve_prediction_top_labels(dataset_id, pred_name):
+	doc = Prediction.get_top_labels(dataset_id, pred_name, mongo.db)
+	return jsonify(doc)
 
 '''
 Pages for samples
