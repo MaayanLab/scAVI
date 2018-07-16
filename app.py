@@ -42,7 +42,11 @@ def index_page():
 @app.route(ENTER_POINT + '/all')
 def all_datasets():
 	n_cells = 0
-	dataset_ids = mongo.db['dataset'].find({'id': {'$regex': r'^GSE'}}).distinct('id')
+	dataset_ids = mongo.db['dataset'].find(
+		{'$and': [
+			{'id': {'$regex': r'^GSE'}},
+			{'sample_ids.30': {'$exists': True}}
+		]}).distinct('id')
 	projection = {'_id':False, 
 		'pubmed_id':True, 
 		'title':True, 

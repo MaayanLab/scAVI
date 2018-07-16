@@ -60,33 +60,34 @@ def inner_func(gse_id, organism):
 		pass
 	else:
 		print gds.df.shape
+		if gds.df.shape[1] > 30:
 
-		print 'POSTing DEGs to Enrichr'
-		d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
-		print len(d_sample_userListId)
+			print 'POSTing DEGs to Enrichr'
+			d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
+			print len(d_sample_userListId)
 
-		rid = gds.save(db)
-		print 'Dataset %s saved to DB' % gse_id
-		print rid
+			rid = gds.save(db)
+			print 'Dataset %s saved to DB' % gse_id
+			print rid
 
-		for vis_name in visualization_names:
-			print 'Performing %s for dataset %s' % (vis_name, gse_id)
-			vis = Visualization(ged=gds, name=vis_name, func=vis_funcs[vis_name])
-			coords = vis.compute_visualization()
-			vis.save(db)
-			print 'Finished %s for dataset %s' % (vis_name, gse_id)
+			for vis_name in visualization_names:
+				print 'Performing %s for dataset %s' % (vis_name, gse_id)
+				vis = Visualization(ged=gds, name=vis_name, func=vis_funcs[vis_name])
+				coords = vis.compute_visualization()
+				vis.save(db)
+				print 'Finished %s for dataset %s' % (vis_name, gse_id)
 
-		for gene_set_library in gene_set_libraries:
-			print 'Performing enrichment analysis on %s for dataset %s' % (gene_set_library, gse_id)
-			er = EnrichmentResults(gds, gene_set_library)
-			try:
-				er.do_enrichment(db)
-				er.summarize(db)
-				print 'Finished enrichment analysis on %s for dataset %s' % (gene_set_library, gse_id)
-				print er.save(db)
-				er.remove_intermediates(db)
-			except:
-				pass
+			for gene_set_library in gene_set_libraries:
+				print 'Performing enrichment analysis on %s for dataset %s' % (gene_set_library, gse_id)
+				er = EnrichmentResults(gds, gene_set_library)
+				try:
+					er.do_enrichment(db)
+					er.summarize(db)
+					print 'Finished enrichment analysis on %s for dataset %s' % (gene_set_library, gse_id)
+					print er.save(db)
+					er.remove_intermediates(db)
+				except:
+					pass
 	return
 
 if n_cpus == 1:

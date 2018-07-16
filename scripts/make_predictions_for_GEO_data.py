@@ -53,14 +53,15 @@ for gse_id in existing_GSE_ids:
 	ged = GEODataset(gse_id=gse_id, organism='human', 
 		expression_kwargs={'CPM_cutoff':0., 'at_least_in_persent_samples':0})
 	print ged.df.shape
+	if ged.df.shape[1] > 30:
 
-	pred_obj = Prediction(ged=ged, name=prediction_name,
-		preprocessor=rp, model=model,
-		npz=npzf)
+		pred_obj = Prediction(ged=ged, name=prediction_name,
+			preprocessor=rp, model=model,
+			npz=npzf)
 
-	print 'predicting cell types for ', gse_id
+		print 'predicting cell types for ', gse_id
 
-	Y_probas = pred_obj.predict_proba()
-	print Y_probas.shape
-	print pred_obj.save(db)
+		Y_probas = pred_obj.predict_proba()
+		print Y_probas.shape
+		print pred_obj.save(db)
 
