@@ -518,7 +518,9 @@ var LibSearchSelectize = Backbone.View.extend({
 						callback();
 					},
 					success: function(res){
-						res = _.filter(res, function(rec){ return self.optionsShow.indexOf(rec.name) !== -1 })
+						if (self.optionsShow.length !== 0){
+							res = _.filter(res, function(rec){ return self.optionsShow.indexOf(rec.name) !== -1 })	
+						}
 						return callback(res)
 					}
 				});

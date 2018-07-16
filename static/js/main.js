@@ -78,7 +78,7 @@ var predSearchSelectize = new LibSearchSelectize({
 	synonymsUrl: 'prediction/query/' + dataset_id,
 	retrieveUrl: 'prediction/get/' + dataset_id,
 	label: 'Predicted cell types from expression vectors:',
-	optionsShow: ['human_cell_type', 'mouse_cell_type']
+	optionsShow: []
 })
 
 
