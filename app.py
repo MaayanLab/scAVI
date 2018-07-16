@@ -121,6 +121,7 @@ def upload_files():
 				dataset_exists = True
 				if not dataset.exists(mongo.db):
 					dataset_exists = False
+					dataset.log10_and_zscore()
 					dataset.save(mongo.db)
 					# run the pipeline in background
 					# p = subprocess.Popen(['python', 'pipeline.py', '-i', dataset.id], 

@@ -184,8 +184,7 @@ class GeneExpressionDataset(object):
 				df = pd.DataFrame({expr['gene']: expr['values'] for expr in expressions}).transpose()
 				df.columns = doc['sample_ids']
 			obj = cls(df, meta=doc['meta'])
-			if meta_only:
-				obj.id = dataset_id
+			obj.id = dataset_id
 		return obj
 
 	@classmethod
