@@ -4,3 +4,5 @@ data/
 static/node_modules
 secrets.sh
 scripts/*.csv
+# notebooks in this repo is for debugging codes only
+*.ipynb 

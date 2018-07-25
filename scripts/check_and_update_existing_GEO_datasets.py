@@ -41,7 +41,12 @@ vis_funcs = {
 }
 
 # find existing GEO datasets in the DB
-existing_GSE_ids = filter(lambda x: x.startswith('GSE'), db['dataset'].distinct('id'))
+existing_GSE_ids = db['dataset'].find(
+	{'$and': [
+		{'id': {'$regex': r'^GSE'}},
+		{'sample_ids.30': {'$exists': True}}
+	]}).distinct('id')
+
 
 print 'Number of GSEs in the database: %d' % len(existing_GSE_ids)
 
@@ -78,8 +83,13 @@ for c, gse_id in enumerate(existing_GSE_ids):
 				print 'Finished %s for dataset %s' % (vis_name, gse_id)
 		
 			if set(gene_sets_avail) != set(gene_set_libraries):
-				print 'POSTing DEGs to Enrichr'
-				d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
+				if not gds.DEGs_posted(db):
+					print 'POSTing DEGs to Enrichr'
+					d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
+					gds.save_DEGs(db)
+				else:
+					d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
+
 				print len(d_sample_userListId)
 
 				for gene_set_name in set(gene_set_libraries) - set(gene_sets_avail):

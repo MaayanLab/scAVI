@@ -110,7 +110,10 @@ class GeneExpressionDataset(object):
 			doc = db[self.coll].find_one({'id': self.id}, 
 				{'d_sample_userListId':True, '_id':False})
 			if doc:
-				result = len(doc.get('d_sample_userListId', {})) > 0
+				if len(doc.get('d_sample_userListId', {})) > 0:
+					if None not in doc['d_sample_userListId'].values():
+						# make sure the userListIds does not contain None
+						result = True
 		return result
 
 	def identify_DEGs(self, cutoff=2.33):
@@ -141,6 +144,13 @@ class GeneExpressionDataset(object):
 
 		self.d_sample_userListId = d_sample_userListId
 		return d_sample_userListId
+
+	def save_DEGs(self, db):
+		# Save d_sample_userListId to the existing doc in the db
+		if hasattr(self, 'd_sample_userListId'): 
+			d_sample_userListId = self.d_sample_userListId
+			db[self.coll].update({'id': self.id}, {'$set': 
+				{'d_sample_userListId': d_sample_userListId}})
 
 
 	def save(self, db):
