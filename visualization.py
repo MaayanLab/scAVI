@@ -8,7 +8,7 @@ def do_pca(X):
 
 
 def do_tsne(X):
-	pca = decomposition.PCA(n_components=50)
+	pca = decomposition.PCA(n_components=min(50, X.shape[1]))
 	X_pca = pca.fit_transform(X)
 	tsne = manifold.TSNE(n_components=2, random_state=2018)
 	return tsne.fit_transform(X_pca)
