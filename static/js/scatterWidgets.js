@@ -161,7 +161,7 @@ var Controler = Backbone.View.extend({
 
 		var model = this.model;
 		// filter out metas used as index
-		var metas = _.filter(model.metas, function(meta){ return meta.nUnique < model.n; });
+		var metas = _.filter(model.metas, function(meta){ return meta.nUnique < model.n || meta.type == 'float'; });
 		var self = this;
 		// filter out metas not suitable for shapes
 		var metasShape = _.filter(metas, function(meta){ return meta.nUnique < 7 });

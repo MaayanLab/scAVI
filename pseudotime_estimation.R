@@ -107,6 +107,8 @@ convertToDataFrames <- function(cds) {
 	data_df[, cn1] <- as.matrix(data_df[, cn1]) %*% t(rot_mat)
 	edge_df[, cn2] <- as.matrix(edge_df[, cn2]) %*% t(rot_mat)
 	edge_df[, cn3] <- as.matrix(edge_df[, cn3]) %*% t(rot_mat)
+	# Drop the redundant sample_state column
+	data_df[,"sample_state"] = NULL
 	return(list(edge_df=edge_df, data_df=data_df))
 }
 

@@ -241,9 +241,13 @@ def load_graph_layout_coords(graph_name, dataset_id):
 			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
 		else:
 			gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
-		vis = Visualization.load(dataset_id, graph_name, mongo.db)
 
-		graph_df = load_vis_df(vis, gds)
+		if graph_name not in ('monocle'):
+			vis = Visualization.load(dataset_id, graph_name, mongo.db)
+			graph_df = load_vis_df(vis, gds)
+		else:
+			pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db)
+			graph_df = load_psudotime_df(pe, gds)
 		return graph_df.reset_index().to_json(orient='records')
 
 

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 try:
 	import rpy2.robjects as ro

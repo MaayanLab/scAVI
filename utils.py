@@ -68,32 +68,6 @@ def clustering(x, y, clstr):
 	return clstr.labels_
 
 
-# def load_graph_from_db(graph_name, meta_df=None):
-# 	# Find the graph by name
-# 	graph_doc = json.load(
-# 		open(os.path.join(SCRIPT_DIR, 'data/graphs', graph_name), 'rb')
-# 		)
-# 	graph_df = pd.DataFrame({
-# 		'sample_ids': graph_doc['sample_ids'],
-# 		'x': graph_doc['x'],
-# 		'y': graph_doc['y'],
-# 		}).set_index('sample_ids')
-# 	graph_df.index.name = 'sample_ids'
-# 	# Scale the x, y 
-# 	graph_df['x'] = _minmax_scaling(graph_df['x'].values)
-# 	graph_df['y'] = _minmax_scaling(graph_df['y'].values)
-# 	# Perform clustering
-# 	graph_df['DBSCAN-clustering'] = _cluster(graph_df['x'].values, graph_df['y'].values,
-# 		clstr = cluster.DBSCAN(min_samples=10, eps=0.33))
-# 	graph_df['KMeans-clustering'] = _cluster(graph_df['x'].values, graph_df['y'].values, 
-# 		cluster.KMeans(n_clusters=30))
-
-# 	# Merge with meta_df
-# 	graph_df = graph_df.merge(meta_df, how='left', left_index=True, right_index=True)
-
-# 	return graph_df
-
-
 def load_vis_df(vis, gds):
 	graph_df = pd.DataFrame({
 		'sample_ids': gds.sample_ids,
@@ -112,5 +86,23 @@ def load_vis_df(vis, gds):
 		cluster.KMeans(n_clusters=10))
 	# Merge with meta_df
 	graph_df = graph_df.merge(gds.meta_df, how='left', left_index=True, right_index=True)
+	return graph_df
+
+def load_psudotime_df(pe, gds):
+	graph_df = pd.DataFrame({
+		'sample_ids': gds.sample_ids,
+		'x': pe.coords[:, 0].tolist(),
+		'y': pe.coords[:, 1].tolist(),
+		}).set_index('sample_ids')
+	graph_df.index.name = 'sample_id'
+	# Scale the x, y 
+	graph_df['x'] = minmax_scaling(graph_df['x'].values)
+	graph_df['y'] = minmax_scaling(graph_df['y'].values)
+	# Merge with meta_df
+	graph_df = graph_df.merge(gds.meta_df, how='left', left_index=True, right_index=True)
+	# Merge with estimated attributes from pe
+	data_df = pe.results['data_df']
+	data_df.index = graph_df.index
+	graph_df = graph_df.merge(data_df, left_index=True, right_index=True)
 	return graph_df
 
