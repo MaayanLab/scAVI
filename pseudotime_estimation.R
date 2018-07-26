@@ -65,8 +65,8 @@ runMonocleDDRTree <- function(cds) {
 convertToDataFrames <- function(cds) {
 	sample_name <- NA
 	sample_state <- pData(cds)$State
-	data_dim_1 <- NA
-	data_dim_2 <- NA
+	# data_dim_1 <- NA
+	# data_dim_2 <- NA
 	theta <- 0
 	x <- 1
 	y <- 2
@@ -90,7 +90,7 @@ convertToDataFrames <- function(cds) {
 
 	data_df <- t(monocle::reducedDimS(cds)) %>%
 	  as.data.frame() %>%
-	  select_(data_dim_1 = x, data_dim_2 = y) %>%
+	  select_(x = x, y = y) %>%
 	  rownames_to_column("sample_name") %>%
 	  mutate(sample_state) %>%
 	  left_join(lib_info_with_pseudo %>% rownames_to_column("sample_name"), by = "sample_name")
@@ -101,7 +101,7 @@ convertToDataFrames <- function(cds) {
 	}
 	rot_mat <- return_rotation_mat(theta)
 
-	cn1 <- c("data_dim_1", "data_dim_2")
+	cn1 <- c("x", "y")
 	cn2 <- c("source_prin_graph_dim_1", "source_prin_graph_dim_2")
 	cn3 <- c("target_prin_graph_dim_1", "target_prin_graph_dim_2")
 	data_df[, cn1] <- as.matrix(data_df[, cn1]) %*% t(rot_mat)
