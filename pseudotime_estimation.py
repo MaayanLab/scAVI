@@ -74,24 +74,3 @@ class PseudotimeEstimator(object):
 		obj.results['edge_df'] = pd.DataFrame(doc['edge_df'])
 		return obj
 
-
-## test 
-# from database import *
-# from pymongo import MongoClient
-
-# MONGOURI='mongodb://146.203.54.131:27017/SCV'
-# mongo = MongoClient(MONGOURI)
-
-# db = mongo['SCV']
-
-# from classes import *
-
-# gse_id = 'GSE110499'
-# print 'loading dataset %s' % gse_id
-# gds = GEODataset.load(gse_id, db)
-# print 'dataset shape: ', gds.df.shape
-
-# pe = PseudotimeEstimator(gds, name='monocle', func=run_monocle_pipeline)
-# pe.fit()
-# pe.save(db)
-# pe2 = PseudotimeEstimator.load(gse_id, 'monocle', db)
