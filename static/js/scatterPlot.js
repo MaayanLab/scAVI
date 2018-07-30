@@ -832,7 +832,7 @@ var Scatter3dView = Backbone.View.extend({
 			// add text canvas
 			var textCanvas = this.makeTextCanvas( geometry.attributes.label.array[idx], 
 			    pointPosition.x, pointPosition.y, pointPosition.z,
-			    { fontsize: 24, fontface: "arial, sans-serif", textColor: {r:0, g:0, b:0, a:0.8} }); 
+			    { fontsize: 24, fontface: "'Rubik', sans-serif", textColor: {r:0, g:0, b:0, a:0.8} }); 
 
 			textCanvas.id = "text-label"
 			this.container.appendChild(textCanvas);
