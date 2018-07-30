@@ -246,7 +246,6 @@ var Controler = Backbone.View.extend({
 			// 	container: 'body',
 			// });			
 		})
-
 		return this;
 	},
 
@@ -254,6 +253,7 @@ var Controler = Backbone.View.extend({
 		// change the current selected option to value
 		$('#shape').val(this.scatterPlot.shapeKey); 
 		$('#color').val(this.scatterPlot.colorKey);
+		$('.selectpicker').selectpicker('refresh');
 	},
 
 });
