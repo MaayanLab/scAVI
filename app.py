@@ -16,7 +16,6 @@ from flask_socketio import SocketIO, emit
 import encrypt
 from utils import *
 
-from database import *
 from classes import *
 
 ENTER_POINT = os.environ['ENTER_POINT']
