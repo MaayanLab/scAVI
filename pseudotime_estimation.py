@@ -1,5 +1,8 @@
+import os
 import numpy as np
 import pandas as pd
+
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 try:
 	import rpy2.robjects as ro
@@ -11,8 +14,8 @@ else:
 	from rpy2.robjects import pandas2ri
 	pandas2ri.activate()
 	ro.r('''
-		source('pseudotime_estimation.R')
-	''')
+		source('%s/pseudotime_estimation.R')
+	''' % SCRIPT_DIR)
 	runMonoclePipeline = ro.globalenv['runMonoclePipeline']
 
 # all implemented pseudotime algorithms
