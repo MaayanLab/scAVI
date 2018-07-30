@@ -339,7 +339,7 @@ var ScatterData = Backbone.Model.extend({
 		_.defaults(options, this.defaults)
 		_.defaults(this, options)
 		// fetch json data from server
-		this.fetch();
+		// this.fetch();
 	},
 
 	groupBy: function(metaKey){
@@ -418,8 +418,6 @@ var Scatter3dView = Backbone.View.extend({
 		this.listenToOnce(this.textures, 'allLoaded', function(){
 
 			self.listenTo(self.model, 'sync', function(){
-				console.log('model synced')
-
 				self.setUpStage();
 				// self.colorBy(self.colorKey);
 				self.shapeBy(self.shapeKey);

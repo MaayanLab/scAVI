@@ -15,6 +15,8 @@ else:
 	''')
 	runMonoclePipeline = ro.globalenv['runMonoclePipeline']
 
+# all implemented pseudotime algorithms
+PSEUDOTIME_ALGOS = set(['monocle'])
 
 def run_monocle_pipeline(df):
 	'''Call the R function runMonoclePipeline then convert to results 

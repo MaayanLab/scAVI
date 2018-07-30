@@ -22,6 +22,19 @@ sdvConfig = $.extend(sdvDefaultConfig, sdvConfig)
 
 var sdv = new Scatter3dView(sdvConfig)
 
+if (has_tree){ // Create Tree model and view if there is a tree in the visualization 
+	var td = new TreeData({
+		url: 'tree/' + dataset_id + '/' + graph_name
+	})
+
+	var tdv = new TreeView({
+		model: td,
+		sdv: sdv
+	})	
+} else {
+	sd.fetch();
+}
+
 var legend = new Legend({scatterPlot: sdv, h: window.innerHeight + 'px', container: container})
 
 var controler = new Controler({scatterPlot: sdv, h: window.innerHeight + 'px', w: '200px', container: container})

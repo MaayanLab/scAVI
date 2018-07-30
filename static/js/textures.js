@@ -46,9 +46,7 @@ var Textures = Backbone.Collection.extend({
 
 
 		this.listenTo(this, 'nLoaded', function(n){
-			console.log('Textures collection nLoaded:', n)
 			if (n === symbolTypes.length){
-				console.log('all textures loaded')
 				self.trigger('allLoaded');
 			}
 		});

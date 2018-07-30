@@ -213,12 +213,13 @@ def graph_page(graph_name, dataset_id):
 	# get available visualizations in the DB
 	visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
 		{'_id':False, 'name':True})
-
+	# flag indicating whether a tree will be plotted
+	has_tree = graph_name in PSEUDOTIME_ALGOS
 
 	return render_template('index.html', 
 		script='main',
 		ENTER_POINT=ENTER_POINT,
-		result_id='hello',
+		has_tree=has_tree,
 		graphs=visualizations,
 		graph_name=graph_name,
 		dataset_id=dataset_id,
@@ -242,13 +243,38 @@ def load_graph_layout_coords(graph_name, dataset_id):
 		else:
 			gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
 
-		if graph_name not in ('monocle'):
+		if graph_name not in PSEUDOTIME_ALGOS:
 			vis = Visualization.load(dataset_id, graph_name, mongo.db)
 			graph_df = load_vis_df(vis, gds)
 		else:
 			pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db)
 			graph_df = load_psudotime_df(pe, gds)
 		return graph_df.reset_index().to_json(orient='records')
+
+
+@app.route(ENTER_POINT + '/tree/<string:dataset_id>/<string:graph_name>', methods=['GET'])
+def load_psudotime_tree(graph_name, dataset_id):
+	'''API to retrieve the tree from psudotime estimation.
+	'''
+	if request.method == 'GET':
+		if dataset_id.startswith('GSE'):
+			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+		else:
+			gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
+		pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db)
+		edge_df = pe.results['edge_df']
+
+		scaler_x = MinMaxScaler((0, 20)).fit(pe.coords[:, 0].reshape(-1, 1))
+		scaler_y = MinMaxScaler((0, 20)).fit(pe.coords[:, 1].reshape(-1, 1))
+
+		for col in ['source_prin_graph_dim_1', 'source_prin_graph_dim_2',
+			'target_prin_graph_dim_1', 'target_prin_graph_dim_2']:
+			if col.endswith('1'):
+				edge_df[col] = scaler_x.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
+			else:
+				edge_df[col] = scaler_y.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
+
+		return edge_df.to_json(orient='records')
 
 
 '''
