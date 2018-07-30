@@ -6,6 +6,7 @@ sys.path.append('../')
 from joblib import Parallel, delayed
 from database import *
 from pymongo import MongoClient
+from rpy2.rinterface import RRuntimeError
 
 mongo = MongoClient(MONGOURI)
 
@@ -36,7 +37,12 @@ for gse_id in existing_GSE_ids:
 	
 	print 'performing %s algorithm for %s ' % (pseudo_algo_name, gse_id)
 	pe = PseudotimeEstimator(gds, name=pseudo_algo_name, func=run_monocle_pipeline)
-	pe.fit()
-	print pe.coords.shape
-	pe.save(db)
+	try:
+		pe.fit()
+	except RRuntimeError as e:
+		print e
+		pass
+	else:
+		print pe.coords.shape
+		pe.save(db)
 
