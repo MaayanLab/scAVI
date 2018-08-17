@@ -478,7 +478,7 @@ var LibSearchSelectize = Backbone.View.extend({
 
 	},
 
-	render: function(){
+	_render: function(){
 		// set up the DOMs
 		// wrapper for SearchSelectize
 		var searchControl = $('<div class="form-group" id="search-control"></div>')
@@ -535,6 +535,15 @@ var LibSearchSelectize = Backbone.View.extend({
 		});
 	},
 
+	render: function(){
+		var self = this;
+		$.getJSON(this.synonymsUrl, function(data){
+			// check if there is any options from synonymsUrl
+			if (data.length > 0){
+				self._render()
+			}
+		});
+	},
 });
 
 var SigSimSearch = Backbone.View.extend({
