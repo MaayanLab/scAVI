@@ -58,13 +58,3 @@
 <script src="node_modules/d3-svg-legend/d3-legend.min.js"></script>
 <script src="node_modules/selectizebootstrap/dist/js/selectize/standalone/selectize.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.0-beta/js/bootstrap-select.min.js"></script>
-
-
-<script>
-  // toggle header active tab
-  var currentUrlRoute = window.location.pathname.split('/')[2];
-  $(".navbar-nav > li").each(function(){
-    $(this).removeClass('active');
-  });
-  $("#" + currentUrlRoute).addClass("active");
-</script>

@@ -4,11 +4,7 @@
       <span>
         <img src="images/favicon.ico" width="25px" height="25px">
       </span>
-        {% if graph_name is defined %}
-          SCAVI - Single Cell Analysis and Visualization Interface: {{ graph_name.strip('.json') }}
-        {% else %}
-          SCAVI - Single Cell Analysis and Visualization Interface
-        {% endif %}
+        SCAVI - Single Cell Analysis and Visualization Interface
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -17,16 +13,15 @@
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
       <ul class="navbar-nav mr-auto">
           {% if graphs is defined %}
-          <li id="graph_page" class="nav-item dropdown active">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Layouts</a>
-            <div class="dropdown-menu" aria-labelledby="dropdown01">
-              
-              {% for graph in graphs %}
-                <a class="dropdown-item" href="graph_page/{{dataset_id}}/{{ graph.name }}">{{ graph.name }}</a>
-              {% endfor %}
-
-            </div>
-          </li>
+            {% for graph in graphs %}
+              {% if graph.name == graph_name %}
+                <li class="nav-item active">
+              {% else %}
+                <li class="nav-item">
+              {% endif %}
+                  <a class="nav-link" href="graph_page/{{dataset_id}}/{{ graph.name }}">{{ graph.name }}</a>  
+                </li>
+            {% endfor %}
           {% endif %}
       </ul>
       <form class="form-inline my-2 my-lg-0">
