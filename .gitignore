@@ -6,3 +6,4 @@ secrets.sh
 scripts/*.csv
 # notebooks in this repo is for debugging codes only
 *.ipynb 
+.DS_Store

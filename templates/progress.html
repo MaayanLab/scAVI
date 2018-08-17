@@ -48,7 +48,7 @@
     <div>
         <h4>Live log</h4>
         <div id="log">
-            {% for line in logger.get_all_msg() %}
+            {% for line in logger_msg %}
                 <div>{{line}}</div>
             {% endfor %}
         </div>

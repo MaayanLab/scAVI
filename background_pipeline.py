@@ -47,10 +47,12 @@ class Logger(object):
 		stream = self.logger.handlers[-1].stream
 		return stream.getvalue().strip().split('\n')[-1]
 
-	def get_all_msg(self):
+	@classmethod
+	def get_all_msg(self, dataset_id):
+		log_fp = os.path.join(SCRIPT_DIR, 'data/logs', '%s.log'%dataset_id)
 		msg = ''
-		if os.path.isfile(self.log_fp):
-			msg = open(self.log_fp, 'r').read()
+		if os.path.isfile(log_fp):
+			msg = open(log_fp, 'r').read()
 
 		return msg.strip().split('\n')
 		

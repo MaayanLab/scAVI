@@ -176,7 +176,7 @@ def check_progress(dataset_id):
 		# run the pipeline
 		return render_template('progress.html', 
 			ENTER_POINT=ENTER_POINT,
-			logger=all_loggers[dataset_id],
+			logger_msg=Logger.get_all_msg(dataset_id),
 			ds=ds)
 
 
