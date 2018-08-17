@@ -59,6 +59,8 @@ var TreeView = Backbone.View.extend({
 
 		$.when(this.model.fetch(), sdv.model.fetch()).done(function(){
 			self.render();
+			// render when sdv shapeChanged because it clears the scene
+			self.listenTo(sdv, 'shapeChanged', self.render)
 		});
 	},
 
