@@ -2,15 +2,15 @@ import numpy as np
 from sklearn import decomposition, manifold
 
 ## Visualization functions:
-def do_pca(X):
-	pca = decomposition.PCA(n_components=2)
+def do_pca(X, n_components=3):
+	pca = decomposition.PCA(n_components=n_components)
 	return pca.fit_transform(X)
 
 
-def do_tsne(X):
+def do_tsne(X, n_components=3):
 	pca = decomposition.PCA(n_components=min(50, X.shape[1]))
 	X_pca = pca.fit_transform(X)
-	tsne = manifold.TSNE(n_components=2, random_state=2018)
+	tsne = manifold.TSNE(n_components=n_components, random_state=2018)
 	return tsne.fit_transform(X_pca)
 
 
@@ -38,18 +38,24 @@ class Visualization(object):
 			'x': self.coords[:, 0].tolist(),
 			'y': self.coords[:, 1].tolist()
 		}
+		if self.coords.shape[1] == 3:
+			doc['z'] = self.coords[:, 2].tolist()
+
 		insert_result = db[self.coll].insert_one(doc)
 		return insert_result.inserted_id
 	
 	@classmethod
-	def load(cls, dataset_id, name, db):
+	def load(cls, dataset_id, name, db, n_dim=2):
 		'''Load from DB'''
 		doc = db[cls.coll].find_one({'$and': [
 				{'dataset_id': dataset_id},
 				{'name': name}
 			]})
 		obj = cls(name=doc['name'])
-		obj.coords = np.array([doc['x'], doc['y']]).T
+		if n_dim == 2:
+			obj.coords = np.array([doc['x'], doc['y']]).T
+		else:
+			obj.coords = np.array([doc['x'], doc['y'], doc['z']]).T
 		return obj
 
 

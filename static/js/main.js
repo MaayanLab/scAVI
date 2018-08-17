@@ -1,7 +1,9 @@
 var textures = new Textures()
 
+var n_dim = sdvConfig.is3d ? 3 : 2;
+
 var sd = new ScatterData({
-	url : 'graph/' + dataset_id + '/' + graph_name   // need to get this variable from server
+	url : 'graph/' + dataset_id + '/' + graph_name + '/' + n_dim  // need to get this variable from server
 })
 
 var container = document.getElementById("body")
@@ -14,8 +16,11 @@ var sdvDefaultConfig = {
 	HEIGHT: height,	
 	model: sd,
 	textures: textures,
-	pointSize: 12,
-	is3d: false,
+	// pointSize: 12, // 2d
+	// is3d: false,
+
+	// pointSize: 0.5, // 3d
+	// is3d: true,
 }
 
 sdvConfig = $.extend(sdvDefaultConfig, sdvConfig)

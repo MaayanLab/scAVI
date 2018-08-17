@@ -54,17 +54,14 @@ def load_cell_meta_from_file():
 	return meta_df
 
 
-def minmax_scaling(arr):
-	scl = MinMaxScaler((0, 20))
+def minmax_scaling(arr, min=0, max=20):
+	scl = MinMaxScaler((min, max))
 	arr = scl.fit_transform(arr.reshape(-1, 1))
 	return arr[:, 0]
 
 from sklearn import cluster
-def clustering(x, y, clstr):
-	data = np.zeros((len(x), 2))
-	data[:, 0] = x
-	data[:, 1] = y
-	clstr.fit(data)
+def clustering(coords, clstr):
+	clstr.fit(coords)
 	return clstr.labels_
 
 
@@ -74,15 +71,24 @@ def load_vis_df(vis, gds):
 		'x': vis.coords[:, 0].tolist(),
 		'y': vis.coords[:, 1].tolist(),
 		}).set_index('sample_ids')
+
 	graph_df.index.name = 'sample_id'
-	# Scale the x, y 
-	graph_df['x'] = minmax_scaling(graph_df['x'].values)
-	graph_df['y'] = minmax_scaling(graph_df['y'].values)
+	# Scale the x, y, (z) 
+	if vis.coords.shape[1] == 3:
+		graph_df['x'] = minmax_scaling(graph_df['x'].values, min=-10, max=10)
+		graph_df['y'] = minmax_scaling(graph_df['y'].values, min=-10, max=10)
+		graph_df['z'] = minmax_scaling(vis.coords[:, 2], min=-10, max=10)
+		coords = graph_df[['x', 'y', 'z']].values
+	else:
+		graph_df['x'] = minmax_scaling(graph_df['x'].values)
+		graph_df['y'] = minmax_scaling(graph_df['y'].values)
+		coords = graph_df[['x', 'y']].values
+
 	# Perform clustering
-	graph_df['DBSCAN-clustering'] = clustering(graph_df['x'].values, graph_df['y'].values,
+	graph_df['DBSCAN-clustering'] = clustering(coords,
 		clstr = cluster.DBSCAN(min_samples=5, 
 			eps=0.7))
-	graph_df['KMeans-clustering'] = clustering(graph_df['x'].values, graph_df['y'].values, 
+	graph_df['KMeans-clustering'] = clustering(coords, 
 		cluster.KMeans(n_clusters=10))
 	# Merge with meta_df
 	graph_df = graph_df.merge(gds.meta_df, how='left', left_index=True, right_index=True)

@@ -448,7 +448,8 @@ var Scatter3dView = Backbone.View.extend({
 
 		if (this.is3d){
 			this.camera = new THREE.PerspectiveCamera( 70, this.aspectRatio, 0.01, 1000000 );
-			this.camera.position.z = this.pointSize * 120;
+			// this.camera.position.z = this.pointSize * 50;
+			this.camera.position.z = 30;
 		} else { // 2d
 			// This is the radius of the camera frustum
 			ORTHO_CAMERA_FRUSTUM_HALF_EXTENT = 11.5;
@@ -502,6 +503,7 @@ var Scatter3dView = Backbone.View.extend({
 		var width = this.WIDTH
 		var height = this.HEIGHT
 
+		if (!this.is3d) {
 		this.svg = d3.select("#body").append('svg')
 			.attr('id', 'brush')
 			.attr('width', width)
@@ -617,6 +619,16 @@ var Scatter3dView = Backbone.View.extend({
 				}
 			});
 		this.svg.call(zoom)
+		} else {
+			var self = this;
+			// set up orbit controls
+			this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
+			this.controls.addEventListener( 'change', function(){
+				self.renderScatter()
+			} );
+			this.controls.enableZoom = true;
+		}
+
 
 		// set up raycaster, mouse
 		this.raycaster = new THREE.Raycaster();

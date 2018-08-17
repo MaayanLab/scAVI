@@ -179,14 +179,23 @@ def check_progress(dataset_id):
 			logger_msg=Logger.get_all_msg(dataset_id),
 			ds=ds)
 
-
-
 @app.route(ENTER_POINT + '/graph_page/<string:dataset_id>/<string:graph_name>')
 def graph_page(graph_name, dataset_id):
+	return redirect(ENTER_POINT + '/graph_page/%s/%s/2' % (dataset_id, graph_name))
+
+@app.route(ENTER_POINT + '/graph_page/<string:dataset_id>/<string:graph_name>/<int:n_dim>')
+def graph_page_with_ndim(graph_name, dataset_id, n_dim):
 	# defaults
 	sdvConfig = {
 		'labelKey': ['sample_id', 'title'],
 	}
+	if n_dim == 2:
+		sdvConfig['is3d'] = False
+		sdvConfig['pointSize'] = 12
+	elif n_dim == 3:
+		sdvConfig['is3d'] = True
+		sdvConfig['pointSize'] = 0.5
+
 	# pick the attributes for default shaping and coloring
 	if dataset_id.startswith('GSE'):
 		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
@@ -232,9 +241,14 @@ def serve_static_file(filename):
 	'''
 	return send_from_directory(app.static_folder, filename)
 
-
 @app.route(ENTER_POINT + '/graph/<string:dataset_id>/<string:graph_name>', methods=['GET'])
 def load_graph_layout_coords(graph_name, dataset_id):
+	'''Redirect to the next API with n_dim = 2 for backward compatibility.
+	'''
+	return redirect(ENTER_POINT + '/graph/%s/%s/2' % (dataset_id, graph_name))
+
+@app.route(ENTER_POINT + '/graph/<string:dataset_id>/<string:graph_name>/<int:n_dim>', methods=['GET'])
+def load_graph_layout_coords_with_dim(graph_name, dataset_id, n_dim):
 	'''API for different graphs'''
 	if request.method == 'GET':
 		if dataset_id.startswith('GSE'):
@@ -243,7 +257,7 @@ def load_graph_layout_coords(graph_name, dataset_id):
 			gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
 
 		if graph_name not in PSEUDOTIME_ALGOS:
-			vis = Visualization.load(dataset_id, graph_name, mongo.db)
+			vis = Visualization.load(dataset_id, graph_name, mongo.db, n_dim=n_dim)
 			graph_df = load_vis_df(vis, gds)
 		else:
 			pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db)
