@@ -318,7 +318,7 @@ var SearchSelectize = Backbone.View.extend({
 				}
 			},
 			load: function(query, callback){
-				if (!query.length) query = 'co'; // to preload some options when focused 
+				if (!query.length) query = 'a'; // to preload some options when focused 
 				$.ajax({
 					url: self.synonymsUrl + '/' + encodeURIComponent(query),
 					type: 'GET',
@@ -416,7 +416,7 @@ var TermSearchSelectize = Backbone.View.extend({
 					}
 				},
 				load: function(query, callback){
-					if (!query.length) query = 'co'; // to preload some options when focused 
+					if (!query.length) query = 'a'; // to preload some options when focused 
 					$.ajax({
 						url: self.synonymsUrl + '/' + encodeURIComponent(query),
 						type: 'GET',
