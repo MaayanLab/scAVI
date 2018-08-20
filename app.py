@@ -445,7 +445,10 @@ def sample_landing_page(sample_id):
 
 	# prepare enrichment
 	enrichment = {}
-	cur = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
+	cur = mongo.db['enrichr'].find({'$and': [
+			{'dataset_id': dataset_id}, 
+			{'scores': {'$exists': True}}
+		]},
 		{'gene_set_library':True, 'scores': True, '_id':False})
 	for doc in cur:
 		lib = doc['gene_set_library']
@@ -525,7 +528,10 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 
 	# prepare enrichment
 	enrichment = {}
-	cur = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
+	cur = mongo.db['enrichr'].find({'$and': [
+			{'dataset_id': dataset_id}, 
+			{'scores': {'$exists': True}}
+		]},
 		{'gene_set_library':True, 'scores': True, '_id':False},
 		cursor_type=CursorType.EXHAUST)
 	for doc in cur:
