@@ -2,7 +2,7 @@ import os, sys
 import json
 import time
 import StringIO
-from collections import Counter
+from collections import Counter, defaultdict
 import subprocess
 import numpy as np
 np.random.seed(10)
@@ -218,9 +218,21 @@ def graph_page_with_ndim(graph_name, dataset_id, n_dim):
 
 	sdvConfig['shapeKey'] = None
 			
-	# get available visualizations in the DB
-	visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
-		{'_id':False, 'name':True})
+	# get available visualizations in the DB 
+	# also get a flag indicating whether 3d is available
+	cur = mongo.db['vis'].find({'dataset_id': dataset_id}, 
+		{'_id':False, 'name':True, 'z': True})
+	vis_names = set()
+	d_has3d = {}
+	for doc in cur:
+		name = doc['name'].split('-')[0]
+		is3d = doc.has_key('z')
+		if is3d:
+			d_has3d[name] = True
+		vis_names.add(name)
+	
+	visualizations = [{'name': name, 'has3d': d_has3d.get(name, False)} for name in vis_names]
+
 	# flag indicating whether a tree will be plotted
 	has_tree = graph_name in PSEUDOTIME_ALGOS
 
