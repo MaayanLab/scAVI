@@ -421,6 +421,9 @@ var Scatter3dView = Backbone.View.extend({
 				self.setUpStage();
 				// self.colorBy(self.colorKey);
 				self.shapeBy(self.shapeKey);
+				if(self.is3d){
+					self.animate();
+				}
 
 			});
 		});
@@ -821,9 +824,10 @@ var Scatter3dView = Backbone.View.extend({
 			}
 			// console.log(pointPosition)
 
+			var euler = this.clouds[0].points.rotation;
 			// add text canvas
 			var textCanvas = this.makeTextCanvas( geometry.attributes.label.array[idx], 
-			    pointPosition.x, pointPosition.y, pointPosition.z,
+			    pointPosition.x, pointPosition.y, pointPosition.z, euler,
 			    { fontsize: 24, fontface: "'Rubik', sans-serif", textColor: {r:0, g:0, b:0, a:0.8} }); 
 
 			textCanvas.id = "text-label"
@@ -846,6 +850,8 @@ var Scatter3dView = Backbone.View.extend({
 
 		// update the picking ray with the camera and mouse position
 		this.raycaster.setFromCamera( this.mouse, this.camera );
+		// stop animation
+		this.stopAnimate();
 
 		// calculate objects intersecting the picking ray
 		var allPoints = _.map(this.clouds, function(obj){ return obj.points; });
@@ -862,7 +868,7 @@ var Scatter3dView = Backbone.View.extend({
 		}
 	},
 
-	makeTextCanvas: function(message, x, y, z, parameters){
+	makeTextCanvas: function(message, x, y, z, euler, parameters){
 
 		if ( parameters === undefined ) parameters = {}; 
 		var fontface = parameters.hasOwnProperty("fontface") ?  
@@ -892,7 +898,7 @@ var Scatter3dView = Backbone.View.extend({
 		context.fillStyle = getCanvasColor(textColor); 
 
 		// calculate the project of 3d point into 2d plain
-		var point = new THREE.Vector3(x, y, z);
+		var point = new THREE.Vector3(x, y, z).applyEuler(euler);
 		var pv = new THREE.Vector3().copy(point).project(this.camera);
 		var coords = {
 			x: ((pv.x + 1) / 2 * this.WIDTH), // * this.DPR, 
@@ -919,6 +925,26 @@ var Scatter3dView = Backbone.View.extend({
 			var cloud = this.clouds[i];
 			cloud.setColors(this.colorScale, this.colorKey)
 		};
+	},
+
+	animate: function(){
+		this.animateId = requestAnimationFrame(this.animate.bind(this))
+		this.rotate()
+	},
+
+	rotate: function(){
+		// rotate everything on the scene
+		var time = Date.now() * 0.001;
+		for (var i = this.scene.children.length - 1; i >= 0; i--) {
+			var object = this.scene.children[i];
+			object.rotation.x = time * 0.05;
+			object.rotation.y = time * 0.1;
+		}
+		this.renderScatter()
+	},
+
+	stopAnimate: function(){
+		cancelAnimationFrame( this.animateId );
 	},
 
 	colorBy: function(metaKey){
