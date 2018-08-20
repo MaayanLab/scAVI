@@ -86,7 +86,8 @@ var libSearchSelectize2 = new LibSearchSelectize({
 	synonymsUrl: 'library/query/' + dataset_id,
 	retrieveUrl: 'library/get/' + dataset_id,
 	label: 'Predict pathways and upstream regulators:',
-	optionsShow: ['ChEA_2016', 'KEA_2015', 'KEGG_2016']
+	optionsShow: ['ChEA_2016', 'KEA_2015', 'KEGG_2016', 
+		'MGI_Mammalian_Phenotype_2017', 'GO_Biological_Process_2018']
 })
 
 // search top predicted labels

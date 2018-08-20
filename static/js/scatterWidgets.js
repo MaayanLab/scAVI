@@ -308,7 +308,7 @@ var SearchSelectize = Backbone.View.extend({
 			preload: 'focus',
 			options: [],
 			create:false,
-			placeholder: 'Type the symbol of a gene',
+			placeholder: 'gene symbol...',
 			render: {
 				option: function(item, escape){
 					return '<ul class="list-unstyled">' + 
@@ -376,7 +376,7 @@ var TermSearchSelectize = Backbone.View.extend({
 		// set up the DOMs
 		// wrapper for SearchSelectize
 		var searchControl = $('<div class="form-group" id="search-control"></div>')
-		searchControl.append($('<label class="control-label">Search a term: <i class="fas fa-info-circle" data-toggle="tooltip" title="Search a biological term such as a pathway and the viewer will overlay the enrichment scores of the searched term on the cells."></i></label>'))
+		searchControl.append($('<label class="control-label">Text search: <i class="fas fa-info-circle" data-toggle="tooltip" title="Search a biological term such as a pathway and the viewer will overlay the enrichment scores of the searched term on the cells."></i></label>'))
 
 		this.$el = $('<select id="search" class="form-control"></select>');
 		searchControl.append(this.$el)
@@ -405,7 +405,7 @@ var TermSearchSelectize = Backbone.View.extend({
 				lockOptgroupOrder: true,
 				preload: 'focus',
 				options: [],
-				placeholder: 'e.g. ABC transporters',
+				placeholder: 'term...',
 				optgroups: optgroups,
 				create:false,
 				render: {
@@ -501,7 +501,7 @@ var LibSearchSelectize = Backbone.View.extend({
 			preload: 'focus',
 			options: [],
 			create:false,
-			placeholder: 'Type a gene-set library',
+			placeholder: 'library...',
 			render: {
 				option: function(item, escape){
 					return '<ul class="list-unstyled">' + 
