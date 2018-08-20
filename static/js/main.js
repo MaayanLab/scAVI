@@ -99,12 +99,13 @@ var predSearchSelectize = new LibSearchSelectize({
 	optionsShow: []
 })
 
+if (!sdvConfig.is3d) { // showing if 2d
+	// DOMs for brush selection
+	var brushController = new BrushController({scatterPlot: sdv, container: "#controls"})
+	var brushModalBtn = new BrushBtns({scatterPlot: sdv, container: container, base_url: 'brush/'+dataset_id})
+	var brushModal = new BrushModal({scatterPlot: sdv});
 
-// DOMs for brush selection
-var brushController = new BrushController({scatterPlot: sdv, container: "#controls"})
-var brushModalBtn = new BrushBtns({scatterPlot: sdv, container: container, base_url: 'brush/'+dataset_id})
-var brushModal = new BrushModal({scatterPlot: sdv});
-
-brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)
+	brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)	
+}
 
 var overlay = new Overlay({scatterPlot: sdv})

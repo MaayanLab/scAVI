@@ -483,143 +483,124 @@ var Scatter3dView = Backbone.View.extend({
 				pos_z = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
 
 			this.camera.position.set(pos_x, pos_y, pos_z)
-			// this.camera.up = new THREE.Vector3(0,0,1)
-			// this.camera.lookAt(new THREE.Vector3(0,0,0));
 		}
 
 		// Put the renderer's DOM into the container
 		this.renderer.domElement.id = "renderer";
-		// this.renderer.setSize( this.WIDTH, this.HEIGHT, false );
-		// console.log(this.renderer.domElement.width, this.renderer.domElement.height)
-		// console.log(this.renderer.getSize())
 
 		this.container.appendChild( this.renderer.domElement );
 
 		var self = this;
-		// flag indicating whether shiftKey is pressed
-		this.shiftKey = false;
 
-		var aspect = this.aspectRatio
-		var width = this.WIDTH
-		var height = this.HEIGHT
+		if (!this.is3d) { // setup brush for 2d
+			// flag indicating whether shiftKey is pressed
+			this.shiftKey = false;
 
-		if (!this.is3d) {
-		this.svg = d3.select("#body").append('svg')
-			.attr('id', 'brush')
-			.attr('width', width)
-			.attr('height', height)
-			.style('left', 0)
-			.style('top', 0)
-			.style('position', 'absolute')
+			var aspect = this.aspectRatio
+			var width = this.WIDTH
+			var height = this.HEIGHT
 
-		// brush
-		this.brush = d3.svg.brush()
-			.x(d3.scale.linear().range([0, width]).domain([-margin_x, -margin_x + right]))
-			.y(d3.scale.linear().range([height, 0]).domain([-margin_y, -margin_y - bottom]))
-			.on('brushstart', function(){
-				// console.log('brushstart')
-				if (!self.shiftKey) {
-					d3.event.target.clear();
-					// clear previous brushed region
-					d3.select(this).call(self.brush.clear())
+			this.svg = d3.select("#body").append('svg')
+				.attr('id', 'brush')
+				.attr('width', width)
+				.attr('height', height)
+				.style('left', 0)
+				.style('top', 0)
+				.style('position', 'absolute')
+
+			// brush
+			this.brush = d3.svg.brush()
+				.x(d3.scale.linear().range([0, width]).domain([-margin_x, -margin_x + right]))
+				.y(d3.scale.linear().range([height, 0]).domain([-margin_y, -margin_y - bottom]))
+				.on('brushstart', function(){
+					if (!self.shiftKey) {
+						d3.event.target.clear();
+						// clear previous brushed region
+						d3.select(this).call(self.brush.clear())
+					}
+				})
+				.on('brush', brushmove)
+				.on('brushend', brushend);
+
+			function brushmove(){
+				if (self.shiftKey) {
+					// self.removeMouseEvents()
+					var extent = self.brush.extent()
+					// find points intersecting with the brush box
+					var intersectingIdx = [];
+					for (var i = 0; i < self.clouds.length; i++) {
+						var cloud = self.clouds[i]
+						var idx = cloud.intersectBox(extent);
+						intersectingIdx = intersectingIdx.concat(idx)
+						if (idx.length > 0) {
+							cloud.highlightIntersectedPoints(idx)
+						}
+					}
+					self.renderer.render( self.scene, self.camera )
 				}
-			})
-			.on('brush', brushmove)
-			.on('brushend', brushend);
+			}
 
-		function brushmove(){
-			if (self.shiftKey) {
-				// self.removeMouseEvents()
+			function brushend(){
 				var extent = self.brush.extent()
-				// console.log('x:',extent[0][0], extent[1][0])
-				// console.log('y:',extent[0][1], extent[1][1])
+				// self.addMouseEvents()
 				// find points intersecting with the brush box
-				var intersectingIdx = [];
+				var intersectingIds = []; // this collects the 'id' attributes
 				for (var i = 0; i < self.clouds.length; i++) {
 					var cloud = self.clouds[i]
+					var sample_ids = cloud.geometry.getAttribute('id').array
 					var idx = cloud.intersectBox(extent);
-					intersectingIdx = intersectingIdx.concat(idx)
+					var ids = []; // collects 'id' attributes from this cloud
+
+					for (var j = 0; j < idx.length; j++) {
+						var id = sample_ids[ [idx[j]] ];
+						ids.push(id)
+					}
+
+					intersectingIds = intersectingIds.concat(ids)
 					if (idx.length > 0) {
 						cloud.highlightIntersectedPoints(idx)
 					}
 				}
 				self.renderer.render( self.scene, self.camera )
 
-			}
-		}
-
-		function brushend(){
-			var extent = self.brush.extent()
-			// self.addMouseEvents()
-			// find points intersecting with the brush box
-			var intersectingIds = []; // this collects the 'id' attributes
-			for (var i = 0; i < self.clouds.length; i++) {
-				var cloud = self.clouds[i]
-				var sample_ids = cloud.geometry.getAttribute('id').array
-				var idx = cloud.intersectBox(extent);
-				var ids = []; // collects 'id' attributes from this cloud
-
-				for (var j = 0; j < idx.length; j++) {
-					var id = sample_ids[ [idx[j]] ];
-					ids.push(id)
-				}
-
-				intersectingIds = intersectingIds.concat(ids)
-				if (idx.length > 0) {
-					cloud.highlightIntersectedPoints(idx)
+				if (intersectingIds.length > 0){
+					self.trigger('brushended', intersectingIds)
 				}
 			}
-			self.renderer.render( self.scene, self.camera )
 
-			if (intersectingIds.length > 0){
-				self.trigger('brushended', intersectingIds)
-			}
-		}
+			this.brush_g = this.svg.append('g')
+				.datum(function() { return {selected: false, previouslySelected: false}; })
+				.attr('class', 'brush')
+				.call(self.brush)
+				.style('pointer-events', 'none')
 
+			// zoom and pan using d3
+			// http://bl.ocks.org/nitaku/b25e6f091e97667c6cae/569c5da78cf5c51577981a7e4d9f2dc6252dbeed
+			// this.view = d3.select(this.renderer.domElement);
+			DZOOM = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT
+			zoom = d3.behavior.zoom().scaleExtent([0.2, 10])
+				.on('zoom', function() {
+					if (!self.shiftKey){
+						var x, y, z, _ref;
+						z = zoom.scale();
+						_ref = zoom.translate(), x = _ref[0], y = _ref[1];
+						x = x - width / 2;
+						y = y - height / 2;
+						// after simplications
+						var c = 2 
+						self.camera.left = -DZOOM / z * aspect * (1 + c*x/width);
+						self.camera.right = DZOOM / z * aspect * (1 - c*x/width);
+						self.camera.top = DZOOM / z * (1 + c*y/height);
+						self.camera.bottom = -DZOOM / z *(1 - c*y/height);
 
-		this.brush_g = this.svg.append('g')
-			.datum(function() { return {selected: false, previouslySelected: false}; })
-			.attr('class', 'brush')
-			.call(self.brush)
-			.style('pointer-events', 'none')
+						self.camera.updateProjectionMatrix();
 
-		// this.center = this.svg.append('circle')
-		// 	.attr('cx', width/2)
-		// 	.attr('cy', height/2)
-		// 	.attr('r', 10)
-		// 	.style('fill', 'red')
-
-		// zoom and pan using d3
-		// http://bl.ocks.org/nitaku/b25e6f091e97667c6cae/569c5da78cf5c51577981a7e4d9f2dc6252dbeed
-		// this.view = d3.select(this.renderer.domElement);
-		DZOOM = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT
-		zoom = d3.behavior.zoom().scaleExtent([0.2, 10])
-			// .center([width/2, height/2])
-			// .size([width, height])
-			.on('zoom', function() {
-				if (!self.shiftKey){
-					var x, y, z, _ref;
-					z = zoom.scale();
-					_ref = zoom.translate(), x = _ref[0], y = _ref[1];
-					// console.log('zoom.translate:', x, y, 'zoom scale', z)
-					x = x - width / 2;
-					y = y - height / 2;
-					// after simplications
-					var c = 2 
-					self.camera.left = -DZOOM / z * aspect * (1 + c*x/width);
-					self.camera.right = DZOOM / z * aspect * (1 - c*x/width);
-					self.camera.top = DZOOM / z * (1 + c*y/height);
-					self.camera.bottom = -DZOOM / z *(1 - c*y/height);
-
-					self.camera.updateProjectionMatrix();
-
-					self.brush_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-					// self.center.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-					self.renderer.render( self.scene, self.camera )
-				}
-			});
-		this.svg.call(zoom)
-		} else {
+						self.brush_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+						self.renderer.render( self.scene, self.camera )
+					}
+				});
+			this.svg.call(zoom)
+		} else { // 3d, set up OrbitControls
 			var self = this;
 			// set up orbit controls
 			this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
@@ -628,7 +609,6 @@ var Scatter3dView = Backbone.View.extend({
 			} );
 			this.controls.enableZoom = true;
 		}
-
 
 		// set up raycaster, mouse
 		this.raycaster = new THREE.Raycaster();
