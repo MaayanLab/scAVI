@@ -269,6 +269,8 @@ def load_graph_layout_coords_with_dim(graph_name, dataset_id, n_dim):
 			gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
 
 		if graph_name not in PSEUDOTIME_ALGOS:
+			if graph_name != 'PCA':
+				graph_name = graph_name + '-3d'
 			vis = Visualization.load(dataset_id, graph_name, mongo.db, n_dim=n_dim)
 			graph_df = load_vis_df(vis, gds)
 		else:
