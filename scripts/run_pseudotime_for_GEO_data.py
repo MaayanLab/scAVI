@@ -16,7 +16,8 @@ coll = db['vis']
 
 from classes import *
 
-pseudo_algo_name = 'monocle'
+# pseudo_algo_name = 'monocle'
+pseudo_algo_name = 'monocle-3d'
 
 # Get a list of existing GSEs in the DB
 existing_GSE_ids = db['dataset'].find(
