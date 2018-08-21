@@ -20,7 +20,7 @@ else:
 	runMonocle3Pipeline = ro.globalenv['runMonocle3Pipeline']
 
 # all implemented pseudotime algorithms
-PSEUDOTIME_ALGOS = set(['monocle'])
+PSEUDOTIME_ALGOS = set(['monocle', 'monocle-3d'])
 
 def run_monocle_pipeline(df, n_components=3):
 	'''Call the R function runMonoclePipeline then convert to results 
@@ -67,11 +67,14 @@ class PseudotimeEstimator(object):
 			'dataset_id': self.ged.id,
 			'x': self.coords[:, 0].tolist(),
 			'y': self.coords[:, 1].tolist(),
-			'data_df': self.results['data_df'].drop(['x', 'y'], axis=1).to_dict(orient='list'),
 			'edge_df': self.results['edge_df'].to_dict(orient='list')
 		}
 		if self.coords.shape[1] == 3:
 			doc['z'] = self.coords[:, 2].tolist()
+			doc['data_df'] = self.results['data_df'].drop(['x', 'y', 'z'], axis=1).to_dict(orient='list')
+		else:
+			doc['data_df'] = self.results['data_df'].drop(['x', 'y'], axis=1).to_dict(orient='list')
+
 		insert_result = db[self.coll].insert_one(doc)
 		return insert_result.inserted_id
 

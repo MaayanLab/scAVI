@@ -101,9 +101,16 @@ def load_psudotime_df(pe, gds):
 		'y': pe.coords[:, 1].tolist(),
 		}).set_index('sample_ids')
 	graph_df.index.name = 'sample_id'
-	# Scale the x, y 
-	graph_df['x'] = minmax_scaling(graph_df['x'].values)
-	graph_df['y'] = minmax_scaling(graph_df['y'].values)
+	# Scale the x, y, (z) 
+	if pe.coords.shape[1] == 3:
+		graph_df['x'] = minmax_scaling(graph_df['x'].values, min=-10, max=10)
+		graph_df['y'] = minmax_scaling(graph_df['y'].values, min=-10, max=10)
+		graph_df['z'] = minmax_scaling(pe.coords[:, 2], min=-10, max=10)
+		coords = graph_df[['x', 'y', 'z']].values
+	else:
+		graph_df['x'] = minmax_scaling(graph_df['x'].values)
+		graph_df['y'] = minmax_scaling(graph_df['y'].values)
+		coords = graph_df[['x', 'y']].values
 	# Merge with meta_df
 	graph_df = graph_df.merge(gds.meta_df, how='left', left_index=True, right_index=True)
 	# Merge with estimated attributes from pe

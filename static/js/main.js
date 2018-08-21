@@ -29,7 +29,7 @@ var sdv = new Scatter3dView(sdvConfig)
 
 if (has_tree){ // Create Tree model and view if there is a tree in the visualization 
 	var td = new TreeData({
-		url: 'tree/' + dataset_id + '/' + graph_name
+		url: 'tree/' + dataset_id + '/' + graph_name + '/' + n_dim
 	})
 
 	var tdv = new TreeView({

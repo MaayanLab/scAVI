@@ -267,20 +267,21 @@ def load_graph_layout_coords_with_dim(graph_name, dataset_id, n_dim):
 			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
 		else:
 			gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
+		
+		if graph_name != 'PCA' and n_dim == 3:
+			graph_name += '-3d'
 
 		if graph_name not in PSEUDOTIME_ALGOS:
-			if graph_name != 'PCA':
-				graph_name = graph_name + '-3d'
 			vis = Visualization.load(dataset_id, graph_name, mongo.db, n_dim=n_dim)
 			graph_df = load_vis_df(vis, gds)
 		else:
-			pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db)
+			pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db, n_dim=n_dim)
 			graph_df = load_psudotime_df(pe, gds)
 		return graph_df.reset_index().to_json(orient='records')
 
 
-@app.route(ENTER_POINT + '/tree/<string:dataset_id>/<string:graph_name>', methods=['GET'])
-def load_psudotime_tree(graph_name, dataset_id):
+@app.route(ENTER_POINT + '/tree/<string:dataset_id>/<string:graph_name>/<int:n_dim>', methods=['GET'])
+def load_psudotime_tree(graph_name, dataset_id, n_dim):
 	'''API to retrieve the tree from psudotime estimation.
 	'''
 	if request.method == 'GET':
@@ -288,19 +289,30 @@ def load_psudotime_tree(graph_name, dataset_id):
 			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
 		else:
 			gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
-		pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db)
+
+		scaler_range = (0, 20)
+		if n_dim == 3:
+			graph_name += '-3d'
+			scaler_range = (-10, 10)
+		# Load monocle results		
+		pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db, n_dim=n_dim)
+		if n_dim == 3:
+			# Fit scalers based on n_dim
+			scaler_z = MinMaxScaler(scaler_range).fit(pe.coords[:, 2].reshape(-1, 1))
+		scaler_x = MinMaxScaler(scaler_range).fit(pe.coords[:, 0].reshape(-1, 1))
+		scaler_y = MinMaxScaler(scaler_range).fit(pe.coords[:, 1].reshape(-1, 1))
+
 		edge_df = pe.results['edge_df']
-
-		scaler_x = MinMaxScaler((0, 20)).fit(pe.coords[:, 0].reshape(-1, 1))
-		scaler_y = MinMaxScaler((0, 20)).fit(pe.coords[:, 1].reshape(-1, 1))
-
-		for col in ['source_prin_graph_dim_1', 'source_prin_graph_dim_2',
-			'target_prin_graph_dim_1', 'target_prin_graph_dim_2']:
-			if col.endswith('1'):
-				edge_df[col] = scaler_x.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
-			else:
-				edge_df[col] = scaler_y.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
-
+		# Apply scaling
+		for col in ['source_prin_graph_dim_1', 'source_prin_graph_dim_2', 'source_prin_graph_dim_3',
+			'target_prin_graph_dim_1', 'target_prin_graph_dim_2', 'target_prin_graph_dim_3']:
+			if col in edge_df.columns:
+				if col.endswith('1'):
+					edge_df[col] = scaler_x.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
+				elif col.endswith('2'):
+					edge_df[col] = scaler_y.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
+				elif col.endswith('3'):
+					edge_df[col] = scaler_z.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
 		return edge_df.to_json(orient='records')
 
 
