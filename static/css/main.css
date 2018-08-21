@@ -214,3 +214,6 @@ text.legendTitle{
 .navbar-brand {
   font-size: 1.5rem;
 }
+.navbar-dark .navbar-brand {
+  color: #000;
+}
