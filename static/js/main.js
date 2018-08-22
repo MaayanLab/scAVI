@@ -38,7 +38,7 @@ var tdv = new TreeView({
 })
 tdv.listenTo(sdv, 'modelChanged', function(url){
 	var treeUrl = url.replace('graph', 'tree')
-	tdv.changeModel(treeUrl)
+	this.changeModel(treeUrl)
 })
 
 var legend = new Legend({scatterPlot: sdv, h: window.innerHeight + 'px', container: container})
@@ -101,13 +101,11 @@ var predSearchSelectize = new LibSearchSelectize({
 	optionsShow: []
 })
 
-if (!sdvConfig.is3d) { // showing if 2d
-	// DOMs for brush selection
-	var brushController = new BrushController({scatterPlot: sdv, container: "#controls"})
-	var brushModalBtn = new BrushBtns({scatterPlot: sdv, container: container, base_url: 'brush/'+dataset_id})
-	var brushModal = new BrushModal({scatterPlot: sdv});
+// DOMs for brush selection
+var brushController = new BrushController({scatterPlot: sdv, container: "#controls"})
+var brushModalBtn = new BrushBtns({scatterPlot: sdv, container: container, base_url: 'brush/'+dataset_id})
+var brushModal = new BrushModal({scatterPlot: sdv});
 
-	brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)	
-}
+brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)	
 
 var overlay = new Overlay({scatterPlot: sdv})

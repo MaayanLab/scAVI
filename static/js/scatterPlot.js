@@ -668,6 +668,7 @@ var Scatter3dView = Backbone.View.extend({
 			this.stopAnimate();
 		}
 		this.removeCurrentCameraAndControl()
+		this.clearScene()
 
 		var n_dim = parseInt(url.split('/').slice(-1)[0]);
 		this.is3d = n_dim === 3;
@@ -730,7 +731,7 @@ var Scatter3dView = Backbone.View.extend({
 		$(this.container).off('click');
 	},
 
-	clearScene: function(){
+	clearClouds: function(){
 		// remove all Points object in the scene
 		var scene = this.scene;
 		for (var i = this.clouds.length - 1; i >= 0; i--) {
@@ -739,12 +740,21 @@ var Scatter3dView = Backbone.View.extend({
 		}
 	},
 
+	clearScene: function(){
+		// clear everything from the scene
+		var scene = this.scene;
+		for (var i = scene.children.length - 1; i >= 0; i--) {
+			var obj = scene.children[i];
+			scene.remove(obj)
+		}
+	},
+
 	shapeBy: function(metaKey){
 		// groupBy the model and init clouds
 		// update shapeKey
 		this.shapeKey = metaKey;
 		// clear this.clouds
-		this.clearScene();
+		this.clearClouds();
 		this.clouds = [];
 		
 		var textures = this.textures;

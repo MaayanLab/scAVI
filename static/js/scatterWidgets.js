@@ -868,12 +868,19 @@ var BrushBtns = Backbone.View.extend({
 	},
 
 	render: function(){
+		this.createDOM()
+		// show if not 3d
+		if (this.scatterPlot.is3d){
+			this.hide();
+		}
+	},
+
+	createDOM: function(){
 		// set up the btn-group div
 		this.div = $('<div id="modal-btn" class="btn-group" role="group"></div>')
 		// set up the modal button
 		this.button = $('<a class="btn btn-outline-info">View Selected Samples Report</a>');
 		var self = this;
-
 		this.button.click(function(e){
 			e.preventDefault();
 			$('#brush-modal').modal('show')
@@ -882,7 +889,6 @@ var BrushBtns = Backbone.View.extend({
 				// load content when modal-body is empty
 				$(".modal-body").load(self.modal_url);
 			}
-
 		});
 
 		// set up the clear btn
@@ -925,8 +931,7 @@ var BrushBtns = Backbone.View.extend({
 				// $(".modal-body").load(self.modal_url);
 			}
 		})
-	}
-
+	},
 });
 
 var BrushModal = Backbone.View.extend({
@@ -971,11 +976,20 @@ var BrushController = Backbone.View.extend({
 		_.defaults(this, options)
 
 		this.model = this.scatterPlot.model;
-		this.listenTo(this.model, 'sync', this.render);
+		this.listenTo(this.model, 'sync', this.createDOM);
+		this.listenTo(this.scatterPlot, 'modelChanged', this.render)
 	},
 
 	render: function(){
-		this.button = $('<button class="btn btn-info btn-sm" data-toggle="button" aria-pressed="false"><i class="fas fa-crosshairs"></i> Free Selection (Lasso)</button>');
+		if(this.scatterPlot.is3d){
+			this.detach()
+		}else{
+			this.attach()
+		}
+	},
+
+	createDOM: function(){
+		this.button = $('<button id="brush-controler" class="btn btn-info btn-sm" data-toggle="button" aria-pressed="false"><i class="fas fa-crosshairs"></i> Free Selection (Lasso)</button>');
 		this.button.click(function(e){
 			e.preventDefault()
 			if (self.sdv.shiftKey){
@@ -984,14 +998,25 @@ var BrushController = Backbone.View.extend({
 				self.sdv.enableBrush()
 			}
 		});
-		$(this.container).append(this.button);
+		if (!this.scatterPlot.is3d){
+			this.attach()
+		}
 	},
 
 	depress: function(){
 		this.button.attr('aria-pressed', 'false')
 		this.button.removeClass('active')
-	}
+	},
 
+	attach: function(){
+		$(this.container).append(this.button);
+	},
+
+	detach: function(){
+		if (this.button){
+			this.button.detach();
+		}
+	},
 });
 
 
