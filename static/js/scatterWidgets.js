@@ -1086,3 +1086,70 @@ var Overlay = Backbone.View.extend({
 	},
 });
 
+
+function replaceDimInUrl(url, n_dim){
+	var sl = url.split('/').slice(0, 3)
+	sl.push(n_dim)
+	return sl.join('/')
+}
+
+var DimToggle = Backbone.View.extend({
+	// toggling between 2/3 dim
+	tagName: 'input',
+	defaults: {
+		container: document.body,
+		scatterPlot: Scatter3dView,
+	},
+
+	initialize: function(options){
+		if (options === undefined) {options = {}}
+		_.defaults(options, this.defaults)
+		_.defaults(this, options)
+		
+		this.listenTo(this.scatterPlot.model, 'sync', this.render);
+	},
+	
+	render: function(){
+		this.$el = $('<' + this.tagName + '>').attr('type', 'checkbox')
+			.attr('id', 'dim-toggle')
+			.attr('data-toggle', 'toggle')
+			.attr('data-onstyle', 'success')
+			.attr('data-offstyle', 'info')
+			.attr('data-on', '3D')
+			.attr('data-off', '2D')
+
+		$(this.container).append(this.$el)
+
+		var sdv = this.scatterPlot;
+		// switch to the current n_dim based on scatterPlot
+		var n_dim = sdv.is3d ? 3 : 2;
+		this.switchTo(n_dim);
+		
+		
+		// when this is switched
+		this.$el.change(function(){
+			var currentModelUrl = sdv.model.url();
+			if ($(this).prop('checked')) {
+				var newUrl = replaceDimInUrl(currentModelUrl, '3')
+			} else {
+				var newUrl = replaceDimInUrl(currentModelUrl, '2')
+			}
+
+			if (newUrl !== currentModelUrl){
+				sdv.changeModel(newUrl)
+			}
+		});
+	},
+
+	disable: function(){
+		this.$el.bootstrapToggle('disable')
+	},
+
+	switchTo: function(n_dim){
+		if (n_dim === 3){
+			this.$el.bootstrapToggle('on')
+		} else {
+			this.$el.bootstrapToggle('off')
+		}
+	},
+})

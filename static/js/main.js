@@ -108,4 +108,6 @@ var brushModal = new BrushModal({scatterPlot: sdv});
 
 brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)	
 
+var dimToggle = new DimToggle({scatterPlot: sdv, container: "#controls"})
+
 var overlay = new Overlay({scatterPlot: sdv})

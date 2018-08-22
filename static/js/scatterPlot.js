@@ -311,7 +311,7 @@ var ScatterData = Backbone.Model.extend({
 	},
 
 	url: function(){
-		return this.attributes.url + '?n=' + this.n;
+		return this.attributes.url;
 	},
 
 	parse: function(response){
