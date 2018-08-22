@@ -59,8 +59,6 @@ var TreeView = Backbone.View.extend({
 
 		$.when(this.model.fetch(), sdv.model.fetch()).done(function(){
 			self.render();
-			// render when sdv shapeChanged because it clears the scene
-			self.listenTo(sdv, 'shapeChanged', self.render)
 		});
 	},
 
@@ -96,19 +94,12 @@ var TreeView = Backbone.View.extend({
 		// change model and update the visualization
 		this.model = new TreeData({url: url})
 		this.removeObject()
-		this.listenTo(this.model, 'success', this.render)
+		this.listenTo(this.model, 'sync', this.render)
 		
-		var self = this;
-		this.model.fetch({
-			success: function(model, response, options){
-				model.trigger('success')
-			},
-			error: function(model, response, options){
-				// in case this url has no tree
-				self.sdv.renderScatter()
-			}
-		});
+		var graph_name = url.split('/').slice(2, 3)[0];
+		if (graph_name === 'monocle'){
+			this.model.fetch()
+		}
 	},
 
 });
-
