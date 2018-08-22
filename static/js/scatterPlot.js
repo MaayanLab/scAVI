@@ -433,7 +433,7 @@ var Scatter3dView = Backbone.View.extend({
 		// set up THREE.js visualization components
 		this.aspectRatio = this.WIDTH / this.HEIGHT;
 		
-		// set up scene, camera, renderer
+		// set up scene, renderer
 		this.scene = new THREE.Scene();
 		// this.scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
 
@@ -448,7 +448,34 @@ var Scatter3dView = Backbone.View.extend({
 		// this.renderer.setPixelRatio( this.DPR );
 		this.renderer.setSize( this.WIDTH, this.HEIGHT, false );
 		console.log(this.WIDTH, this.HEIGHT)
+		// Put the renderer's DOM into the container
+		this.renderer.domElement.id = "renderer";
+		this.container.appendChild( this.renderer.domElement );
+		// Set up camera and control
+		this.setUpCameraAndControl();
+		this.mouse = new THREE.Vector2();
 
+		if (this.showStats) {
+			this.stats = new Stats();
+			this.container.appendChild( this.stats.dom );
+		}
+
+		this.addMouseEvents();
+
+		// window resize event
+		$(window).on( 'resize', function(event){
+			self.WIDTH = $(self.container).width(); 
+			self.HEIGHT = $(self.container).height(); 
+			self.renderer.setSize(self.WIDTH, self.HEIGHT)
+			self.camera.aspect = self.WIDTH / self.HEIGHT;
+			self.camera.updateProjectionMatrix();
+			// TODO: update camera frustum, position and the x, y scales of the brush
+		});
+		
+	},
+
+	setUpCameraAndControl: function(){
+		// set up or reset camera and zoom/pan control
 		if (this.is3d){
 			this.camera = new THREE.PerspectiveCamera( 70, this.aspectRatio, 0.01, 1000000 );
 			// this.camera.position.z = this.pointSize * 50;
@@ -484,17 +511,10 @@ var Scatter3dView = Backbone.View.extend({
 			// Decide camera position
 			var pos_x = -margin_x,
 				pos_z = ORTHO_CAMERA_FRUSTUM_HALF_EXTENT;
-
 			this.camera.position.set(pos_x, pos_y, pos_z)
 		}
 
-		// Put the renderer's DOM into the container
-		this.renderer.domElement.id = "renderer";
-
-		this.container.appendChild( this.renderer.domElement );
-
 		var self = this;
-
 		if (!this.is3d) { // setup brush for 2d
 			// flag indicating whether shiftKey is pressed
 			this.shiftKey = false;
@@ -604,7 +624,6 @@ var Scatter3dView = Backbone.View.extend({
 				});
 			this.svg.call(zoom)
 		} else { // 3d, set up OrbitControls
-			var self = this;
 			// set up orbit controls
 			this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
 			this.controls.addEventListener( 'change', function(){
@@ -622,28 +641,48 @@ var Scatter3dView = Backbone.View.extend({
 				this.raycaster.params.Points.threshold = this.pointSize/5;	
 			} else {
 				this.raycaster.params.Points.threshold = this.pointSize/200;	
-			}			
+			}
 		}
-		
-		this.mouse = new THREE.Vector2();
+	},
 
-		if (this.showStats) {
-			this.stats = new Stats();
-			this.container.appendChild( this.stats.dom );
+	removeCurrentCameraAndControl: function(){
+		// remove the current camera and control from the object and DOMs
+		this.camera = undefined;
+		this.raycaster = undefined;
+
+		if (this.is3d){
+			this.controls = undefined;
+		} else {
+			this.svg.remove()
+			this.svg = undefined;
+			this.brush_g = undefined;
 		}
+	},
 
-		this.addMouseEvents();
+	changeModel: function(url){
+		// change model and update the visualization
+		if (this.is3d){
+			this.stopAnimate();
+		}
+		this.removeCurrentCameraAndControl()
 
-		// window resize event
-		$(window).on( 'resize', function(event){
-			self.WIDTH = $(self.container).width(); 
-			self.HEIGHT = $(self.container).height(); 
-			self.renderer.setSize(self.WIDTH, self.HEIGHT)
-			self.camera.aspect = self.WIDTH / self.HEIGHT;
-			self.camera.updateProjectionMatrix();
-			// TODO: update camera frustum, position and the x, y scales of the brush
+		var n_dim = parseInt(url.split('/').slice(-1)[0]);
+		this.is3d = n_dim === 3;
+		this.pointSize = this.is3d ? 0.5 : 12;
+
+		this.model = new ScatterData({url: url})
+
+		var self = this;
+		this.listenTo(this.model, 'sync', function(){
+			self.setUpCameraAndControl()
+			self.shapeBy(self.shapeKey)
+			if(self.is3d){
+				self.animate();
+			}
+			self.trigger('modelChanged', url);
 		});
-		
+		// use the updated model to fetch the data
+		this.model.fetch()
 	},
 
 	enableBrush: function(){

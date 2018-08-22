@@ -83,5 +83,32 @@ var TreeView = Backbone.View.extend({
 		this.sdv.renderScatter()
 	},
 
+	removeObject: function(){
+		// remove object from scene and this view if exists
+		if (this.parentObject){
+			var scene = this.sdv.scene;
+			scene.remove(scene.getObjectById(this.parentObject.id));					
+		}
+		this.parentObject = undefined;
+	},
+
+	changeModel: function(url){
+		// change model and update the visualization
+		this.model = new TreeData({url: url})
+		this.removeObject()
+		this.listenTo(this.model, 'success', this.render)
+		
+		var self = this;
+		this.model.fetch({
+			success: function(model, response, options){
+				model.trigger('success')
+			},
+			error: function(model, response, options){
+				// in case this url has no tree
+				self.sdv.renderScatter()
+			}
+		});
+	},
+
 });
 

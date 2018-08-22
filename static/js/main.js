@@ -35,7 +35,11 @@ if (has_tree){ // Create Tree model and view if there is a tree in the visualiza
 	var tdv = new TreeView({
 		model: td,
 		sdv: sdv
-	})	
+	})
+	tdv.listenTo(sdv, 'modelChanged', function(url){
+		var treeUrl = url.replace('graph', 'tree')
+		tdv.changeModel(treeUrl)
+	})
 } else {
 	sd.fetch();
 }
