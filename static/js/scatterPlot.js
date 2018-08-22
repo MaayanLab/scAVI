@@ -338,6 +338,8 @@ var ScatterData = Backbone.Model.extend({
 		if (options === undefined) {options = {}}
 		_.defaults(options, this.defaults)
 		_.defaults(this, options)
+		// empty metas slot on initialize
+		this.metas = [];
 		// fetch json data from server
 		// this.fetch();
 	},
@@ -463,6 +465,7 @@ var Scatter3dView = Backbone.View.extend({
 		this.addMouseEvents();
 
 		// window resize event
+		var self = this;
 		$(window).on( 'resize', function(event){
 			self.WIDTH = $(self.container).width(); 
 			self.HEIGHT = $(self.container).height(); 
@@ -728,10 +731,11 @@ var Scatter3dView = Backbone.View.extend({
 	},
 
 	clearScene: function(){
-		// remove everythin in the scene
+		// remove all Points object in the scene
 		var scene = this.scene;
-		for( var i = scene.children.length - 1; i >= 0; i--) {
-			scene.remove(scene.children[i]);
+		for (var i = this.clouds.length - 1; i >= 0; i--) {
+			var id = this.clouds[i].points.id;
+			scene.remove(scene.getObjectById(id))
 		}
 	},
 
@@ -740,8 +744,8 @@ var Scatter3dView = Backbone.View.extend({
 		// update shapeKey
 		this.shapeKey = metaKey;
 		// clear this.clouds
-		this.clouds = [];
 		this.clearScene();
+		this.clouds = [];
 		
 		var textures = this.textures;
 		var symbols = _.map(d3.svg.symbolTypes, function(t){

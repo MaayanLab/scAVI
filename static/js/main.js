@@ -27,22 +27,19 @@ sdvConfig = $.extend(sdvDefaultConfig, sdvConfig)
 
 var sdv = new Scatter3dView(sdvConfig)
 
-if (has_tree){ // Create Tree model and view if there is a tree in the visualization 
-	var td = new TreeData({
-		url: 'tree/' + dataset_id + '/' + graph_name + '/' + n_dim
-	})
+// Create Tree model and view regardless if there is a tree in the visualization 
+var td = new TreeData({
+	url: 'tree/' + dataset_id + '/' + graph_name + '/' + n_dim
+})
 
-	var tdv = new TreeView({
-		model: td,
-		sdv: sdv
-	})
-	tdv.listenTo(sdv, 'modelChanged', function(url){
-		var treeUrl = url.replace('graph', 'tree')
-		tdv.changeModel(treeUrl)
-	})
-} else {
-	sd.fetch();
-}
+var tdv = new TreeView({
+	model: td,
+	sdv: sdv
+})
+tdv.listenTo(sdv, 'modelChanged', function(url){
+	var treeUrl = url.replace('graph', 'tree')
+	tdv.changeModel(treeUrl)
+})
 
 var legend = new Legend({scatterPlot: sdv, h: window.innerHeight + 'px', container: container})
 
