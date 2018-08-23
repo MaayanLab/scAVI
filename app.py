@@ -135,6 +135,7 @@ def upload_files():
 						all_loggers[dataset_id] = logger
 						thread = socketio.start_background_task(target=background_pipeline, 
 							socketio=socketio,
+							enter_point=ENTER_POINT,
 							dataset_id=dataset_id,
 							gene_set_libraries='KEGG_2016,ARCHS4_Cell-lines',
 							logger=logger

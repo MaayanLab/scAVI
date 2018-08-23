@@ -57,7 +57,7 @@ class Logger(object):
 		return msg.strip().split('\n')
 		
 
-def background_pipeline(socketio=None, dataset_id=None, gene_set_libraries=None, logger=None):
+def background_pipeline(socketio=None, dataset_id=None, enter_point=None, gene_set_libraries=None, logger=None):
 
 	gene_set_libraries = gene_set_libraries.split(',')
 
@@ -72,7 +72,7 @@ def background_pipeline(socketio=None, dataset_id=None, gene_set_libraries=None,
 
 	# logger = setup_logger(dataset_id)
 
-	def emit_message(msg='', socketio=socketio, namespace='/%s'%dataset_id, logger=logger):
+	def emit_message(msg='', socketio=socketio, namespace='%s/%s'%(enter_point, dataset_id), logger=logger):
 		logger.info(msg)
 		# get the last message from stream handler of the logger
 		log_msg = logger.get_last_msg()
