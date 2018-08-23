@@ -109,7 +109,7 @@ var brushModal = new BrushModal({scatterPlot: sdv});
 brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)	
 
 var dimToggle = new DimToggle({scatterPlot: sdv, 
-	container: "#controls", 
+	container: "#dim-toggle", 
 	graphs: graphs,
 	defaultColorKey: sdvDefaultConfig.colorKey
 })
