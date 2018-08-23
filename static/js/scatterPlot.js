@@ -675,10 +675,10 @@ var Scatter3dView = Backbone.View.extend({
 		this.pointSize = this.is3d ? 0.5 : 12;
 
 		this.model = new ScatterData({url: url})
+		this.setUpCameraAndControl()
 
 		var self = this;
 		this.listenTo(this.model, 'sync', function(){
-			self.setUpCameraAndControl()
 			self.shapeBy(self.shapeKey)
 			if(self.is3d){
 				self.animate();

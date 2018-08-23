@@ -1099,6 +1099,7 @@ var DimToggle = Backbone.View.extend({
 	defaults: {
 		container: document.body,
 		scatterPlot: Scatter3dView,
+		graphs: [], // an array of objects specifying the available visualizations
 	},
 
 	initialize: function(options){
@@ -1107,6 +1108,18 @@ var DimToggle = Backbone.View.extend({
 		_.defaults(this, options)
 		
 		this.listenTo(this.scatterPlot.model, 'sync', this.render);
+		// responsively disable button if the n_dim is not available
+		var graphs = _.indexBy(this.graphs, 'name');
+		var self = this;
+		this.listenTo(this.scatterPlot, 'modelChanged', function(url){
+			var visualization = url.split('/')[2]
+			if (!graphs[visualization].has3d){
+				self.disable();
+			} else {
+				self.enable();
+			}
+		});
+
 	},
 	
 	render: function(){
@@ -1142,7 +1155,13 @@ var DimToggle = Backbone.View.extend({
 	},
 
 	disable: function(){
+		this.$el.parent().addClass('disabled')
 		this.$el.bootstrapToggle('disable')
+	},
+
+	enable: function(){
+		this.$el.parent().removeClass('disabled')
+		this.$el.bootstrapToggle('enable')
 	},
 
 	switchTo: function(n_dim){
@@ -1192,6 +1211,7 @@ var VisualizationBtnGroup = Backbone.View.extend({
 
 		var sdv = this.scatterPlot;
 		var currentModelUrl = sdv.model.url();
+		var graph_info = _.indexBy(this.graphs, 'name')
 
 		// switch to the current visualization
 		this.switchTo(currentModelUrl.split('/')[2])
@@ -1199,7 +1219,13 @@ var VisualizationBtnGroup = Backbone.View.extend({
 		// handle on change event to make sdv change its model
 		$('input:radio[name=options]', this.$el).change(function() {
 			// get the new url based on the selection
+			currentModelUrl = sdv.model.url();
 			var sl = currentModelUrl.split('/')
+			var currentDim = parseInt(sl[3])
+			if (currentDim === 3 && !graph_info[this.value].has3d){
+				// currently display 3d, but the next graph has no 3d available
+				sl[3] = '2';
+			}
 			sl[2] = this.value;
 			var newUrl = sl.join('/');
 			sdv.changeModel(newUrl)
