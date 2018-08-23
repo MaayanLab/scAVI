@@ -130,9 +130,7 @@ var Controler = Backbone.View.extend({
 		_.defaults(options, this.defaults)
 		_.defaults(this, options)
 
-		this.model = this.scatterPlot.model;
-
-		this.listenTo(this.model, 'sync', this.render);
+		this.listenTo(this.scatterPlot.model, 'sync', this.render);
 
 		var scatterPlot = this.scatterPlot;
 		var self = this;
@@ -148,7 +146,8 @@ var Controler = Backbone.View.extend({
 				scatterPlot.colorBy(selectedMetaKey);
 			}
 		});
-
+		// update options when model changed
+		this.listenTo(scatterPlot, 'modelChanged', this.updateOptions)
 	},
 
 	render: function(){
@@ -159,32 +158,65 @@ var Controler = Backbone.View.extend({
 			.style('width', this.w)
 			.style('height', this.h);
 
-		var model = this.model;
+		this.setUpDOMs();
+
+		return this;
+	},
+
+	setUpDOMs: function() {
+		var self = this;
+		// Shapes: 
+		this.shapeControl = this.el.append('div')
+			.attr('class', 'form-group my-1');
+		this.shapeControl.append('label')
+			.attr('class', 'control-label')
+			.text('Shape by:');
+
+		this.shapeSelect = this.shapeControl.append('select')
+			.attr('id', 'shape')
+			.attr('class', 'form-control selectpicker')
+			.on('change', function(){
+				var selectedMetaKey = d3.select('#shape').property('value');
+				self.trigger('shapeChanged', selectedMetaKey)
+			});
+
+		// Colors
+		this.colorControl = this.el.append('div')
+			.attr('class', 'form-group my-1')
+		this.colorControl.append('label')
+			.attr('class', 'control-label')
+			.text('Color by:');
+
+		this.colorSelect = this.colorControl.append('select')
+			.attr('id', 'color')
+			.attr('class', 'form-control selectpicker')
+			.on('change', function(){
+				var selectedMetaKey = d3.select('#color').property('value');
+				self.trigger('colorChanged', selectedMetaKey)
+			});
+
+		this.updateOptions()
+
+		$('.selectpicker').on('shown.bs.select', function(e){
+			// $('[data-toggle="tooltip"]').tooltip({
+			// 	placement: 'auto',
+			// 	container: 'body',
+			// });			
+		})
+	},
+
+	updateOptions: function(){
+		// update options using this.sdv.models.metas
+		this.removeCurrentOptions()
+
+		var model = this.scatterPlot.model;
 		// filter out metas used as index
 		var metas = _.filter(model.metas, function(meta){ return meta.nUnique < model.n || meta.type == 'float'; });
-		var self = this;
-		// filter out metas not suitable for shapes
 		var metasShape = _.filter(metas, function(meta){ return meta.nUnique < 7 });
-		// Only retrain these attributes as shapes
-		// var metasShapeNames = ['p-value', 'Dose', 'Time'];
-		// var metasShape = _.filter(metas, function(meta){return metasShapeNames.indexOf(meta.name) !== -1 });
+		var metasColorExclude = ['p-value', 'Dose', 'Perturbation_ID'];
+		var metasColor = _.filter(metas, function(meta){return metasColorExclude.indexOf(meta.name) === -1 });
 		if (metasShape.length > 0){
-			// Shapes: 
-			var shapeControl = this.el.append('div')
-				.attr('class', 'form-group my-1');
-			shapeControl.append('label')
-				.attr('class', 'control-label')
-				.text('Shape by:');
-
-			var shapeSelect = shapeControl.append('select')
-				.attr('id', 'shape')
-				.attr('class', 'form-control selectpicker')
-				.on('change', function(){
-					var selectedMetaKey = d3.select('#shape').property('value');
-					self.trigger('shapeChanged', selectedMetaKey)
-				});
-
-			var shapeOptions = shapeSelect
+			this.shapeOptions = this.shapeSelect
 				.selectAll('option')
 				.data(_.pluck(metasShape, 'name')).enter()
 				.append('option')
@@ -198,24 +230,7 @@ var Controler = Backbone.View.extend({
 				});
 		}
 
-		// Colors
-		var colorControl = this.el.append('div')
-			.attr('class', 'form-group my-1')
-		colorControl.append('label')
-			.attr('class', 'control-label')
-			.text('Color by:');
-
-		var colorSelect = colorControl.append('select')
-			.attr('id', 'color')
-			.attr('class', 'form-control selectpicker')
-			.on('change', function(){
-				var selectedMetaKey = d3.select('#color').property('value');
-				self.trigger('colorChanged', selectedMetaKey)
-			});
-
-		var metasColorExclude = ['p-value', 'Dose', 'Perturbation_ID'];
-		var metasColor = _.filter(metas, function(meta){return metasColorExclude.indexOf(meta.name) === -1 });
-		var colorOptions = colorSelect
+		this.colorOptions = this.colorSelect
 			.selectAll('option')
 			.data(_.pluck(metasColor, 'name')).enter()
 			.append('option')
@@ -223,30 +238,16 @@ var Controler = Backbone.View.extend({
 			.attr('value', function(d){return d;})
 			.attr('data-content', function(d){
 				if (tooltipTexts.hasOwnProperty(d)) {
-					if (d==='Perturbation') {
 					return '<div title="'+tooltipTexts[d]+
-						'" data-toggle="tooltip">Popular-Perturbation</div>'; 
-					}else {
-						return '<div title="'+tooltipTexts[d]+
-							'" data-toggle="tooltip">'+d+'</div>';						
-					}
-
+						'" data-toggle="tooltip">'+d+'</div>';
 				} else{
 					return '<div>' + d + '</div>';
 				};
 			});
-
 		$('.selectpicker').selectpicker({
 			style: 'btn-outline-secondary btn-sm',
 		});
-
-		$('.selectpicker').on('shown.bs.select', function(e){
-			// $('[data-toggle="tooltip"]').tooltip({
-			// 	placement: 'auto',
-			// 	container: 'body',
-			// });			
-		})
-		return this;
+		$('.selectpicker').selectpicker('refresh');
 	},
 
 	changeSelection: function(){
@@ -254,6 +255,25 @@ var Controler = Backbone.View.extend({
 		$('#shape').val(this.scatterPlot.shapeKey); 
 		$('#color').val(this.scatterPlot.colorKey);
 		$('.selectpicker').selectpicker('refresh');
+	},
+
+	removeCurrentOptions: function(){
+		// remove all current options if exists
+		if(this.colorOptions){
+			var currentOptions = this.colorOptions.data()
+			for (var i = currentOptions.length - 1; i >= 0; i--) {
+				var op = currentOptions[i]
+				$('#color').find('[value="'+op+'"]').remove()
+			}
+		}
+
+		if (this.shapeOptions){
+			var currentOptions = this.shapeOptions.data()
+			for (var i = currentOptions.length - 1; i >= 0; i--) {
+				var op = currentOptions[i]
+				$('#shape').find('[value="'+op+'"]').remove()
+			}
+		}
 	},
 
 });
