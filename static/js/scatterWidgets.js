@@ -1219,6 +1219,7 @@ var VisualizationBtnGroup = Backbone.View.extend({
 		// switch to the current visualization
 		this.switchTo(currentModelUrl.split('/')[2])
 
+		var defaultColorKey = this.defaultColorKey;
 		// handle on change event to make sdv change its model
 		$('input:radio[name=options]', this.$el).change(function() {
 			// get the new url based on the selection
@@ -1231,7 +1232,7 @@ var VisualizationBtnGroup = Backbone.View.extend({
 			}
 			sl[2] = this.value;
 			var newUrl = sl.join('/');
-			sdv.colorKey = this.defaultColorKey;
+			sdv.colorKey = defaultColorKey;
 			sdv.changeModel(newUrl)
 		});
 		// put on
