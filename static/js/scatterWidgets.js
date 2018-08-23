@@ -1100,6 +1100,7 @@ var DimToggle = Backbone.View.extend({
 		container: document.body,
 		scatterPlot: Scatter3dView,
 		graphs: [], // an array of objects specifying the available visualizations
+		defaultColorKey: undefined,
 	},
 
 	initialize: function(options){
@@ -1138,7 +1139,7 @@ var DimToggle = Backbone.View.extend({
 		var n_dim = sdv.is3d ? 3 : 2;
 		this.switchTo(n_dim);
 		
-		
+		var defaultColorKey = this.defaultColorKey;
 		// when this is switched
 		this.$el.change(function(){
 			var currentModelUrl = sdv.model.url();
@@ -1149,6 +1150,7 @@ var DimToggle = Backbone.View.extend({
 			}
 
 			if (newUrl !== currentModelUrl){
+				sdv.colorKey = defaultColorKey;
 				sdv.changeModel(newUrl)
 			}
 		});
@@ -1180,6 +1182,7 @@ var VisualizationBtnGroup = Backbone.View.extend({
 		container: document.body,
 		scatterPlot: Scatter3dView,
 		graphs: [], // an array of objects specifying the available visualizations
+		defaultColorKey: undefined,
 	},
 	
 	initialize: function(options){
@@ -1228,6 +1231,7 @@ var VisualizationBtnGroup = Backbone.View.extend({
 			}
 			sl[2] = this.value;
 			var newUrl = sl.join('/');
+			sdv.colorKey = this.defaultColorKey;
 			sdv.changeModel(newUrl)
 		});
 		// put on

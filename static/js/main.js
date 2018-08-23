@@ -108,7 +108,15 @@ var brushModal = new BrushModal({scatterPlot: sdv});
 
 brushController.listenTo(brushModalBtn, 'clearBrush', brushController.depress)	
 
-var dimToggle = new DimToggle({scatterPlot: sdv, container: "#controls", graphs: graphs})
-var visBtnGroup = new VisualizationBtnGroup({scatterPlot: sdv, container: "#vis-btn-group", graphs: graphs})
+var dimToggle = new DimToggle({scatterPlot: sdv, 
+	container: "#controls", 
+	graphs: graphs,
+	defaultColorKey: sdvDefaultConfig.colorKey
+})
+var visBtnGroup = new VisualizationBtnGroup({scatterPlot: sdv, 
+	container: "#vis-btn-group", 
+	graphs: graphs,
+	defaultColorKey: sdvDefaultConfig.colorKey
+})
 
 var overlay = new Overlay({scatterPlot: sdv})
