@@ -1153,3 +1153,65 @@ var DimToggle = Backbone.View.extend({
 		}
 	},
 })
+
+var VisualizationBtnGroup = Backbone.View.extend({
+	// the button group to toggle amond different visualizations
+	tagName: 'div',
+	defaults: {
+		container: document.body,
+		scatterPlot: Scatter3dView,
+		graphs: [], // an array of objects specifying the available visualizations
+	},
+	
+	initialize: function(options){
+		if (options === undefined) {options = {}}
+		_.defaults(options, this.defaults)
+		_.defaults(this, options)
+		
+		this.listenTo(this.scatterPlot.model, 'sync', this.render);
+	},
+	
+	render: function(){
+		this.$el = $('<' + this.tagName + '>').attr('class', 'btn-group btn-group-toggle')
+			.attr('data-toggle', 'buttons')
+
+		for (var i = this.graphs.length - 1; i >= 0; i--) {
+			var rec = this.graphs[i];
+			var btn = $('<label>')
+				.attr('class', 'btn btn-info')
+				.attr('id', rec.name)
+				.text(rec.name)
+			var radio = $('<input>').attr('type', 'radio')
+				.attr('name', 'options')
+				.attr('autocomplete', 'off')
+				.attr('value', rec.name)
+				
+			btn.append(radio)
+			this.$el.append(btn)
+		}
+
+		var sdv = this.scatterPlot;
+		var currentModelUrl = sdv.model.url();
+
+		// switch to the current visualization
+		this.switchTo(currentModelUrl.split('/')[2])
+
+		// handle on change event to make sdv change its model
+		$('input:radio[name=options]', this.$el).change(function() {
+			// get the new url based on the selection
+			var sl = currentModelUrl.split('/')
+			sl[2] = this.value;
+			var newUrl = sl.join('/');
+			sdv.changeModel(newUrl)
+		});
+		// put on
+		$(this.container).append(this.$el)
+	},
+
+	switchTo: function(name){
+		// switch the button in the button group to active
+		$('label', this.$el).removeClass('active');
+		$("#"+name, this.$el).addClass('active');
+	},
+
+})

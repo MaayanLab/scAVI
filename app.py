@@ -234,13 +234,12 @@ def graph_page_with_ndim(graph_name, dataset_id, n_dim):
 	visualizations = [{'name': name, 'has3d': d_has3d.get(name, False)} for name in vis_names]
 
 	# flag indicating whether a tree will be plotted
-	has_tree = graph_name in PSEUDOTIME_ALGOS
+	# has_tree = graph_name in PSEUDOTIME_ALGOS
 
 	return render_template('index.html', 
 		script='main',
 		ENTER_POINT=ENTER_POINT,
-		has_tree=has_tree,
-		graphs=visualizations,
+		graphs=json.dumps(visualizations),
 		graph_name=graph_name,
 		dataset_id=dataset_id,
 		sdvConfig=json.dumps(sdvConfig),

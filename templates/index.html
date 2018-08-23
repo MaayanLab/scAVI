@@ -19,7 +19,7 @@
     <script>
         var graph_name = "{{ graph_name }}";
         var dataset_id = "{{ dataset_id }}";
-        var has_tree = JSON.parse("{{ has_tree }}".toLowerCase());
+        var graphs = {{ graphs|safe }};
         var sdvConfig = {{ sdvConfig|safe }};
     </script>
     <script src="js/{{ script }}.js"></script>

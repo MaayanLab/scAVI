@@ -13,34 +13,7 @@
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
       <ul class="navbar-nav mr-auto">
           {% if graphs is defined %}
-            {% for graph in graphs %}
-
-              {% if graph.has3d and graph.name == graph_name %}
-                <li class="nav-item dropdown active">
-                  <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="dropdown-{{graph.name}}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{graph.name}}</a>
-                  <div class="dropdown-menu">
-                    <a class="dropdown-item" href="graph_page/{{dataset_id}}/{{ graph.name }}/2">2D</a>
-                    <a class="dropdown-item" href="graph_page/{{dataset_id}}/{{ graph.name }}/3">3D</a>
-                  </div>
-              
-              {% elif graph.has3d and graph.name != graph_name %}
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="dropdown-{{graph.name}}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{graph.name}}</a>
-                  <div class="dropdown-menu">
-                    <a class="dropdown-item" href="graph_page/{{dataset_id}}/{{ graph.name }}/2">2D</a>
-                    <a class="dropdown-item" href="graph_page/{{dataset_id}}/{{ graph.name }}/3">3D</a>
-                  </div>
-
-              {% elif not graph.has3d and graph.name == graph_name%}
-                <li class="nav-item active">
-                  <a class="nav-link" href="graph_page/{{dataset_id}}/{{ graph.name }}/2">{{ graph.name }}</a>
-              {% else %}
-                <li class="nav-item">
-                  <a class="nav-link" href="graph_page/{{dataset_id}}/{{ graph.name }}/2">{{ graph.name }}</a>
-              {% endif %}
-                </li>
-
-            {% endfor %}
+            <li class="nav-item" id="vis-btn-group"></li>
           {% endif %}
       </ul>
       <form class="form-inline my-2 my-lg-0">
