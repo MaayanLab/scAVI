@@ -161,14 +161,13 @@ def check_progress(dataset_id):
 	if ds is None:
 		abort(404)
 	else:
-		visualizations = mongo.db['vis'].find({'dataset_id': dataset_id}, 
-			{'_id': False, 'name':True})
+		visualizations = get_available_vis(mongo.db, dataset_id)
 		enrichments = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
 			{'_id': False, 'gene_set_library':True})
 		er_pendings = mongo.db['enrichr_temp'].find({'dataset_id': dataset_id}, 
 			{'_id': False, 'gene_set_library':True})
 
-		ds.visualizations = [vis for vis in visualizations]
+		ds.visualizations = visualizations
 		ds.enrichment_results = [er for er in enrichments]
 		er_pendings = Counter([er['gene_set_library'] for er in er_pendings])
 		ds.er_pendings = [{'gene_set_library': key, 'count': val} for key, val in er_pendings.items()]	
@@ -217,25 +216,11 @@ def graph_page_with_ndim(graph_name, dataset_id, n_dim):
 		sdvConfig['colorKey'] = d_col_nuniques[0][0]
 
 	sdvConfig['shapeKey'] = None
-			
-	# get available visualizations in the DB 
-	# also get a flag indicating whether 3d is available
-	cur = mongo.db['vis'].find({'dataset_id': dataset_id}, 
-		{'_id':False, 'name':True, 'z': True})
-	vis_names = set()
-	d_has3d = {}
-	for doc in cur:
-		name = doc['name'].split('-')[0]
-		is3d = doc.has_key('z')
-		if is3d:
-			d_has3d[name] = True
-		vis_names.add(name)
-	
-	visualizations = [{'name': name, 'has3d': d_has3d.get(name, False)} for name in vis_names]
+
+	visualizations = get_available_vis(mongo.db, dataset_id)
 
 	# flag indicating whether a tree will be plotted
 	# has_tree = graph_name in PSEUDOTIME_ALGOS
-
 	return render_template('index.html', 
 		script='main',
 		ENTER_POINT=ENTER_POINT,

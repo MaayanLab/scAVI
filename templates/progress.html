@@ -22,7 +22,10 @@
         <h1>Visualizations</h1>
         <ul>
             {% for vis in ds.visualizations %}
-            <li><a href="graph_page/{{ds.id}}/{{vis['name']}}">{{vis['name']}}</a></li>
+                <li><a href="graph_page/{{ds.id}}/{{vis['name']}}/2">{{vis['name']}}-2D</a></li>
+                {% if vis['has3d'] %}
+                    <li><a href="graph_page/{{ds.id}}/{{vis['name']}}/3">{{vis['name']}}-3D</a></li>
+                {% endif %}
             {% endfor %}
         </ul>
     </div>

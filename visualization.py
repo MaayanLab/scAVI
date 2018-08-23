@@ -24,10 +24,10 @@ def do_tsne(X, n_components=3):
 class Visualization(object):
 	"""docstring for Visualization"""
 	coll = 'vis'
-	def __init__(self, ged=None, name=None, func=None):
+	def __init__(self, ged=None, name=None, func=None, **kwargs):
 		self.ged = ged # GeneExpressionDataset instance
 		self.name = name
-		self.func = func
+		self.func = lambda x: func(x, **kwargs)
 
 	def compute_visualization(self):
 		# make sure it is z-scored

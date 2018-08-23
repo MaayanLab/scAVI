@@ -93,10 +93,16 @@ def background_pipeline(socketio=None, dataset_id=None, gene_set_libraries=None,
 	emit_message('PCA finished')
 	vis.save(db)
 
-	emit_message('Performing tSNE')
-	vis = Visualization(ged=gds, name='tSNE', func=do_tsne)
+	emit_message('Performing tSNE-2d')
+	vis = Visualization(ged=gds, name='tSNE', func=do_tsne, n_components=2)
 	coords = vis.compute_visualization()
-	emit_message('tSNE finished')
+	emit_message('tSNE-2d finished')
+	vis.save(db)
+
+	emit_message('Performing tSNE-3d')
+	vis = Visualization(ged=gds, name='tSNE-3d', func=do_tsne)
+	coords = vis.compute_visualization()
+	emit_message('tSNE-3d finished')
 	vis.save(db)
 
 	# step 3.

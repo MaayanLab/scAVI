@@ -3,9 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-
-# from gene_expression import *
-# from enrichment import *
+from sklearn import cluster
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -18,48 +16,12 @@ def nan_to_none(x):
 		pass
 	return x
 
-def load_graphs_meta():
-	'''Load and preprocess the meta for graphs in the `data/graphs` dir.
-	'''
-	graphs = []
-	graphs_dir = os.path.join(SCRIPT_DIR, 'data/graphs')
-	for graph_file in os.listdir(graphs_dir):
-		graph_meta = {
-			'name': graph_file,
-			'display_name': graph_file.strip('.json'),
-		}
-		graphs.append(graph_meta)
-	return graphs
-
-def load_predicted_cell_types():
-	preds_df = pd.read_csv(os.path.join(SCRIPT_DIR, 'data/predicted_cell_types.csv'))
-	return preds_df.set_index(preds_df.columns[0])
-
-def load_cell_meta_from_file():
-	meta_file = os.path.join(SCRIPT_DIR, 'data/Index Sort Matrix_04_MR.xlsx')
-	meta_df = pd.read_excel(meta_file, sheetname='Sheet1')
-	meta_df = meta_df.set_index('Well')
-	meta_df = meta_df[meta_df.columns[2:]]
-	
-	meta_df = meta_df.transpose()
-	meta_df.index.name = 'sample_ids'
-	meta_df['Plate'] = meta_df.index.map(lambda x:x.split('_')[0])
-	meta_df['FSC'] = meta_df['FSC'].fillna(0)
-	meta_df['SSC'] = meta_df['SSC'].fillna(0)
-
-	meta_df.fillna('unknown', inplace=True)
-	preds_df = load_predicted_cell_types()
-	meta_df = meta_df.merge(preds_df, left_index=True, right_index=True, how='left')
-	print meta_df.shape
-	return meta_df
-
 
 def minmax_scaling(arr, min=0, max=20):
 	scl = MinMaxScaler((min, max))
 	arr = scl.fit_transform(arr.reshape(-1, 1))
 	return arr[:, 0]
 
-from sklearn import cluster
 def clustering(coords, clstr):
 	clstr.fit(coords)
 	return clstr.labels_
@@ -119,3 +81,19 @@ def load_psudotime_df(pe, gds):
 	graph_df = graph_df.merge(data_df, left_index=True, right_index=True)
 	return graph_df
 
+def get_available_vis(db, dataset_id):
+	'''Get available visualizations in the DB.
+	also get a flag indicating whether 3d is available.
+	''' 
+	cur = db['vis'].find({'dataset_id': dataset_id}, 
+		{'_id':False, 'name':True, 'z': True})
+	vis_names = set()
+	d_has3d = {}
+	for doc in cur:
+		name = doc['name'].split('-')[0]
+		is3d = doc.has_key('z')
+		if is3d:
+			d_has3d[name] = True
+		vis_names.add(name)
+	
+	return [{'name': name, 'has3d': d_has3d.get(name, False)} for name in vis_names]
