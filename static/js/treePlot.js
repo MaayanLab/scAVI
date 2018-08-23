@@ -19,12 +19,12 @@ var TreeData = Backbone.Model.extend({
 		this.positions = [];
 		for (var i = response.length - 1; i >= 0; i--) {
 			var edge = response[i];
-			var x = edge['source_prin_graph_dim_1'],
-				y = edge['source_prin_graph_dim_2'],
-				z = edge['source_prin_graph_dim_3'] || 0,
-				xend = edge['target_prin_graph_dim_1'],
-				yend = edge['target_prin_graph_dim_2'],
-				zend = edge['target_prin_graph_dim_3'] || 0;
+			var x = edge['x'],
+				y = edge['y'],
+				z = edge['z'] || 0,
+				xend = edge['xe'],
+				yend = edge['ye'],
+				zend = edge['ze'] || 0;
 			var points = new Float32Array([x, y, z, xend, yend, zend]);
 			this.positions.push(points)
 		}

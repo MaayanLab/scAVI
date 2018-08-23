@@ -284,11 +284,6 @@ def load_psudotime_tree(graph_name, dataset_id, n_dim):
 	'''API to retrieve the tree from psudotime estimation.
 	'''
 	if request.method == 'GET':
-		if dataset_id.startswith('GSE'):
-			gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
-		else:
-			gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
-
 		scaler_range = (0, 20)
 		if n_dim == 3:
 			graph_name += '-3d'
@@ -301,17 +296,24 @@ def load_psudotime_tree(graph_name, dataset_id, n_dim):
 		scaler_x = MinMaxScaler(scaler_range).fit(pe.coords[:, 0].reshape(-1, 1))
 		scaler_y = MinMaxScaler(scaler_range).fit(pe.coords[:, 1].reshape(-1, 1))
 
-		edge_df = pe.results['edge_df']
+		edge_df = pe.results['edge_df'].rename(columns={
+			'source_prin_graph_dim_1': 'x', 
+			'source_prin_graph_dim_2': 'y', 
+			'source_prin_graph_dim_3': 'z',
+			'target_prin_graph_dim_1': 'xe', 
+			'target_prin_graph_dim_2': 'ye', 
+			'target_prin_graph_dim_3': 'ze'
+			})
 		# Apply scaling
-		for col in ['source_prin_graph_dim_1', 'source_prin_graph_dim_2', 'source_prin_graph_dim_3',
-			'target_prin_graph_dim_1', 'target_prin_graph_dim_2', 'target_prin_graph_dim_3']:
+		for col in ['x', 'y', 'z', 'xe', 'ye', 'ze']:
 			if col in edge_df.columns:
-				if col.endswith('1'):
+				if col.startswith('x'):
 					edge_df[col] = scaler_x.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
-				elif col.endswith('2'):
+				elif col.startswith('y'):
 					edge_df[col] = scaler_y.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
-				elif col.endswith('3'):
+				elif col.startswith('z'):
 					edge_df[col] = scaler_z.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
+
 		return edge_df.to_json(orient='records')
 
 
