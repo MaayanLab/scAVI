@@ -29,6 +29,16 @@ a {
 	padding: 0; 
 	position: relative; 
 }
+#legend-container{
+  height: 100%;
+  position: relative;
+  padding: 0;
+}
+#controler-container{
+  height: 100%;
+  position: relative;
+  padding: 0;
+}
 
 .modal-dialog{
     position: relative;
@@ -48,7 +58,7 @@ a {
 }
 
 #legend{
-	z-index: 10;
+	/*z-index: 10;*/
 	position: absolute;
 	left: 0px;
 	top: 0px;
@@ -60,6 +70,7 @@ a {
 	position: absolute;
 	right: 5px;
 	top: 0px;
+  max-height: 600px;
 }
 
 #clear-btn {

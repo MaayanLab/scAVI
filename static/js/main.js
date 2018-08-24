@@ -41,9 +41,33 @@ tdv.listenTo(sdv, 'modelChanged', function(url){
 	this.changeModel(treeUrl)
 })
 
-var legend = new Legend({scatterPlot: sdv, h: window.innerHeight + 'px', container: container})
 
-var controler = new Controler({scatterPlot: sdv, h: window.innerHeight + 'px', w: '200px', container: container})
+if (mobilecheck() || width < 420){ // small or mobile screen
+	console.log('small screen')
+	// make wrapper for controls
+	// $('body').append($('<div>').attr('class', 'container')
+	// 	.attr('id', 'legend-container'))
+	$('body>div:eq(1)').after($('<div>').attr('class', 'container')
+		.attr('id', 'controler-container'))
+
+	var legend = new Legend({scatterPlot: sdv, 
+		h: window.innerHeight/3 + 'px', 
+		container: container
+	})
+	
+	var controler = new Controler({scatterPlot: sdv, 
+		h: window.innerHeight/3 + 'px', 
+		w: window.innerWidth * 0.9 + 'px', 
+		container: document.getElementById('controler-container')})
+} else {
+	var legend = new Legend({scatterPlot: sdv, 
+		h: window.innerHeight + 'px', 
+		container: container})
+	var controler = new Controler({scatterPlot: sdv, 
+		h: window.innerHeight * 0.67 + 'px', 
+		w: '200px', 
+		container: container})
+}
 
 // search expression of single genes
 var geneSearchSelectize = new SearchSelectize({
