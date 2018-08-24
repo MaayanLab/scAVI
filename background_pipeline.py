@@ -27,7 +27,7 @@ class Logger(object):
 		self.logger = logging.getLogger(dataset_id)
 		self.logger.setLevel(logging.INFO)
 		# create file handler and stream handler for the logger
-		self.log_fp = os.path.join(SCRIPT_DIR, 'data/logs', '%s.log'%dataset_id)
+		self.log_fp = os.path.join(SCRIPT_DIR, 'logs', '%s.log'%dataset_id)
 		fh = logging.FileHandler(self.log_fp)
 		fh.setLevel(logging.INFO)
 		ch = logging.StreamHandler(log_capture_string)
@@ -49,7 +49,7 @@ class Logger(object):
 
 	@classmethod
 	def get_all_msg(self, dataset_id):
-		log_fp = os.path.join(SCRIPT_DIR, 'data/logs', '%s.log'%dataset_id)
+		log_fp = os.path.join(SCRIPT_DIR, 'logs', '%s.log'%dataset_id)
 		msg = ''
 		if os.path.isfile(log_fp):
 			msg = open(log_fp, 'r').read()
