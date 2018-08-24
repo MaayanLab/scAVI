@@ -29,7 +29,7 @@ app.config['UPLOAD_FOLDER'] = os.path.join(SCRIPT_DIR, 'data/uploads')
 mongo.init_app(app)
 
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
+socketio = SocketIO(app, path=ENTER_POINT + '/socket.io')
 
 
 @app.route(ENTER_POINT + '/')
@@ -102,26 +102,31 @@ def upload_files():
 			# data_file.save(os.path.join(app.config['UPLOAD_FOLDER'], data_filename))
 			metadata_filename = secure_filename(metadata_file.filename)
 			# metadata_file.save(os.path.join(app.config['UPLOAD_FOLDER'], metadata_filename))
-
+			print 'Uploaded files: %s, %s' %(data_filename, metadata_filename)
 			# parse uploaded files
 			expr_df, meta_df = parse_uploaded_files(data_file, metadata_file)
+			print 'Files parsed:', expr_df.shape, meta_df.shape
 			try:
 				expr_dtype = expression_is_valid(expr_df)
 			except ValueError as e:
 				print expr_df.head()
 				abort(str(e))
 			else:
+				print 'expr_dtype is', expr_dtype
 				if expr_dtype == 'counts':
 					expr_df = compute_CPMs(expr_df)
 
 				# parse into GeneExpressionDataset object
 				dataset = GeneExpressionDataset(expr_df, meta={'meta_df': meta_df.to_dict('list')})
+				print 'converted in to GeneExpressionDataset'
 				# check if dataset exists
 				dataset_exists = True
 				if not dataset.exists(mongo.db):
 					dataset_exists = False
+					print 'performing log10_and_zscore for dataset'
 					dataset.log10_and_zscore()
 					dataset.save(mongo.db)
+					print 'Dataset saved into db'
 					# run the pipeline in background
 					# p = subprocess.Popen(['python', 'pipeline.py', '-i', dataset.id], 
 					# 	stdout=subprocess.PIPE)
@@ -133,6 +138,7 @@ def upload_files():
 						# create logger for the job
 						logger = Logger(dataset_id)
 						all_loggers[dataset_id] = logger
+						print 'Started background_pipeline for dataset'
 						thread = socketio.start_background_task(target=background_pipeline, 
 							socketio=socketio,
 							enter_point=ENTER_POINT,
@@ -141,14 +147,15 @@ def upload_files():
 							logger=logger
 							)
 						all_threads[dataset_id] = thread
+						print 'print this line after background_pipeline'
 
-
-			return render_template('upload_success.html',
-					ENTER_POINT=ENTER_POINT,
-					data_filename=data_filename,
-					metadata_filename=metadata_filename,
-					dataset_exists=dataset_exists,
-					ds=dataset)
+				print 'print this line before render_template upload_success.html'
+				return render_template('upload_success.html',
+						ENTER_POINT=ENTER_POINT,
+						data_filename=data_filename,
+						metadata_filename=metadata_filename,
+						dataset_exists=dataset_exists,
+						ds=dataset)
 
 	return render_template('upload.html',
 			ENTER_POINT=ENTER_POINT)

@@ -66,7 +66,7 @@ $(document).ready(function(){
     var enter_point = '/' + window.location.pathname.split('/')[1]
     var namespace = enter_point + '/' + '{{ds.id}}';
     var url = 'http://' + document.domain + ':' + location.port + namespace
-    var socket = io.connect(url);
+    var socket = io(url, {path: enter_point + '/socket.io'})
 
             // Event handler for new connections.
             // The callback function is invoked when a connection with the
