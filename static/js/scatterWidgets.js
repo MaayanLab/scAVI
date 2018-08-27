@@ -73,6 +73,7 @@ var Legend = Backbone.View.extend({
 
 		var self = this
 		// a hack here because d3.legend has no callback
+		setTimeout(function(){self.createLegendCellForNull();}, 400)
 		setTimeout(function(){self.moveShapeLegend();}, 500)
 
 		return this;
@@ -88,8 +89,35 @@ var Legend = Backbone.View.extend({
 			.transition()
 			.attr('transform', 'translate(0, ' + dy + ')')
 			.duration(500)
-	}
+	},
 
+	createLegendCellForNull: function(){
+		// A hacky method to add legend cell for null values
+		var colorScale = this.scatterPlot.colorScale;
+		if (colorScale.hasNull){
+			// select the second legend cell to get the translate value
+			var legendCell = this.g.select("#legendColor").select('.cell:nth-child(2)');
+			var nCells = this.g.select("#legendColor").selectAll('.cell')[0].length;
+			var ty = d3.transform(legendCell.attr('transform')).translate[1]
+			var nullCell = this.g.select("#legendColor")
+				.select('.legendCells')
+				.append('g').attr('class', 'cell')
+				.attr('transform', 'translate(0, '+ty * nCells+')')
+			// get size of the rect
+			var h = legendCell.select('rect').attr('height'),
+				w = legendCell.select('rect').attr('width'),
+				t = d3.transform(legendCell.select('text').attr('transform')).translate;
+			nullCell.append('rect')
+				.attr('class', 'swatch')
+				.attr('height', h)
+				.attr('width', w)
+				.style('fill', colorScale.nullColor)
+			nullCell.append('text')
+				.attr('class', 'label')
+				.attr('transform', 'translate('+t[0]+', '+t[1]+')')
+				.text('N/A')
+		}
+	},
 });
 
 // This is a map for the tooltips displayed to explain the 

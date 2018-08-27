@@ -18,6 +18,26 @@ function getType(n){
 	return type;
 }
 
+function getArrayType(arr){
+	// get the data type of items in an array
+	// skipping the null(s)
+	var arr = _.filter(arr, function(x){ return x !== null})
+	var dtypes = new Set(_.map(arr, getType))
+	var dtype = [...dtypes][0];
+	if (dtypes.size > 1){
+		if (dtypes.has('float')){ // mixture of floats, ints, or strings
+			dtypes = 'float'
+		}
+	}
+	return dtype;
+}
+
+function arrayHasNull(arr){
+	// assert if null in an array
+	var s = new Set(arr)
+	return s.has(null);
+}
+
 /** 
  * convenience for converting JSON color to rgba that canvas wants
  * Be nice to handle different forms (e.g. no alpha, CSS style, etc.)
@@ -320,13 +340,15 @@ var ScatterData = Backbone.Model.extend({
 		var xyz = ['x', 'y', 'z'];
 		for (var key in response[0]){
 			if (xyz.indexOf(key) === -1){ 
-				var nUnique = _.unique(_.pluck(response, key)).length;
-				// var type = typeof response[0][key];
-				var type = getType(response[0][key]);
+				var arr = _.pluck(response, key)
+				var nUnique = _.unique(arr).length;
+				var type = getArrayType(arr)
+				var hasNull = arrayHasNull(arr)
 				this.metas.push({
 					name: key,
 					nUnique: nUnique,
 					type: type,
+					hasNull: hasNull
 				});
 			}
 		}
@@ -384,8 +406,8 @@ var ScatterData = Backbone.Model.extend({
 		this.metas.push({
 			name: key,
 			nUnique: _.unique(values).length,
-			// type: typeof values[0]
-			type: getType(values[0])
+			type: getArrayType(values),
+			hasNull: arrayHasNull(values)
 		});
 	},
 });
@@ -1063,11 +1085,27 @@ var Scatter3dView = Backbone.View.extend({
 			var colorExtent = d3.extent(metas);
 			var min_score = colorExtent[0],
 				max_score = colorExtent[1];
-			var colorScale = d3.scale.pow()
+			var nullColor = '#7f7f7f'
+			var _colorScale = d3.scale.pow()
 				.domain([min_score, (min_score+max_score)/2, max_score])
 				.range(["#1f77b4", "#ddd", "#d62728"]);
-			// var shifted_max = max_score + 1 - min_score;
+			var colorScale = function(item){
+				c = _colorScale(item)
+				if (item === null){
+					var c = nullColor;
+				}
+				return c;
+			}
+			colorScale.domain = _colorScale.domain
+			colorScale.range = _colorScale.range
+			colorScale.rangeRound = _colorScale.rangeRound
+			colorScale.interpolate = _colorScale.interpolate
+			colorScale.exponent = _colorScale.exponent
+			colorScale.ticks = _colorScale.ticks
+			colorScale.tickFormat = _colorScale.tickFormat
 
+			colorScale.hasNull = meta.hasNull
+			colorScale.nullColor = nullColor
 		}
 
 		this.colorScale = colorScale; // the d3 scale used for coloring nodes
