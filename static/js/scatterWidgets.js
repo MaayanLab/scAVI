@@ -423,7 +423,7 @@ var TermSearchSelectize = Backbone.View.extend({
 				optgroupLabelField: 'name',
 				optgroupValueField: 'id',
 				lockOptgroupOrder: true,
-				preload: 'focus',
+				preload: false,
 				options: [],
 				placeholder: 'term...',
 				optgroups: optgroups,
@@ -436,18 +436,20 @@ var TermSearchSelectize = Backbone.View.extend({
 					}
 				},
 				load: function(query, callback){
-					if (!query.length) query = 'a'; // to preload some options when focused 
-					$.ajax({
-						url: self.synonymsUrl + '/' + encodeURIComponent(query),
-						type: 'GET',
-						dataType: 'json',
-						error: function(){
-							callback();
-						},
-						success: function(res){
-							return callback(res);
-						}
-					});
+					// if (!query.length) query = 'a'; // to preload some options when focused 
+					if (query.length > 1){
+						$.ajax({
+							url: self.synonymsUrl + '/' + encodeURIComponent(query),
+							type: 'GET',
+							dataType: 'json',
+							error: function(){
+								callback();
+							},
+							success: function(res){
+								return callback(res);
+							}
+						});
+					}
 				}
 				});
 			// on change, trigger('searched', query)
