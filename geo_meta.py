@@ -100,6 +100,9 @@ class _GSMList(object):
 			.set_index(self.id_field)
 		# remove columns with only 1 unique value
 		meta_df = meta_df.loc[:, meta_df.nunique() > 1]
+		# attempt to convert columns to numerical type
+		for col in meta_df.columns:
+			meta_df[col] = pd.to_numeric(meta_df[col], errors='ignore')
 		return meta_df
 
 	def save(self, db):

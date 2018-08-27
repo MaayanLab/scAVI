@@ -160,7 +160,8 @@ class EnrichmentResults(object):
 			]}, 
 			{'scores.%s'%term:True, '_id': False}
 			)
-		doc['scores'][term] = map(nan_to_none, doc['scores'][term])
+		min_val = np.nanmin( doc['scores'][term])
+		doc['scores'][term] = pd.Series(doc['scores'][term]).fillna(min_val).tolist()
 		return doc['scores']
 
 	@classmethod
