@@ -1040,6 +1040,7 @@ var Scatter3dView = Backbone.View.extend({
 		var uniqueCats = new Set(metas);
 		var nUniqueCats = uniqueCats.size;
 		uniqueCats = Array.from(uniqueCats);
+		var nullColor = '#7f7f7f';
 		// Make unknown to be gray 
 		if (uniqueCats.indexOf('unknown') !== -1) {
 			if(uniqueCats.length > 7){
@@ -1085,30 +1086,35 @@ var Scatter3dView = Backbone.View.extend({
 			var colorExtent = d3.extent(metas);
 			var min_score = colorExtent[0],
 				max_score = colorExtent[1];
-			var nullColor = '#7f7f7f'
-			var _colorScale = d3.scale.pow()
+			var colorScale = d3.scale.pow()
 				.domain([min_score, (min_score+max_score)/2, max_score])
 				.range(["#1f77b4", "#ddd", "#d62728"]);
-			var colorScale = function(item){
-				c = _colorScale(item)
+		}
+		
+		if (meta.hasNull){
+			var colorScaleWrapper = function(item){
+				c = colorScale(item)
 				if (item === null){
 					var c = nullColor;
 				}
 				return c;
 			}
-			colorScale.domain = _colorScale.domain
-			colorScale.range = _colorScale.range
-			colorScale.rangeRound = _colorScale.rangeRound
-			colorScale.interpolate = _colorScale.interpolate
-			colorScale.exponent = _colorScale.exponent
-			colorScale.ticks = _colorScale.ticks
-			colorScale.tickFormat = _colorScale.tickFormat
+			colorScaleWrapper.domain = colorScale.domain
+			colorScaleWrapper.range = colorScale.range
+			colorScaleWrapper.rangeRound = colorScale.rangeRound
+			colorScaleWrapper.interpolate = colorScale.interpolate
+			colorScaleWrapper.exponent = colorScale.exponent
+			colorScaleWrapper.ticks = colorScale.ticks
+			colorScaleWrapper.tickFormat = colorScale.tickFormat
 
-			colorScale.hasNull = meta.hasNull
-			colorScale.nullColor = nullColor
+			this.colorScale = colorScaleWrapper
+		} else {
+			this.colorScale = colorScale; // the d3 scale used for coloring nodes	
 		}
-
-		this.colorScale = colorScale; // the d3 scale used for coloring nodes
+		this.colorScale.hasNull = meta.hasNull
+		this.colorScale.nullColor = nullColor
+		this.colorScale.dtype = meta.type
+		this.colorScale.nUnique = meta.nUnique
 
 		this.trigger('colorChanged');
 		this.renderScatter();

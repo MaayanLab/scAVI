@@ -95,27 +95,36 @@ var Legend = Backbone.View.extend({
 		// A hacky method to add legend cell for null values
 		var colorScale = this.scatterPlot.colorScale;
 		if (colorScale.hasNull){
-			// select the second legend cell to get the translate value
-			var legendCell = this.g.select("#legendColor").select('.cell:nth-child(2)');
-			var nCells = this.g.select("#legendColor").selectAll('.cell')[0].length;
-			var ty = d3.transform(legendCell.attr('transform')).translate[1]
-			var nullCell = this.g.select("#legendColor")
-				.select('.legendCells')
-				.append('g').attr('class', 'cell')
-				.attr('transform', 'translate(0, '+ty * nCells+')')
-			// get size of the rect
-			var h = legendCell.select('rect').attr('height'),
-				w = legendCell.select('rect').attr('width'),
-				t = d3.transform(legendCell.select('text').attr('transform')).translate;
-			nullCell.append('rect')
-				.attr('class', 'swatch')
-				.attr('height', h)
-				.attr('width', w)
-				.style('fill', colorScale.nullColor)
-			nullCell.append('text')
-				.attr('class', 'label')
-				.attr('transform', 'translate('+t[0]+', '+t[1]+')')
-				.text('N/A')
+			if (colorScale.dtype === 'float'|| (colorScale.dtype === 'int' && colorScale.nUnique > 40)){
+				// select the second legend cell to get the translate value
+				var legendCell = this.g.select("#legendColor").select('.cell:nth-child(2)');
+				var nCells = this.g.select("#legendColor").selectAll('.cell')[0].length;
+				var ty = d3.transform(legendCell.attr('transform')).translate[1]
+				var nullCell = this.g.select("#legendColor")
+					.select('.legendCells')
+					.append('g').attr('class', 'cell')
+					.attr('transform', 'translate(0, '+ty * nCells+')')
+				// get size of the rect
+				var h = legendCell.select('rect').attr('height'),
+					w = legendCell.select('rect').attr('width'),
+					t = d3.transform(legendCell.select('text').attr('transform')).translate;
+				nullCell.append('rect')
+					.attr('class', 'swatch')
+					.attr('height', h)
+					.attr('width', w)
+					.style('fill', colorScale.nullColor)
+				nullCell.append('text')
+					.attr('class', 'label')
+					.attr('transform', 'translate('+t[0]+', '+t[1]+')')
+					.text('N/A')
+			} else { // Add "N/A" to the legend cell with empty text
+				this.g.select("#legendColor").selectAll('.cell text').each(function(){
+					var legendText = d3.select(this).text();
+					if (legendText === ''){
+						d3.select(this).text('N/A')
+					}
+				});
+			}
 		}
 	},
 });

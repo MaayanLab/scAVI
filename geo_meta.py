@@ -11,6 +11,7 @@ with warnings.catch_warnings():
 		pass
 
 import pandas as pd
+import numpy as np
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -101,6 +102,7 @@ class _GSMList(object):
 		# remove columns with only 1 unique value
 		meta_df = meta_df.loc[:, meta_df.nunique() > 1]
 		# attempt to convert columns to numerical type
+		meta_df.replace('NA', np.nan, inplace=True)
 		for col in meta_df.columns:
 			meta_df[col] = pd.to_numeric(meta_df[col], errors='ignore')
 		return meta_df
