@@ -10,6 +10,11 @@ var container = document.getElementById("body")
 var width = container.clientWidth;
 var height = container.clientHeight;
 
+if (mobilecheck() || width < 420){ // small or mobile screen
+	height = Math.min(width, height)
+	width = height
+}
+
 var sdvDefaultConfig = {
 	container: container,
 	WIDTH: width,
@@ -43,10 +48,7 @@ tdv.listenTo(sdv, 'modelChanged', function(url){
 
 
 if (mobilecheck() || width < 420){ // small or mobile screen
-	console.log('small screen')
 	// make wrapper for controls
-	// $('body').append($('<div>').attr('class', 'container')
-	// 	.attr('id', 'legend-container'))
 	$('body>div:eq(1)').after($('<div>').attr('class', 'container')
 		.attr('id', 'controler-container'))
 
