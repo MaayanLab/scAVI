@@ -53,7 +53,7 @@ def load_vis_df(vis, gds):
 	graph_df['KMeans-clustering'] = clustering(coords, 
 		cluster.KMeans(n_clusters=10))
 	# Filter out columns won't be used for visualization
-	meta_df = gds.meta_df.loc[:, gds.meta_df.nunique() < gds.meta_df.shape[0]]
+	meta_df = gds.meta_df.loc[:, (gds.meta_df.nunique() < gds.meta_df.shape[0]) | (gds.meta_df.dtypes != 'object')]
 	# Merge with meta_df
 	graph_df = graph_df.merge(meta_df, how='left', left_index=True, right_index=True)
 	return graph_df
@@ -76,7 +76,7 @@ def load_psudotime_df(pe, gds):
 		graph_df['y'] = minmax_scaling(graph_df['y'].values)
 		coords = graph_df[['x', 'y']].values
 	# Filter out columns won't be used for visualization
-	meta_df = gds.meta_df.loc[:, gds.meta_df.nunique() < gds.meta_df.shape[0]]
+	meta_df = gds.meta_df.loc[:, (gds.meta_df.nunique() < gds.meta_df.shape[0]) | (gds.meta_df.dtypes != 'object')]
 	# Merge with meta_df
 	graph_df = graph_df.merge(meta_df, how='left', left_index=True, right_index=True)
 	# Merge with estimated attributes from pe

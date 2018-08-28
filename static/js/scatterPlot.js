@@ -26,7 +26,7 @@ function getArrayType(arr){
 	var dtype = [...dtypes][0];
 	if (dtypes.size > 1){
 		if (dtypes.has('float')){ // mixture of floats, ints, or strings
-			dtypes = 'float'
+			dtype = 'float'
 		}
 	}
 	return dtype;
