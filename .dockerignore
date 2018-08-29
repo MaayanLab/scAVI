@@ -5,3 +5,4 @@ data/
 .ipynb
 scripts/*.csv
 .git/
+logs/*.log

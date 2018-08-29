@@ -1,0 +1,56 @@
+{% extends "base-center.html" %}
+{% block content_center %}
+<style type="text/css">
+    #log {
+        max-height: 300px;
+        overflow: scroll;
+        background-color: #eee;
+    }
+</style>
+
+    <div class="alert alert-success">
+        <h4 class="alert-heading">Success!</h4>
+        <p>Your data file ({{upload_obj.data_file}}) and metadata file ({{upload_obj.metadata_file}}) has been uploaded.</p> 
+
+    </div>
+
+    <div>
+        <h4>Live log</h4>
+        <div id="log">
+            {% for line in logger_msg %}
+                <div>{{line}}</div>
+            {% endfor %}
+        </div>
+    </div>
+    <div id="done">
+    	{% if upload_obj.done %}
+    		<a href="progress/{{upload_obj.dataset_id}}">{{ upload_obj.dataset_id }}</a>
+    	{% endif %}
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript" src="lib/socket.io.min.js"></script>
+    <script type="text/javascript">
+        
+$(document).ready(function(){
+	var upload_id = '{{ upload_obj.id }}';
+    var enter_point = '/' + window.location.pathname.split('/')[1]
+    var namespace = enter_point + '/' + upload_id;
+    var url = 'http://' + document.domain + ':' + location.port + namespace
+    var socket = io(url, {path: enter_point + '/socket.io'})
+
+    // Event handler for server sent data.
+    socket.on('my_response', function(msg) {
+    	console.log(msg)
+    	if (!msg.done){
+    		$('#log').append('<br>'+ $('<div/>').text(msg.data).html());	
+    	} else{
+    		var a = $('<a>').text(msg.dataset_id).attr('href', 'progress/' + msg.dataset_id)
+    		$('#done').append(a)
+    	}
+    });
+
+});
+    </script>
+{% endblock %}

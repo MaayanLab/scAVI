@@ -11,7 +11,7 @@ import pandas as pd
 from flask import Flask, request, redirect, render_template, \
 	jsonify, send_from_directory, abort, Response, send_file
 from werkzeug.utils import secure_filename
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 
 import encrypt
 from utils import *
@@ -84,9 +84,12 @@ def all_datasets():
 
 
 from upload_utils import *
-from threading import Lock
-all_threads = {}
-all_loggers = {}
+with app.app_context():
+	# Set class variables
+	Upload.upload_folder = app.config['UPLOAD_FOLDER']
+	Upload.db = mongo.db
+
+# from threading import Lock
 from background_pipeline import *
 
 
@@ -99,67 +102,41 @@ def upload_files():
 		if data_file and allowed_file(data_file.filename) and \
 			metadata_file and allowed_file(metadata_file.filename):
 			data_filename = secure_filename(data_file.filename)
-			# data_file.save(os.path.join(app.config['UPLOAD_FOLDER'], data_filename))
+			data_file.save(os.path.join(app.config['UPLOAD_FOLDER'], data_filename))
 			metadata_filename = secure_filename(metadata_file.filename)
-			# metadata_file.save(os.path.join(app.config['UPLOAD_FOLDER'], metadata_filename))
-			print 'Uploaded files: %s, %s' %(data_filename, metadata_filename)
-			# parse uploaded files
-			expr_df, meta_df = parse_uploaded_files(data_file, metadata_file)
-			print 'Files parsed:', expr_df.shape, meta_df.shape
-			try:
-				expr_dtype = expression_is_valid(expr_df)
-			except ValueError as e:
-				print expr_df.head()
-				abort(str(e))
-			else:
-				print 'expr_dtype is', expr_dtype
-				if expr_dtype == 'counts':
-					expr_df = compute_CPMs(expr_df)
+			metadata_file.save(os.path.join(app.config['UPLOAD_FOLDER'], metadata_filename))
 
-				# parse into GeneExpressionDataset object
-				dataset = GeneExpressionDataset(expr_df, meta={'meta_df': meta_df.to_dict('list')})
-				print 'converted in to GeneExpressionDataset'
-				# check if dataset exists
-				dataset_exists = True
-				if not dataset.exists(mongo.db):
-					dataset_exists = False
-					print 'performing log10_and_zscore for dataset'
-					dataset.log10_and_zscore()
-					dataset.save(mongo.db)
-					print 'Dataset saved into db'
-					# run the pipeline in background
-					# p = subprocess.Popen(['python', 'pipeline.py', '-i', dataset.id], 
-					# 	stdout=subprocess.PIPE)
-					dataset_id = dataset.id
-
-					# thread_lock = Lock()
-					# with thread_lock:
-					if dataset_id not in all_threads:
-						# create logger for the job
-						logger = Logger(dataset_id)
-						all_loggers[dataset_id] = logger
-						print 'Started background_pipeline for dataset'
-						thread = socketio.start_background_task(target=background_pipeline, 
-							socketio=socketio,
-							enter_point=ENTER_POINT,
-							dataset_id=dataset_id,
-							gene_set_libraries='KEGG_2016,ARCHS4_Cell-lines',
-							logger=logger
-							)
-						all_threads[dataset_id] = thread
-						print 'print this line after background_pipeline'
-
-				print 'print this line before render_template upload_success.html'
-				return render_template('upload_success.html',
-						ENTER_POINT=ENTER_POINT,
-						data_filename=data_filename,
-						metadata_filename=metadata_filename,
-						dataset_exists=dataset_exists,
-						ds=dataset)
+			upload_obj = Upload(data_filename, metadata_filename)
+			return redirect(ENTER_POINT + '/preprocess/%s' % upload_obj.id)
 
 	return render_template('upload.html',
 			ENTER_POINT=ENTER_POINT)
 
+@app.route(ENTER_POINT + '/preprocess/<string:upload_id>', methods=['GET'])
+def preprocess_uploaded_file(upload_id):
+	# Check if the upload_id exists in db
+	if Upload.exists(upload_id):
+		upload_obj = Upload.load(upload_id)
+		# Check if upload_id has started the process
+		if not upload_obj.started:
+			logger = Logger(upload_id)
+			thread = socketio.start_background_task(
+				target=background_preprocess_pipeline, 
+				# target=background_preprocess_test_pipeline,
+				socketio=socketio,
+				enter_point=ENTER_POINT,
+				upload_id=upload_id,
+				logger=logger
+				)
+			upload_obj.start()
+
+		return render_template('preprocess.html',
+			ENTER_POINT=ENTER_POINT,
+			upload_obj=upload_obj,
+			logger_msg=Logger.get_all_msg(upload_id)
+			)
+	else:
+		abort(404)
 
 @app.route(ENTER_POINT + '/progress/<string:dataset_id>', methods=['GET'])
 def check_progress(dataset_id):
@@ -169,6 +146,21 @@ def check_progress(dataset_id):
 	if ds is None:
 		abort(404)
 	else:
+		# Check if dataset_id has started the process
+		if not ds.started:
+			# run the pipeline
+			logger = Logger(dataset_id)
+			thread = socketio.start_background_task(
+				target=background_pipeline, 
+				socketio=socketio,
+				enter_point=ENTER_POINT,
+				dataset_id=dataset_id,
+				gene_set_libraries='KEGG_2016,ARCHS4_Cell-lines',
+				logger=logger,
+				db=mongo.db
+				)
+			ds.start(mongo.db)
+
 		visualizations = get_available_vis(mongo.db, dataset_id)
 		enrichments = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
 			{'_id': False, 'gene_set_library':True})
@@ -180,7 +172,6 @@ def check_progress(dataset_id):
 		er_pendings = Counter([er['gene_set_library'] for er in er_pendings])
 		ds.er_pendings = [{'gene_set_library': key, 'count': val} for key, val in er_pendings.items()]	
 		
-		# run the pipeline
 		return render_template('progress.html', 
 			ENTER_POINT=ENTER_POINT,
 			logger_msg=Logger.get_all_msg(dataset_id),
@@ -591,36 +582,7 @@ from jinja2 import Markup
 app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])
 
 
-'''
-SocketIO endpoints
-'''
-@socketio.on('connect', namespace='/test')
-def test_connect():
-	'''Send message to client when one connects.
-	'''
-	# global thread
-	# with thread_lock:
-	#     if thread is None:
-	#         thread = socketio.start_background_task(target=background_pipeline_test, socketio=socketio)
-	emit('my_response', {'data': 'Connected', 'count': 0})
-
-# @socketio.on('check_status', namespace='/test')
-@socketio.on('check_status')
-def check_pipeline_status(msg):
-	'''Send specific message to client when one wants to check the status of a dataset.
-	'''
-	dataset_id = msg['id']
-	print dataset_id
-
-
-@socketio.on('disconnect', namespace='/test')
-def test_disconnect():
-	print('Client disconnected', request.sid)
-
-
-
 if __name__ == '__main__':
 	# app.run(host='0.0.0.0', port=5000, threaded=True)
 	socketio.run(app, host='0.0.0.0', port=5000)
-
 

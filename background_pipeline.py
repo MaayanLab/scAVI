@@ -1,21 +1,11 @@
 import os
+import time
 import logging
 from cStringIO import StringIO
+from upload_utils import *
+from classes import *
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-
-
-def background_pipeline_test(socketio=None, namespace='/test'):
-    """Example of how to send server generated events to clients."""
-    count = 0
-    for i in range(100):
-        socketio.sleep(1)
-        socketio.emit('my_response',
-                      {'data': 'Server generated event', 'count': i},
-                      namespace=namespace,
-                      # broadcast=True
-                      )
-
 
 class Logger(object):
 	"""A custom logger"""
@@ -53,36 +43,85 @@ class Logger(object):
 		msg = ''
 		if os.path.isfile(log_fp):
 			msg = open(log_fp, 'r').read()
-
 		return msg.strip().split('\n')
-		
 
-def background_pipeline(socketio=None, dataset_id=None, enter_point=None, gene_set_libraries=None, logger=None):
+
+def _emit_message(msg='', socketio=None, namespace='/', logger=None, 
+	**kwargs):
+	logger.info(msg)
+	# get the last message from stream handler of the logger
+	log_msg = logger.get_last_msg()
+	kwargs['data'] = log_msg
+	kwargs['done'] = kwargs.get('done', False)
+	socketio.emit('my_response', 
+		kwargs,
+		namespace=namespace)
+
+
+def background_preprocess_test_pipeline(socketio=None, upload_id=None, enter_point=None, logger=None):
+	'''For testing only.''' 
+	def emit_message(msg='', **kwargs):
+		_emit_message(msg=msg, socketio=socketio, namespace='%s/%s'%(enter_point, upload_id), logger=logger, **kwargs)
+
+	upload_obj = Upload.load(upload_id)
+	for i in range(10):
+		time.sleep(1)
+		emit_message('tick %d from upload_id: %s, finished? %s' % (i, upload_obj.id, upload_obj.done))
+
+	dataset_id = 'some_data_id'
+	emit_message(done=True, dataset_id=dataset_id)
+	upload_obj.finish(dataset_id)
+	emit_message('tick %d from upload_id: %s, finished? %s' % (i, upload_obj.id, upload_obj.done))
+
+
+def background_preprocess_pipeline(socketio=None, upload_id=None, enter_point=None, logger=None):
+	'''Pipeline for preprocessing uploaded files.'''
+	def emit_message(msg='', **kwargs):
+		_emit_message(msg=msg, socketio=socketio, namespace='%s/%s'%(enter_point, upload_id), logger=logger, **kwargs)
+
+	upload_obj = Upload.load(upload_id)
+	time.sleep(1)
+	emit_message('Parsing the uploaded files: %s, %s' %(upload_obj.data_file, upload_obj.metadata_file))
+	expr_df, meta_df = upload_obj.parse()
+	emit_message('Files parsing files with shapes: %s, %s' % (str(expr_df.shape), str(meta_df.shape)))
+	emit_message('Determining the data type of the gene expression file...')
+	try:
+		expr_dtype = expression_is_valid(expr_df)
+	except ValueError as e:
+		emit_message('Gene expression data file is not valid:')
+		emit_message(str(e))
+	else:
+		emit_message('Expression data type is: %s' % expr_dtype)
+		if expr_dtype == 'counts':
+			emit_message('Computing CPMs for read counts...')
+			expr_df = compute_CPMs(expr_df)
+			emit_message('Finished computing CPMs')
+
+		emit_message('Converting dataset into GeneExpressionDataset object...')
+		dataset = GeneExpressionDataset(expr_df, meta={'meta_df': meta_df.to_dict('list')})
+		emit_message('Converted GeneExpressionDataset object')
+		# check if dataset exists
+		if not dataset.exists(Upload.db):
+			emit_message('Normalizing dataset...')
+			dataset.log10_and_zscore()
+			emit_message('Finished data normalization')
+			dataset.save(Upload.db)
+			emit_message('Dataset(%s) has been saved into the database' % dataset.id)
+		else:
+			emit_message('Dataset(%s) already exists in the database' % dataset.id)
+
+		emit_message(done=True, dataset_id=dataset.id)
+		upload_obj.finish(dataset.id)
+
+
+def background_pipeline(socketio=None, dataset_id=None, enter_point=None, gene_set_libraries=None, logger=None, db=None):
+	'''Pipeline for running DR, enrichment and etc. for dataset already saved in the db.'''
+	def emit_message(msg='', **kwargs):
+		_emit_message(msg=msg, socketio=socketio, namespace='%s/%s'%(enter_point, dataset_id), logger=logger, **kwargs)
 
 	gene_set_libraries = gene_set_libraries.split(',')
-
-	from database import *
-	from pymongo import MongoClient
-	mongo = MongoClient(MONGOURI)
-
-	db = mongo['SCV']
-	coll = db['dataset']
-
-	from classes import *
-
-	# logger = setup_logger(dataset_id)
-
-	def emit_message(msg='', socketio=socketio, namespace='%s/%s'%(enter_point, dataset_id), logger=logger):
-		logger.info(msg)
-		# get the last message from stream handler of the logger
-		log_msg = logger.get_last_msg()
-		socketio.emit('my_response', 
-				{'data': log_msg},
-				namespace=namespace)
-
 	# step 1.
 	emit_message('Retrieving expression data from database for %s' % dataset_id)
-
 	gds = GeneExpressionDataset.load(dataset_id, db, meta_only=False)
 	emit_message('Dataset loaded with shape %d x %d' % gds.df.shape)
 
@@ -120,4 +159,4 @@ def background_pipeline(socketio=None, dataset_id=None, enter_point=None, gene_s
 		er.remove_intermediates(db)
 
 	emit_message('All completed!')
-	
+	gds.finish(db)

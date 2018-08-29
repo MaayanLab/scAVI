@@ -177,6 +177,18 @@ class GeneExpressionDataset(object):
 		doc = db[self.coll].find_one({'id': self.id})
 		return doc is not None
 
+	def start(self, db):
+		# Set the started flag to True and update the doc in db
+		self.started = True,
+		db[self.coll].update_one({'id': self.id},
+			{'$set': {'started': True}})
+
+	def finish(self, db):
+		# Set the done flag to True and update the doc in db
+		self.done = True
+		db[self.coll].update_one({'id': self.id},
+			{'$set': {'done': True}})
+
 	@classmethod
 	def load(cls, dataset_id, db, meta_only=False):
 		'''Load from the database.'''
@@ -195,6 +207,8 @@ class GeneExpressionDataset(object):
 				df.columns = doc['sample_ids']
 			obj = cls(df, meta=doc['meta'])
 			obj.id = dataset_id
+			obj.started = doc.get('started', False)
+			obj.done = doc.get('done', False)
 		return obj
 
 	@classmethod
