@@ -79,6 +79,14 @@ class PseudotimeEstimator(object):
 		return insert_result.inserted_id
 
 	@classmethod
+	def exists(cls, dataset_id, name, db):
+		doc = db[cls.coll].find_one({'$and': [
+				{'dataset_id': dataset_id},
+				{'name': name}
+			]})
+		return 'edge_df' in doc
+
+	@classmethod
 	def load(cls, dataset_id, name, db, n_dim=2):
 		'''Load from DB'''
 		doc = db[cls.coll].find_one({'$and': [

@@ -1,13 +1,5 @@
 {% extends "base-center.html" %}
 {% block content_center %}
-<style type="text/css">
-    #log {
-        max-height: 300px;
-        overflow: scroll;
-        background-color: #eee;
-    }
-</style>
-
     <div class="alert alert-success">
         <h4 class="alert-heading">Success!</h4>
         <p>Your data file ({{upload_obj.data_file}}) and metadata file ({{upload_obj.metadata_file}}) has been uploaded.</p> 
@@ -24,7 +16,11 @@
     </div>
     <div id="done">
     	{% if upload_obj.done %}
-    		<a href="progress/{{upload_obj.dataset_id}}">{{ upload_obj.dataset_id }}</a>
+        <div class="alert alert-info">
+            <span>Data preprocessing completed, please click this link to start analyzing the data: </span>
+            <a href="progress/{{upload_obj.dataset_id}}">{{ upload_obj.dataset_id }}</a>
+        </div>
+    		
     	{% endif %}
     </div>
 
@@ -46,8 +42,11 @@ $(document).ready(function(){
     	if (!msg.done){
     		$('#log').append('<br>'+ $('<div/>').text(msg.data).html());	
     	} else{
+            var divAlert = $('<div>').attr('class', 'alert alert-info')
+            divAlert.append($('<span>').text('Data preprocessing completed, please click this link to start analyzing the data: '))
     		var a = $('<a>').text(msg.dataset_id).attr('href', 'progress/' + msg.dataset_id)
-    		$('#done').append(a)
+            divAlert.append(a)
+    		$('#done').append(divAlert)
     	}
     });
 

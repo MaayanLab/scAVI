@@ -273,34 +273,36 @@ def load_psudotime_tree(graph_name, dataset_id, n_dim):
 		if n_dim == 3:
 			graph_name += '-3d'
 			scaler_range = (-10, 10)
-		# Load monocle results		
-		pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db, n_dim=n_dim)
-		if n_dim == 3:
-			# Fit scalers based on n_dim
-			scaler_z = MinMaxScaler(scaler_range).fit(pe.coords[:, 2].reshape(-1, 1))
-		scaler_x = MinMaxScaler(scaler_range).fit(pe.coords[:, 0].reshape(-1, 1))
-		scaler_y = MinMaxScaler(scaler_range).fit(pe.coords[:, 1].reshape(-1, 1))
+		# Load monocle results
+		if PseudotimeEstimator.exists(dataset_id, graph_name, mongo.db):
+			pe = PseudotimeEstimator.load(dataset_id, graph_name, mongo.db, n_dim=n_dim)
+			if n_dim == 3:
+				# Fit scalers based on n_dim
+				scaler_z = MinMaxScaler(scaler_range).fit(pe.coords[:, 2].reshape(-1, 1))
+			scaler_x = MinMaxScaler(scaler_range).fit(pe.coords[:, 0].reshape(-1, 1))
+			scaler_y = MinMaxScaler(scaler_range).fit(pe.coords[:, 1].reshape(-1, 1))
 
-		edge_df = pe.results['edge_df'].rename(columns={
-			'source_prin_graph_dim_1': 'x', 
-			'source_prin_graph_dim_2': 'y', 
-			'source_prin_graph_dim_3': 'z',
-			'target_prin_graph_dim_1': 'xe', 
-			'target_prin_graph_dim_2': 'ye', 
-			'target_prin_graph_dim_3': 'ze'
-			})
-		# Apply scaling
-		for col in ['x', 'y', 'z', 'xe', 'ye', 'ze']:
-			if col in edge_df.columns:
-				if col.startswith('x'):
-					edge_df[col] = scaler_x.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
-				elif col.startswith('y'):
-					edge_df[col] = scaler_y.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
-				elif col.startswith('z'):
-					edge_df[col] = scaler_z.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
+			edge_df = pe.results['edge_df'].rename(columns={
+				'source_prin_graph_dim_1': 'x', 
+				'source_prin_graph_dim_2': 'y', 
+				'source_prin_graph_dim_3': 'z',
+				'target_prin_graph_dim_1': 'xe', 
+				'target_prin_graph_dim_2': 'ye', 
+				'target_prin_graph_dim_3': 'ze'
+				})
+			# Apply scaling
+			for col in ['x', 'y', 'z', 'xe', 'ye', 'ze']:
+				if col in edge_df.columns:
+					if col.startswith('x'):
+						edge_df[col] = scaler_x.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
+					elif col.startswith('y'):
+						edge_df[col] = scaler_y.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
+					elif col.startswith('z'):
+						edge_df[col] = scaler_z.transform(edge_df[col].values.reshape(-1, 1))[:, 0]
 
-		return edge_df.to_json(orient='records')
-
+			return edge_df.to_json(orient='records')
+		else: # no psudotime tree available
+			abort(500)
 
 '''
 Gene expression search endpoints
@@ -577,7 +579,9 @@ Error handlers.
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html', ENTER_POINT=ENTER_POINT), 404
-
+@app.errorhandler(500)
+def error_json(e):
+	return jsonify(error=500, text=str(e)), 500
 
 from jinja2 import Markup
 app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])

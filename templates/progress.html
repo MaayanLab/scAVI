@@ -1,12 +1,5 @@
 {% extends "base-center.html" %}
 {% block content_center %}
-<style type="text/css">
-    #log {
-        max-height: 300px;
-        overflow: scroll;
-        background-color: #eee;
-    }
-</style>
     <div class="">
         <h1>Dataset</h1>
         <dl class="row">
@@ -20,7 +13,7 @@
     </div>
     <div>
         <h1>Visualizations</h1>
-        <ul>
+        <ul id="visualization">
             {% for vis in ds.visualizations %}
                 <li><a href="graph_page/{{ds.id}}/{{vis['name']}}/2">{{vis['name']}}-2D</a></li>
                 {% if vis['has3d'] %}
@@ -32,7 +25,7 @@
     <div>
         <h1>Enrichment analysis</h1>
         <h4>Finished:</h4>
-        <ul>
+        <ul id="enrichment">
             {% for er in ds.enrichment_results %}
             <li>{{er['gene_set_library']}}</li>
             {% endfor %}
@@ -68,21 +61,34 @@ $(document).ready(function(){
     var url = 'http://' + document.domain + ':' + location.port + namespace
     var socket = io(url, {path: enter_point + '/socket.io'})
 
-            // Event handler for new connections.
-            // The callback function is invoked when a connection with the
-            // server is established.
-            socket.on('connect', function() {
-                socket.emit('my_event', {data: 'I\'m connected!'});
-                socket.emit('check_status', {id: '{{ ds.id }}'});
-            });
-            // Event handler for server sent data.
-            // The callback function is invoked whenever the server emits data
-            // to the client. The data is then displayed in the "Received"
-            // section of the page.
-            socket.on('my_response', function(msg) {
-                $('#log').append('<br>'+ $('<div/>').text(msg.data).html());
-                // $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
-            });
+    // Event handler for server sent data.
+    socket.on('my_response', function(msg) {
+        console.log(msg)
+        if (!msg.done){
+            $('#log').append('<br>'+ $('<div/>').text(msg.data).html());    
+        } else { // Add DOM(s) to corresponding positions
+            if (msg.done === 'visualization'){
+                if (msg.name === 'PCA'){
+                    var a = $('<a>').attr('href', 'graph_page/{{ds.id}}/PCA/2').text('PCA-2D')
+                    var li = $('<li>').append(a)
+                    $("#" + msg.done).append(li)
+                    var a = $('<a>').attr('href', 'graph_page/{{ds.id}}/PCA/3').text('PCA-3D')
+                    var li = $('<li>').append(a)
+                    $("#" + msg.done).append(li)
+                } else {
+                    var ndim = msg.name.split('-').slice(-1)[0][0];
+                    var name = msg.name.split('-')[0]
+                    var href = 'graph_page/{{ds.id}}/'+name+'/3'
+                    var li = $('<li>')
+                    li.append($('<a>').attr('href', href).text(name + '-' + ndim + 'D'))
+                    $("#" + msg.done).append(li)
+                }
+            } else if (msg.done === 'enrichment') {
+                var li = $('<li>').text(msg.name)
+                $("#" + msg.done).append(li)
+            }
+        }
+    });
 
 });
     </script>

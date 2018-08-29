@@ -48,11 +48,13 @@ class Logger(object):
 
 def _emit_message(msg='', socketio=None, namespace='/', logger=None, 
 	**kwargs):
-	logger.info(msg)
-	# get the last message from stream handler of the logger
-	log_msg = logger.get_last_msg()
-	kwargs['data'] = log_msg
-	kwargs['done'] = kwargs.get('done', False)
+	done = kwargs.get('done', False)
+	if not done: # only log message where done is False
+		logger.info(msg)
+		# get the last message from stream handler of the logger
+		log_msg = logger.get_last_msg()
+		kwargs['data'] = log_msg
+	kwargs['done'] = done
 	socketio.emit('my_response', 
 		kwargs,
 		namespace=namespace)
@@ -120,42 +122,48 @@ def background_pipeline(socketio=None, dataset_id=None, enter_point=None, gene_s
 		_emit_message(msg=msg, socketio=socketio, namespace='%s/%s'%(enter_point, dataset_id), logger=logger, **kwargs)
 
 	gene_set_libraries = gene_set_libraries.split(',')
+	time.sleep(1)
 	# step 1.
 	emit_message('Retrieving expression data from database for %s' % dataset_id)
 	gds = GeneExpressionDataset.load(dataset_id, db, meta_only=False)
 	emit_message('Dataset loaded with shape %d x %d' % gds.df.shape)
 
 	# step 2.
-	emit_message('Performing PCA')
+	emit_message('Performing PCA...')
 	vis = Visualization(ged=gds, name='PCA', func=do_pca)
 	coords = vis.compute_visualization()
 	emit_message('PCA finished')
+	emit_message(done='visualization', name='PCA')
 	vis.save(db)
 
-	emit_message('Performing tSNE-2d')
+	emit_message('Performing tSNE-2d...')
 	vis = Visualization(ged=gds, name='tSNE', func=do_tsne, n_components=2)
 	coords = vis.compute_visualization()
 	emit_message('tSNE-2d finished')
+	emit_message(done='visualization', name='tSNE-2')
 	vis.save(db)
 
-	emit_message('Performing tSNE-3d')
+	emit_message('Performing tSNE-3d...')
 	vis = Visualization(ged=gds, name='tSNE-3d', func=do_tsne)
 	coords = vis.compute_visualization()
 	emit_message('tSNE-3d finished')
+	emit_message(done='visualization', name='tSNE-3')
 	vis.save(db)
 
 	# step 3.
-	emit_message('POSTing DEGs to Enrichr')
+	emit_message('POSTing DEGs to Enrichr for enrichment analysis')
 	d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
-	emit_message('Number of gene sets POSTed: %d' % len(d_sample_userListId))
-
+	emit_message('Number of gene sets sent to Enrichr: %d' % len(d_sample_userListId))
+	emit_message('Will perform enrichment analysis on the following gene-set libraries: %s' % ', '.join(gene_set_libraries))
 	for gene_set_library in gene_set_libraries:
 		emit_message('Performing enrichment on: %s' % gene_set_library)
 		er = EnrichmentResults(gds, gene_set_library)
 		er.do_enrichment(db)
+		emit_message('Summarizing enrichment results from individual cells...')
 		er.summarize(db)
 		er.save(db)
 		emit_message('Enrichment on %s has finished' % gene_set_library)
+		emit_message(done='enrichment', name=gene_set_library)
 		er.remove_intermediates(db)
 
 	emit_message('All completed!')
