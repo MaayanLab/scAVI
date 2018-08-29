@@ -7,15 +7,16 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import scale
 
-from gene_expression import *
-from utils import nan_to_none
+from .gene_expression import *
+from .utils import nan_to_none
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 def load_objects_from_files(*args):
 	ret = []
 	for fn in args:
-		fp = os.path.join(SCRIPT_DIR, 'data/models', fn)
+		fp = os.path.abspath(
+			os.path.join(SCRIPT_DIR, '..', 'data/models', fn))
 		if fn.endswith('.npz'):
 			obj = np.load(fp)
 		else:

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from bson.codec_options import CodecOptions
 
-from geo_meta import *
+from .geo_meta import *
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 

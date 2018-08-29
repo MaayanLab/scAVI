@@ -3,7 +3,7 @@ import time
 import logging
 from cStringIO import StringIO
 from upload_utils import *
-from classes import *
+from models import *
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 

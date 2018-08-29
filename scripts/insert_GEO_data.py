@@ -16,14 +16,14 @@ parser.add_argument('-t', '--cpu', help='Number of CPUs to use',
 import sys
 sys.path.append('../')
 from joblib import Parallel, delayed
-from database import *
+from models.database import *
 from pymongo import MongoClient
 mongo = MongoClient(MONGOURI)
 
 db = mongo['SCV']
 coll = db['dataset']
 
-from classes import *
+from models import *
 
 args = parser.parse_args()
 gene_set_libraries = args.gsl.split(',')

@@ -25,7 +25,7 @@ visualization_names = args.vis.split(',')
 import sys
 sys.path.append('../')
 
-from database import *
+from models.database import *
 from pymongo import MongoClient
 
 MONGOURI='mongodb://146.203.54.131:27017/SCV'
@@ -33,7 +33,7 @@ mongo = MongoClient(MONGOURI)
 
 db = mongo['SCV']
 
-from classes import *
+from models import *
 
 vis_funcs = {
 	'PCA': do_pca,

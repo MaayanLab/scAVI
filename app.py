@@ -16,9 +16,10 @@ from flask_socketio import SocketIO
 import encrypt
 from utils import *
 
-from classes import *
+from models import *
 
 ENTER_POINT = os.environ['ENTER_POINT']
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 app = Flask(__name__, static_url_path=ENTER_POINT, static_folder=os.path.join(os.getcwd(), 'static'))
 app.debug = bool(int(os.environ.get('debug', True)))
