@@ -44,18 +44,20 @@ class EnrichmentResults(object):
 		'Overlapping genes', 'Adjusted p-value', 
 		'Old p-value', 'Old adjusted p-value']
 
-	def __init__(self, ged=None, gene_set_library=None):
+	def __init__(self, ged=None, gene_set_library=None, etype='genewise-z'):
 		self.ged = ged # GeneExpressionDataset instance
 		self.gene_set_library = gene_set_library
+		self.etype = etype
 
 	def do_enrichment(self, db):
 		ged = self.ged
-		for sample_id, user_list_id in ged.d_sample_userListId.items():
+		for sample_id, user_list_id in ged.d_sample_userListId[self.etype].items():
 			if user_list_id:
 				res = get_enrichment(user_list_id, self.gene_set_library)
 				res['sample_id'] = sample_id
 				res['gene_set_library'] = self.gene_set_library
 				res['dataset_id'] = self.ged.id
+				res['type'] = self.etype
 				db['enrichr_temp'].insert_one(res)
 
 	def summarize(self, db):
@@ -67,7 +69,8 @@ class EnrichmentResults(object):
 		for sample_id in self.ged.sample_ids:
 			doc = db['enrichr_temp'].find_one({
 				'sample_id': sample_id,
-				'gene_set_library': self.gene_set_library
+				'gene_set_library': self.gene_set_library,
+				'type': self.etype
 				})
 			if doc:
 				df = pd.DataFrame(doc[self.gene_set_library],
@@ -101,6 +104,7 @@ class EnrichmentResults(object):
 			'terms': self.combined_scores_df.index.tolist(),
 			'gene_set_library': self.gene_set_library,
 			'dataset_id': self.ged.id,
+			'type': self.etype,
 			'top1_terms': self.top1_terms
 		}
 		insert_result = db[self.coll].insert_one(doc)
@@ -109,30 +113,33 @@ class EnrichmentResults(object):
 	def remove_intermediates(self, db):
 		db['enrichr_temp'].remove({'$and': [
 				{'sample_id': {'$in': self.ged.sample_ids}},
-				{'gene_set_library': self.gene_set_library}
+				{'gene_set_library': self.gene_set_library},
+				{'type': self.etype}
 			]})
 		return
 
 	@classmethod
-	def load(cls, dataset_id, gene_set_library, db):
+	def load(cls, dataset_id, gene_set_library, db, etype='genewise-z'):
 		'''Load from DB'''
 
 		doc = db[cls.coll].find_one({'$and': [
 				{'dataset_id': dataset_id},
-				{'gene_set_library': gene_set_library}
+				{'gene_set_library': gene_set_library},
+				{'type': etype}
 			]})
-		obj = cls(ged=None, gene_set_library=gene_set_library)
+		obj = cls(ged=None, gene_set_library=gene_set_library, etype=etype)
 		obj.combined_scores_df = pd.DataFrame(doc['scores'], index=doc['sample_ids'])
 		obj.top1_terms = doc['top1_terms']
 		return obj
 
 	@classmethod
-	def get_term_scores(cls, dataset_id, gene_set_library, term, db):
+	def get_term_scores(cls, dataset_id, gene_set_library, term, db, etype='genewise-z'):
 		'''Given dataset_id, gene_set_library, term, find the scores of the samples.
 		'''
 		doc = db[cls.coll].find_one({'$and': [
 				{'dataset_id': dataset_id},
-				{'gene_set_library': gene_set_library}
+				{'gene_set_library': gene_set_library},
+				{'type': etype}
 			]}, 
 			{'scores.%s'%term:True, '_id': False}
 			)
@@ -141,12 +148,13 @@ class EnrichmentResults(object):
 		return doc['scores']
 
 	@classmethod
-	def get_top_terms(cls, dataset_id, gene_set_library, db):
+	def get_top_terms(cls, dataset_id, gene_set_library, db, etype='genewise-z'):
 		'''Return the list top enriched terms for samples.
 		'''
 		doc = db[cls.coll].find_one({'$and': [
 				{'dataset_id': dataset_id},
-				{'gene_set_library': gene_set_library}
+				{'gene_set_library': gene_set_library},
+				{'type': etype}
 			]}, 
 			{'top1_terms':True, '_id':False}
 			)

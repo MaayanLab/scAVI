@@ -19,7 +19,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 def load_read_counts(organism='human', gsms=[]):
 	'''Load data from h5 file using a list of GSMs.
 	'''
-	fn = os.path.join(SCRIPT_DIR, 'data/%s_matrix.h5' % organism)
+	fn = os.path.abspath(os.path.join(SCRIPT_DIR, '../data/%s_matrix.h5' % organism))
 	f = h5py.File(fn, 'r')
 	mat = f['data']['expression']
 
@@ -101,30 +101,59 @@ class GeneExpressionDataset(object):
 	def is_zscored(self):
 		return self.df.min().min() < 0
 
-	def DEGs_posted(self, db):
-		'''Whether DEGs has been POSTed to Enrichr.'''
+	def DEGs_posted(self, db, etype='genewise-z'):
+		'''Whether DEGs (from etype) has been POSTed to Enrichr.'''
 		result = False
 		if hasattr(self, 'd_sample_userListId'):
-			result = True
+			if etype in self.d_sample_userListId:
+				result = True
 		else:
 			doc = db[self.coll].find_one({'id': self.id}, 
 				{'d_sample_userListId':True, '_id':False})
 			if doc:
 				if len(doc.get('d_sample_userListId', {})) > 0:
-					if None not in doc['d_sample_userListId'].values():
+					d_sample_userListId = doc['d_sample_userListId'].get(etype, {})
+					if len(d_sample_userListId) > 0 and None not in d_sample_userListId.values():
 						# make sure the userListIds does not contain None
 						result = True
 		return result
 
-	def identify_DEGs(self, cutoff=2.33):
+	def identify_DEGs_genewise_z(self, cutoff=2.33):
 		if not self.is_zscored():
 			self.log10_and_zscore()
 		up_DEGs_df = self.df > cutoff
 		return up_DEGs_df
 
-	def post_DEGs_to_Enrichr(self, db, cutoff=2.33):
-		if not self.DEGs_posted(db):
-			up_DEGs_df = self.identify_DEGs(cutoff)
+	def identify_DEGs_samplewise_z(self, cutoff=2.33):
+		assert not self.is_zscored()
+		zscore_df = self.df.apply(lambda x: (x-x.mean())/x.std(ddof=0), axis=0)
+		up_DEGs_df = zscore_df > cutoff
+		return up_DEGs_df
+
+	def identify_DEGs_from_background(self, cutoff=2.33, genes_meta=None):
+		assert not self.is_zscored()
+		df = self.df.copy()
+		# Filter out genes not in genes_meta
+		df = df.loc[df.index.isin(genes_meta.index)]
+		gene_means = genes_meta.loc[df.index, 'mean_cpm'].values
+		gene_stds = genes_meta.loc[df.index, 'std_cpm'].values
+		# Compute gene-wise z-scores
+		df = (df.values - gene_means.reshape(-1, 1)) / gene_stds.reshape(-1, 1)
+		up_DEGs_df = df > cutoff
+		return up_DEGs_df
+
+	def identify_DEGs(self, cutoff=2.33, etype='genewise-z', genes_meta=None):
+		if etype == 'genewise-z':
+			up_DEGs_df = self.identify_DEGs_genewise_z(cutoff)
+		elif etype == 'samplewise-z':
+			up_DEGs_df = self.identify_DEGs_samplewise_z(cutoff)
+		else:
+			up_DEGs_df = self.identify_DEGs_from_background(cutoff, genes_meta)
+		return up_DEGs_df
+
+	def post_DEGs_to_Enrichr(self, db, cutoff=2.33, etype='genewise-z', genes_meta=None):
+		if not self.DEGs_posted(db, etype):
+			up_DEGs_df = self.identify_DEGs(cutoff, etype, genes_meta)
 			d_sample_userListId = OrderedDict()
 
 			for sample_id in self.sample_ids:
@@ -134,23 +163,24 @@ class GeneExpressionDataset(object):
 					user_list_id = post_genes_to_enrichr(up_genes, '%s up' % sample_id)
 
 				d_sample_userListId[sample_id] = user_list_id
-
+			# nest
+			d_sample_userListId = {etype: d_sample_userListId}
 		else:
 			doc = db.get_collection(self.coll, codec_options=CodecOptions(OrderedDict))\
 				.find_one({'id': self.id},
-					{'d_sample_userListId':True, '_id':False},
+					{'d_sample_userListId.%s'%etype:True, '_id':False},
 					)
 			d_sample_userListId = doc['d_sample_userListId']
 
 		self.d_sample_userListId = d_sample_userListId
 		return d_sample_userListId
 
-	def save_DEGs(self, db):
+	def save_DEGs(self, db, etype='genewise-z'):
 		# Save d_sample_userListId to the existing doc in the db
 		if hasattr(self, 'd_sample_userListId'): 
 			d_sample_userListId = self.d_sample_userListId
 			db[self.coll].update({'id': self.id}, {'$set': 
-				{'d_sample_userListId': d_sample_userListId}})
+				{'d_sample_userListId.%s'% etype: d_sample_userListId[etype]}})
 
 
 	def save(self, db):
