@@ -46,6 +46,10 @@ tdv.listenTo(sdv, 'modelChanged', function(url){
 	this.changeModel(treeUrl)
 })
 
+var inferredMeta = ['DBSCAN-clustering', 'KMeans-clustering',
+	'Cluster', 'Pseudotime', 'delta', 'rho',
+	'Size_Factor'
+];
 
 if (mobilecheck() || width < 420){ // small or mobile screen
 	// make wrapper for controls
@@ -60,7 +64,9 @@ if (mobilecheck() || width < 420){ // small or mobile screen
 	var controler = new Controler({scatterPlot: sdv, 
 		h: window.innerHeight/3 + 'px', 
 		w: window.innerWidth * 0.9 + 'px', 
-		container: document.getElementById('controler-container')})
+		container: document.getElementById('controler-container'),
+		inferredMeta: inferredMeta,
+	})
 } else {
 	var legend = new Legend({scatterPlot: sdv, 
 		h: window.innerHeight + 'px', 
@@ -68,7 +74,9 @@ if (mobilecheck() || width < 420){ // small or mobile screen
 	var controler = new Controler({scatterPlot: sdv, 
 		h: window.innerHeight * 0.67 + 'px', 
 		w: '200px', 
-		container: container})
+		container: container,
+		inferredMeta: inferredMeta,
+	})
 }
 
 // search expression of single genes

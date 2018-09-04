@@ -132,25 +132,6 @@ var Legend = Backbone.View.extend({
 // This is a map for the tooltips displayed to explain the 
 // colorBy and shapeBy options.
 var tooltipTexts = { 
-	// 'p-value': 'An empirical p-value measuring the consistency between drug treatment replicates used for calculating the drug-induced signature.',
-	// 'Scores': 'Similarity score measuring the overlap between the input DE genes and the signature DE genes divided by the effective input. The range of the score is [-1, 1]. Positive scores indicate similar signature whereas negative scores indicate opposite signature.',
-	// 'Cell': 'Cell line for the drug perturbation',
-	// 'Dose': 'Concentration of the drug',
-	// 'Perturbation_ID': 'ID of the drug/small molecule compound',
-	// 'Time': 'Duration of drug treatment',
-	// 'Perturbation': 'Name of drug/small molecule compound',
-	// 'EHR_Coprescribed_Drugs': 'Most frequently associated co-prescribed drug',
-	// 'EHR_Diagnoses': 'Most frequently associated diagnosis',
-	// 'Phase': 'Drug development phase',
-	// 'MOA': 'Mechanisms of action',
-	// 'Batch': 'Experimental batch',
-	// 'DBSCAN-clustering': 'Signature clustering result using DBSCAN algorithm',
-	// 'KMeans-clustering': 'Signature clustering result using KMeans algorithm',
-	// 'rings': "The molecule's rings in the drug/compounds",
-	// 'scaffolds': "The chemical scaffolds of the drugs/compounds",
-	// 'n_rings': 'Number of rings in the drugs/compounds',
-	// 'n_scaffolds': 'Number of scaffolds in the drugs/compounds',
-	// 'predicted_MOA': 'Mechanisms of action predicted based on gene expression and chemical signatures',
 };
 
 var Controler = Backbone.View.extend({
@@ -160,6 +141,7 @@ var Controler = Backbone.View.extend({
 		scatterPlot: Scatter3dView,
 		w: 300,
 		h: 800,
+		inferredMeta: [], // a list of metadata names inferred by us
 	},
 
 	initialize: function(options){
@@ -233,13 +215,6 @@ var Controler = Backbone.View.extend({
 			});
 
 		this.updateOptions()
-
-		$('.selectpicker').on('shown.bs.select', function(e){
-			// $('[data-toggle="tooltip"]').tooltip({
-			// 	placement: 'auto',
-			// 	container: 'body',
-			// });			
-		})
 	},
 
 	updateOptions: function(){
@@ -247,40 +222,55 @@ var Controler = Backbone.View.extend({
 		this.removeCurrentOptions()
 
 		var model = this.scatterPlot.model;
+		var inferredMeta = this.inferredMeta;
 		// filter out metas used as index
-		var metas = _.filter(model.metas, function(meta){ return meta.nUnique < model.n || meta.type == 'float'; });
+		var metas = _.filter(model.metas, function(meta){ return meta.nUnique < model.n || meta.type === 'float'; });
 		var metasShape = _.filter(metas, function(meta){ return meta.nUnique < 7 });
-		var metasColorExclude = ['p-value', 'Dose', 'Perturbation_ID'];
-		var metasColor = _.filter(metas, function(meta){return metasColorExclude.indexOf(meta.name) === -1 });
+
+		var metasColor = _.partition(_.pluck(metas, 'name'), function(name){
+			return inferredMeta.indexOf(name) === -1;
+		})
+
 		if (metasShape.length > 0){
-			this.shapeOptions = this.shapeSelect
+			metasShape = _.partition(_.pluck(metasShape, 'name'), function(name){
+				return inferredMeta.indexOf(name) === -1;
+			});
+			this.shapeOptGroup1 = this.shapeSelect
+				.append('optgroup')
+				.attr('label', 'User-provided metadata')
+					.selectAll('option')
+					.data(metasShape[0]).enter()
+					.append('option')
+					.text(function(d){return d;})
+					.attr('value', function(d){return d;});
+			this.shapeOptGroup2 = this.shapeSelect
+				.append('optgroup')
+				.attr('label', 'Inferred metadata')
+					.selectAll('option')
+					.data(metasShape[1]).enter()
+					.append('option')
+					.text(function(d){return d;})
+					.attr('value', function(d){return d;});
+		}
+
+		this.colorOptGroup1 = this.colorSelect
+			.append('optgroup')
+			.attr('label', 'User-provided metadata')
 				.selectAll('option')
-				.data(_.pluck(metasShape, 'name')).enter()
+				.data(metasColor[0]).enter()
 				.append('option')
 				.text(function(d){return d;})
 				.attr('value', function(d){return d;})
-				.attr('data-content', function(d){
-					if (tooltipTexts.hasOwnProperty(d)) {
-						return '<div title="'+tooltipTexts[d]+
-							'" data-toggle="tooltip">'+d+'</div>';
-					};
-				});
-		}
 
-		this.colorOptions = this.colorSelect
-			.selectAll('option')
-			.data(_.pluck(metasColor, 'name')).enter()
-			.append('option')
-			.text(function(d){return d;})
-			.attr('value', function(d){return d;})
-			.attr('data-content', function(d){
-				if (tooltipTexts.hasOwnProperty(d)) {
-					return '<div title="'+tooltipTexts[d]+
-						'" data-toggle="tooltip">'+d+'</div>';
-				} else{
-					return '<div>' + d + '</div>';
-				};
-			});
+		this.colorOptGroup2 = this.colorSelect
+			.append('optgroup')
+			.attr('label', 'Inferred metadata')
+				.selectAll('option')
+				.data(metasColor[1]).enter()
+				.append('option')
+				.text(function(d){return d;})
+				.attr('value', function(d){return d;})
+
 		$('.selectpicker').selectpicker({
 			style: 'btn-outline-secondary btn-sm',
 		});
@@ -296,16 +286,16 @@ var Controler = Backbone.View.extend({
 
 	removeCurrentOptions: function(){
 		// remove all current options if exists
-		if(this.colorOptions){
-			var currentOptions = this.colorOptions.data()
+		if(this.colorOptGroup1){
+			var currentOptions = this.colorOptGroup1.data().concat(this.colorOptGroup2.data())
 			for (var i = currentOptions.length - 1; i >= 0; i--) {
 				var op = currentOptions[i]
 				$('#color').find('[value="'+op+'"]').remove()
 			}
 		}
 
-		if (this.shapeOptions){
-			var currentOptions = this.shapeOptions.data()
+		if (this.shapeOptGroup1){
+			var currentOptions = this.shapeOptGroup1.data().concat(this.shapeOptGroup2.data())
 			for (var i = currentOptions.length - 1; i >= 0; i--) {
 				var op = currentOptions[i]
 				$('#shape').find('[value="'+op+'"]').remove()
