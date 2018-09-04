@@ -743,9 +743,12 @@ var Scatter3dView = Backbone.View.extend({
 		$(this.container).mousedown(function(event){
 			if (event.shiftKey) { // shift+click
 				self.mouseClick();
+			} else {
+				if (self.is3d){
+					self.stopAnimate();	
+				}
 			}
 		});
-
 	},
 
 	removeMouseEvents: function(){

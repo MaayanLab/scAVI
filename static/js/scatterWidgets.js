@@ -942,11 +942,15 @@ var BrushBtns = Backbone.View.extend({
 		var self = this;
 		this.button.click(function(e){
 			e.preventDefault();
-			$('#brush-modal').modal('show')
-			if ($('.modal-body').is(':empty')){
-				$(".modal-body").append($('<p id="wait-msg">please wait loading report...</p>'))
-				// load content when modal-body is empty
-				$(".modal-body").load(self.modal_url);
+			if (self.modal_url.startsWith('sample/')){
+				window.location.href = self.modal_url;
+			} else {
+				$('#brush-modal').modal('show')
+				if ($('.modal-body').is(':empty')){
+					$(".modal-body").append($('<p id="wait-msg">please wait loading report...</p>'))
+					// load content when modal-body is empty
+					$(".modal-body").load(self.modal_url);
+				}				
 			}
 		});
 
@@ -978,18 +982,22 @@ var BrushBtns = Backbone.View.extend({
 		// server to get the url for the modal.
 		this.show();
 		$('.modal-body').empty();
-		var self = this;
-		$.ajax({
-			method: 'POST',
-			url: self.base_url,
-			contentType: 'application/json',
-			data: JSON.stringify({ids: ids}),
-			dataType: 'json',
-			success: function(resp_data){
-				self.modal_url = self.base_url + '/' + resp_data.hash;
-				// $(".modal-body").load(self.modal_url);
-			}
-		})
+		if (ids.length === 1){ // only one cell is selected
+			this.modal_url = 'sample/' + ids[0];
+		} else {
+			var self = this;
+			$.ajax({
+				method: 'POST',
+				url: self.base_url,
+				contentType: 'application/json',
+				data: JSON.stringify({ids: ids}),
+				dataType: 'json',
+				success: function(resp_data){
+					self.modal_url = self.base_url + '/' + resp_data.hash;
+					// $(".modal-body").load(self.modal_url);
+				}
+			})			
+		}
 	},
 });
 
