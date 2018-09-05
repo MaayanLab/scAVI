@@ -333,13 +333,13 @@ def search_terms(query_string, dataset_id):
 				{'dataset_id': dataset_id},
 				{'terms': {'$elemMatch': {'$regex': ".*%s.*" % query_string, '$options': 'i'} }}
 			]}, 
-			{'_id':False, 'terms': True, 'gene_set_library':True})
+			{'_id':False, 'terms': True, 'gene_set_library':True, 'type':True})
 
 		array_of_terms = []
 		for doc in docs:
 			for term in doc['terms']:
 				if query_string.lower() in term.lower():
-					term = {'library': doc['gene_set_library'], 'term': term}
+					term = {'library': doc['gene_set_library'], 'term': term+'/'+doc['type']}
 					array_of_terms.append(term)
 		return jsonify(array_of_terms)
 
@@ -348,6 +348,12 @@ def retrieve_term_enrichment(dataset_id, term):
 	gene_set_library = find_library_for_term(term, mongo.db)
 	doc = EnrichmentResults.get_term_scores(dataset_id, gene_set_library, term, mongo.db)
 	return jsonify(doc)
+
+@app.route(ENTER_POINT + '/term/get/<string:dataset_id>/<string:term>/<string:etype>', methods=['GET'])
+def retrieve_term_enrichment_with_type(dataset_id, term, etype):
+	gene_set_library = find_library_for_term(term, mongo.db)
+	doc = EnrichmentResults.get_term_scores(dataset_id, gene_set_library, term, mongo.db, etype=etype)
+	return jsonify({'%s/%s' % (term, etype): doc[term]})
 
 '''
 Most enriched terms within a gene set library
@@ -454,13 +460,13 @@ def sample_landing_page(sample_id):
 			{'dataset_id': dataset_id}, 
 			{'scores': {'$exists': True}}
 		]},
-		{'gene_set_library':True, 'scores': True, '_id':False})
+		{'gene_set_library':True, 'scores': True, 'type': True, '_id':False})
 	for doc in cur:
 		lib = doc['gene_set_library']
 		recs = [{'term': term, 'score': scores[idx]} for term, scores in doc['scores'].iteritems()]
 		sorted_scores = pd.DataFrame.from_records(recs).sort_values('score', na_position='first')
 		top_terms = sorted_scores[-10:][::-1].to_dict(orient='records')
-		enrichment[lib] = top_terms
+		enrichment['%s/%s' % (lib, doc['type'])] = top_terms
 
 	# prepare prediction
 	prediction = {}
@@ -537,7 +543,7 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 			{'dataset_id': dataset_id}, 
 			{'scores': {'$exists': True}}
 		]},
-		{'gene_set_library':True, 'scores': True, '_id':False},
+		{'gene_set_library':True, 'scores': True, 'type':True, '_id':False},
 		cursor_type=CursorType.EXHAUST)
 	for doc in cur:
 		lib = doc['gene_set_library']
@@ -547,7 +553,7 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 		n = min(10, (sorted_scores>0).sum())
 		top_terms = sorted_scores[:n].index
 		top_terms_scores = scores_df.loc[:, top_terms].melt().to_dict(orient='list') # {term: [values]}
-		enrichment[lib] = top_terms_scores
+		enrichment['%s/%s' % (lib, doc['type'])] = top_terms_scores
 
 	# prepare prediction
 	prediction = {}

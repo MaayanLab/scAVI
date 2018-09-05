@@ -457,8 +457,11 @@ var TermSearchSelectize = Backbone.View.extend({
 				create:false,
 				render: {
 					option: function(item, escape){
+						var term = item.term.split('/')[0],
+							type = item.term.split('/')[1];
 						return '<ul class="list-unstyled">' + 
-							'<li>' + escape(item.term) + '</li>' +
+							'<li>' + escape(term) + '</li>' +
+							'<li>' + escape(type) + '</li>' +
 							'</ul>';
 					}
 				},
