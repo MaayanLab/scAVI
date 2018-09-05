@@ -356,12 +356,17 @@ Most enriched terms within a gene set library
 def get_libraries(dataset_id):
 	if request.method == 'GET':
 		'''Return a list of available gene_set_libraries for the dataset'''
-		docs = mongo.db['enrichr'].find({'dataset_id': dataset_id}, {'gene_set_library':True, '_id':False})
-		return jsonify([{'name': doc['gene_set_library']} for doc in docs])
+		docs = mongo.db['enrichr'].find({'dataset_id': dataset_id}, {'gene_set_library':True, 'type':True, '_id':False})
+		return jsonify([{'name': doc['gene_set_library'], 'type': doc['type']} for doc in docs])
 
 @app.route(ENTER_POINT + '/library/get/<string:dataset_id>/<string:library>', methods=['GET'])
-def retrieve_library_top_terms(dataset_id, library):
-	doc = EnrichmentResults.get_top_terms(dataset_id, library, mongo.db)
+def redirect_to_library_top_terms(dataset_id, library):
+	etype_default = 'genewise-z'
+	return redirect(ENTER_POINT + '/library/get/%s/%s/%s' % (dataset_id, library, etype_default))
+
+@app.route(ENTER_POINT + '/library/get/<string:dataset_id>/<string:library>/<string:etype>', methods=['GET'])
+def retrieve_library_top_terms(dataset_id, library, etype):
+	doc = EnrichmentResults.get_top_terms(dataset_id, library, mongo.db, etype=etype)
 	return jsonify(doc)
 
 '''
