@@ -186,7 +186,7 @@ def graph_page(graph_name, dataset_id):
 def graph_page_with_ndim(graph_name, dataset_id, n_dim):
 	# defaults
 	sdvConfig = {
-		'labelKey': ['sample_id', 'title'],
+		'labelKey': ['sample_id'],
 	}
 	if n_dim == 2:
 		sdvConfig['is3d'] = False

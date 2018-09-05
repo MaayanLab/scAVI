@@ -880,10 +880,8 @@ var Scatter3dView = Backbone.View.extend({
 
 		// add interactivities if there is intesecting points
 		if ( intersects.length > 0 ) {
-			// console.log(intersects)
 			// only highlight the closest object
 			var intersect = intersects[0];
-			// console.log(intersect)
 			var idx = intersect.index;
 			var geometry = intersect.object.geometry;
 			
@@ -902,13 +900,12 @@ var Scatter3dView = Backbone.View.extend({
 			    y: geometry.attributes.position.array[idx*3+1],
 			    z: geometry.attributes.position.array[idx*3+2],
 			}
-			// console.log(pointPosition)
 
 			var euler = this.clouds[0].points.rotation;
 			// add text canvas
 			var textCanvas = this.makeTextCanvas( geometry.attributes.label.array[idx], 
 			    pointPosition.x, pointPosition.y, pointPosition.z, euler,
-			    { fontsize: 24, fontface: "'Rubik', sans-serif", textColor: {r:0, g:0, b:0, a:0.8} }); 
+			    { fontsize: 18, fontface: "'Rubik', sans-serif", textColor: {r:0, g:0, b:0, a:0.8} }); 
 
 			textCanvas.id = "text-label"
 			this.container.appendChild(textCanvas);
@@ -1150,94 +1147,4 @@ var Scatter3dView = Backbone.View.extend({
 		}
 	},
 
-	highlightQuery: function(query, metaKey){
-		// To highlight a query result, red for matched nodes and grey for unmatched nodes
-		this.colorKey = metaKey;
-		this.colorScale = function(x) {
-			return x === query ? "#cc0000" : "#cccccc";
-		};
-		this.renderScatter();
-	},
-
-	createHighlightCloud: function(dataSubset){
-		// Create a Scatter3dCloud for a _ScatterDataSubset instance
-		var highlightCould = new Scatter3dCloud({
-			model: dataSubset,
-			texture: this.textures.getTexture('circle'), 
-			pointSize: this.pointSize * 5,
-			sizeAttenuation: this.is3d,
-			opacity: 0.4	
-		});
-		return highlightCould;
-	},
-
-	highlightQuery2: function(query, metaKey){
-		// To highlight a query result by adding a new Scatter3dCloud instance
-		var scatterDataSubsets = this.model.groupBy(metaKey);
-		this.highlightCould = this.createHighlightCloud(scatterDataSubsets[query])
-		this.highlightCould.setSingleColor('yellow');
-		this.highlightCould.points.name = 'highlight';
-		this.scene.add(this.highlightCould.points)
-		this.renderScatter();
-
-	},
-
-	highlightTopNScores: function(n){
-		var sortedData = _.sortBy(this.model.data, 'Scores')
-		// var dataSubsetsToHighlight = sortedData.slice(0, n).concat(sortedData.slice(-n))
-		// var scatterDataSubsetsToHighlight = new _ScatterDataSubset({data: dataSubsetsToHighlight})
-		// this.highlightCould = new Scatter3dCloud({
-		// 	model: scatterDataSubsetsToHighlight,
-		// 	texture: this.textures.getTexture('circle'), 
-		// 	pointSize: this.pointSize * 5,
-		// 	sizeAttenuation: this.is3d,
-		// 	opacity: 0.4
-		// })
-
-		this.highlightCouldNeg = this.createHighlightCloud(
-			new _ScatterDataSubset({data: sortedData.slice(0, n)}))
-		this.highlightCouldNeg.setSingleColor('#62fff7');
-		this.highlightCouldNeg.points.name = 'highlight-neg';
-		this.scene.add(this.highlightCouldNeg.points)
-
-		this.highlightCouldPos = this.createHighlightCloud(
-			new _ScatterDataSubset({data: sortedData.slice(-n)}))
-		this.highlightCouldPos.setSingleColor('#f463ff');
-		this.highlightCouldPos.points.name = 'highlight-pos';
-		this.scene.add(this.highlightCouldPos.points)
-
-		this.renderScatter();
-
-	},
-
-	removeHighlightedPoints: function(){
-		var scene = this.scene;
-		scene.remove(scene.getObjectByName('highlight'));
-		this.highlightCould = undefined;
-		scene.remove(scene.getObjectByName('highlight-neg'));
-		this.highlightCouldNeg = undefined;
-		scene.remove(scene.getObjectByName('highlight-pos'));
-		this.highlightCouldPos = undefined;
-		this.renderScatter();
-	}
-
-	// sizeBy: function(metaKey){
-	// 	// Size points by a certain metaKey
-	// 	var metas = this.model.meta[metaKey]
-	// 	var sizeExtent = d3.extent(metas)
-	// 	var sizeScale = d3.scale.linear()
-	// 		.domain(sizeExtent)
-	// 		.range([0.1, 4]);
-	// 	// construct sizes BufferAttribute
-	// 	var sizes = _.map(sizeScale, metas); 
-
-	// 	this.sizes = sizes;
-
-	// 	this.geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
-	// 	this.geometry.attributes.size.needsUpdate = true;
-
-	// 	this.renderer.render( this.scene, this.camera );
-	// }
-
 });
-
