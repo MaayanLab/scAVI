@@ -135,11 +135,13 @@ class GeneExpressionDataset(object):
 		df = self.df.copy()
 		# Filter out genes not in genes_meta
 		df = df.loc[df.index.isin(genes_meta.index)]
+		genes, samples = df.index, df.columns
 		gene_means = genes_meta.loc[df.index, 'mean_cpm'].values
 		gene_stds = genes_meta.loc[df.index, 'std_cpm'].values
 		# Compute gene-wise z-scores
 		df = (df.values - gene_means.reshape(-1, 1)) / gene_stds.reshape(-1, 1)
-		up_DEGs_df = df > cutoff
+		up_DEGs_mat = df > cutoff
+		up_DEGs_df = pd.DataFrame(up_DEGs_mat, index=genes, columns=samples)
 		return up_DEGs_df
 
 	def identify_DEGs(self, cutoff=2.33, etype='genewise-z', genes_meta=None):
