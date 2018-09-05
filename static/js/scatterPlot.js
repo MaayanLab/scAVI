@@ -1132,19 +1132,20 @@ var Scatter3dView = Backbone.View.extend({
 		});
 	},
 
-	colorByCategoriesFromUrl: function(url, lib){
-		if (this.labelKey.indexOf(lib) === -1){
+	colorByCategoriesFromUrl: function(url, obj){
+		var attrName = obj.name + '/' + obj.type;
+		if (this.labelKey.indexOf(attrName) === -1){
 			// retrieve from server if not in the labelKey
 			var self = this;
-			$.getJSON(url + '/' + lib, function(result){
-				self.colorKey = lib;
-				self.model.setAttr(lib, result[lib]);
+			$.getJSON(url + '/' + attrName, function(result){
+				self.colorKey = obj.name + '/' + obj.type;
+				self.model.setAttr(attrName, result[obj.name]);
 				// Add this lib to labelKey for hovering display
-				self.labelKey.push(lib);
+				self.labelKey.push(attrName);
 				self.shapeBy(self.shapeKey)
 			});
 		} else{
-			this.colorKey = lib;
+			this.colorKey = attrName;
 			this.shapeBy(this.shapeKey)
 		}
 	},

@@ -96,44 +96,38 @@ var termSearchSelectize = new TermSearchSelectize({
 	retrieveUrl: 'term/get/' + dataset_id
 })
 
-// search probabilities for single predicted labels
-// var labelSearchSelectize = new TermSearchSelectize({
-// 	scatterPlot: sdv, 
-// 	container: "#controls", 
-// 	synonymsUrl: 'label/query/' + dataset_id,
-// 	optGroupUrl: 'prediction/query/' + dataset_id,
-// 	retrieveUrl: 'label/get/' + dataset_id
-// })
-
 // search top enriched terms
 var libSearchSelectize = new LibSearchSelectize({
 	scatterPlot: sdv, 
 	container: "#controls", 
 	synonymsUrl: 'library/query/' + dataset_id,
 	retrieveUrl: 'library/get/' + dataset_id,
-	label: 'Enriched cell type and tissue:',
-	optionsShow: ['ARCHS4_Tissues', 'ARCHS4_Cell-lines']
+	label: 'Enrichment analysis:',
+	optionsShow: ['ARCHS4_Tissues', 'ARCHS4_Cell-lines',
+		'ChEA_2016', 'KEA_2015', 'KEGG_2016', 
+		'MGI_Mammalian_Phenotype_2017', 'GO_Biological_Process_2018'
+	]
 })
 
-var libSearchSelectize2 = new LibSearchSelectize({
-	scatterPlot: sdv, 
-	container: "#controls", 
-	synonymsUrl: 'library/query/' + dataset_id,
-	retrieveUrl: 'library/get/' + dataset_id,
-	label: 'Predict pathways and upstream regulators:',
-	optionsShow: ['ChEA_2016', 'KEA_2015', 'KEGG_2016', 
-		'MGI_Mammalian_Phenotype_2017', 'GO_Biological_Process_2018']
-})
+// var libSearchSelectize2 = new LibSearchSelectize({
+// 	scatterPlot: sdv, 
+// 	container: "#controls", 
+// 	synonymsUrl: 'library/query/' + dataset_id,
+// 	retrieveUrl: 'library/get/' + dataset_id,
+// 	label: 'Predict pathways and upstream regulators:',
+// 	optionsShow: ['ChEA_2016', 'KEA_2015', 'KEGG_2016', 
+// 		'MGI_Mammalian_Phenotype_2017', 'GO_Biological_Process_2018']
+// })
 
 // search top predicted labels
-var predSearchSelectize = new LibSearchSelectize({
-	scatterPlot: sdv, 
-	container: "#controls", 
-	synonymsUrl: 'prediction/query/' + dataset_id,
-	retrieveUrl: 'prediction/get/' + dataset_id,
-	label: 'Predicted cell types from expression vectors:',
-	optionsShow: []
-})
+// var predSearchSelectize = new LibSearchSelectize({
+// 	scatterPlot: sdv, 
+// 	container: "#controls", 
+// 	synonymsUrl: 'prediction/query/' + dataset_id,
+// 	retrieveUrl: 'prediction/get/' + dataset_id,
+// 	label: 'Predicted cell types from expression vectors:',
+// 	optionsShow: []
+// })
 
 // DOMs for brush selection
 var brushController = new BrushController({scatterPlot: sdv, container: "#controls"})

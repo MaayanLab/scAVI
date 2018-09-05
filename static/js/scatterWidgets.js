@@ -193,7 +193,7 @@ var Controler = Backbone.View.extend({
 
 		this.shapeSelect = this.shapeControl.append('select')
 			.attr('id', 'shape')
-			.attr('class', 'form-control selectpicker')
+			.attr('class', 'form-control selectpicker control-picker')
 			.on('change', function(){
 				var selectedMetaKey = d3.select('#shape').property('value');
 				self.trigger('shapeChanged', selectedMetaKey)
@@ -208,7 +208,7 @@ var Controler = Backbone.View.extend({
 
 		this.colorSelect = this.colorControl.append('select')
 			.attr('id', 'color')
-			.attr('class', 'form-control selectpicker')
+			.attr('class', 'form-control selectpicker control-picker')
 			.on('change', function(){
 				var selectedMetaKey = d3.select('#color').property('value');
 				self.trigger('colorChanged', selectedMetaKey)
@@ -271,17 +271,17 @@ var Controler = Backbone.View.extend({
 				.text(function(d){return d;})
 				.attr('value', function(d){return d;})
 
-		$('.selectpicker').selectpicker({
+		$('.control-picker').selectpicker({
 			style: 'btn-outline-secondary btn-sm',
 		});
-		$('.selectpicker').selectpicker('refresh');
+		$('.control-picker').selectpicker('refresh');
 	},
 
 	changeSelection: function(){
 		// change the current selected option to value
 		$('#shape').val(this.scatterPlot.shapeKey); 
 		$('#color').val(this.scatterPlot.colorKey);
-		$('.selectpicker').selectpicker('refresh');
+		$('.control-picker').selectpicker('refresh');
 	},
 
 	removeCurrentOptions: function(){
@@ -527,61 +527,41 @@ var LibSearchSelectize = Backbone.View.extend({
 
 	},
 
-	_render: function(){
+	_render: function(data){
 		// set up the DOMs
 		// wrapper for SearchSelectize
 		var searchControl = $('<div class="form-group" id="search-control"></div>')
 		searchControl.append($('<label class="control-label">' + this.label + '</label>'))
 
-		this.$el = $('<select id="search" class="form-control"></select>');
+		this.$el = $('<select id="search" class="form-control selectpicker" title="Select a library..."></select>');
+		
+		data = _.groupBy(data, 'type');
+		for (var type in data){
+			var optgroup = $('<optgroup>').attr('label', type);
+			for (var i = 0; i < data[type].length; i++) {
+				var rec = data[type][i];
+				var option = $('<option>').text(rec.name).attr('value', rec.name + '/'+ rec.type)
+				optgroup.append(option)
+			}
+			this.$el.append(optgroup)
+		}
+
 		searchControl.append(this.$el)
 		$(this.container).append(searchControl)
 
-		var callback = function(data){
-			return data;
-		}
-
-		var self = this;
-		this.$el.selectize({
-			valueField: 'name',
-			labelField: 'name',
-			searchField: 'name',
-			sortField: 'name',
-			preload: 'focus',
-			options: [],
-			create:false,
-			placeholder: 'library...',
-			render: {
-				option: function(item, escape){
-					return '<ul class="list-unstyled">' + 
-						'<li>' + escape(item.name) + '</li>' +
-						'</ul>';
-				}
-			},
-			load: function(query, callback){
-				$.ajax({
-					url: self.synonymsUrl,
-					type: 'GET',
-					dataType: 'json',
-					error: function(){
-						callback();
-					},
-					success: function(res){
-						if (self.optionsShow.length !== 0){
-							res = _.filter(res, function(rec){ return self.optionsShow.indexOf(rec.name) !== -1 })	
-						}
-						return callback(res)
-					}
-				});
-			}
-			});
-
-		// on change, trigger('searched', query)
-		this.$el[0].selectize.on('change', function(value){
-			if (value !== ''){
-				self.trigger('searched', value);
-			}
+		this.$el.selectpicker({
+			style: 'btn-outline-secondary btn-sm',
 		});
+		this.$el.selectpicker('refresh');
+
+		// on change, trigger('searched', option)
+		var self = this;
+		this.$el.on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue){
+			var selectedValue = $(this).val();
+			var name = selectedValue.split('/')[0],
+				type = selectedValue.split('/')[1];
+			self.trigger('searched', {type: type, name: name});
+		})
 	},
 
 	render: function(){
@@ -589,7 +569,8 @@ var LibSearchSelectize = Backbone.View.extend({
 		$.getJSON(this.synonymsUrl, function(data){
 			// check if there is any options from synonymsUrl
 			if (data.length > 0){
-				self._render()
+				data = _.filter(data, function(rec){ return self.optionsShow.indexOf(rec.name) !== -1 })
+				self._render(data)
 			}
 		});
 	},
