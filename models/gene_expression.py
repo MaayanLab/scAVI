@@ -9,6 +9,7 @@ import h5py
 import requests
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import scale
 from bson.codec_options import CodecOptions
 
 from .geo_meta import *
@@ -61,7 +62,10 @@ def compute_CPMs(expr_df, CPM_cutoff=0.3, at_least_in_persent_samples=10):
 
 def log10_and_zscore(expr_df):
 	expr_df = np.log10(expr_df + 1.)
-	expr_df = expr_df.apply(lambda x: (x-x.mean())/x.std(ddof=0), axis=1)
+	if isinstance(expr_df, pd.DataFrame):
+		expr_df = expr_df.apply(lambda x: (x-x.mean())/x.std(ddof=0), axis=1)
+	elif isinstance(expr_df, np.ndarray):
+		expr_df = scale(expr_df, axis=1)
 	return expr_df
 
 

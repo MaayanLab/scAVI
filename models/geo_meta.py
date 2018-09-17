@@ -2,12 +2,13 @@
 '''
 import os
 import warnings
+from rpy2.rinterface import RRuntimeError
 
 with warnings.catch_warnings():
 	warnings.simplefilter("ignore")
 	try:
 		import geo_query as gq
-	except ImportError:
+	except (ImportError, RRuntimeError) as e:
 		pass
 
 import pandas as pd

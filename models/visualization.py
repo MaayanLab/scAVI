@@ -1,13 +1,16 @@
 import numpy as np
 from sklearn import decomposition, manifold
+from .gene_expression import log10_and_zscore
 
 ## Visualization functions:
 def do_pca(X, n_components=3):
+	X = log10_and_zscore(X)
 	pca = decomposition.PCA(n_components=n_components)
 	return pca.fit_transform(X)
 
 
 def do_tsne(X, n_components=3):
+	X = log10_and_zscore(X)
 	pca = decomposition.PCA(n_components=min(50, X.shape[1]))
 	X_pca = pca.fit_transform(X)
 	if n_components == 3:
@@ -31,8 +34,8 @@ class Visualization(object):
 
 	def compute_visualization(self):
 		# make sure it is z-scored
-		if not self.ged.is_zscored():
-			self.ged.log10_and_zscore()
+		# if not self.ged.is_zscored():
+		# 	self.ged.log10_and_zscore()
 		coords = self.func(self.ged.df.values.T)
 		self.coords = coords
 		return self.coords

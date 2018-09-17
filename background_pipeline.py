@@ -104,9 +104,9 @@ def background_preprocess_pipeline(socketio=None, upload_id=None, enter_point=No
 		emit_message('Converted GeneExpressionDataset object')
 		# check if dataset exists
 		if not dataset.exists(Upload.db):
-			emit_message('Normalizing dataset...')
-			dataset.log10_and_zscore()
-			emit_message('Finished data normalization')
+			# emit_message('Normalizing dataset...')
+			# dataset.log10_and_zscore()
+			# emit_message('Finished data normalization')
 			dataset.save(Upload.db)
 			emit_message('Dataset(%s) has been saved into the database' % dataset.id)
 		else:
@@ -149,6 +149,13 @@ def background_pipeline(socketio=None, dataset_id=None, enter_point=None, gene_s
 	emit_message('tSNE-3d finished')
 	emit_message(done='visualization', name='tSNE-3')
 	vis.save(db)
+
+	emit_message('Performing Monocle-2d...')
+	pe = PseudotimeEstimator(gds, name='monocle', func=lambda x: run_monocle_pipeline(x, n_components=2))
+	pe.fit()
+	emit_message('Monocle analysis finished')
+	emit_message(done='visualization', name='monocle-2')
+	pe.save(db)
 
 	# step 3.
 	emit_message('POSTing DEGs to Enrichr for enrichment analysis')

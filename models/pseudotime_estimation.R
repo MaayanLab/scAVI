@@ -21,7 +21,7 @@ makeCellData <- function(expr_df) {
 		phenoData = pd,
 		featureData = fd,
 		lowerDetectionLimit = 0.1,
-		expressionFamily = tobit(0.1))
+		expressionFamily = VGAM::tobit(0.1))
 }
 
 makeCellData3 <- function(expr_df) {
@@ -52,6 +52,7 @@ runMonocleDDRTree <- function(cds) {
 		max_components = 2,
 		norm_method = 'log',
 		reduction_method = 'tSNE',
+		perplexity = 5,
 		verbose = T)
 	cds <- clusterCells(cds, verbose = T)
 	n_clusters <- length(unique(cds$Cluster))
