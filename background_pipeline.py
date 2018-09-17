@@ -84,14 +84,24 @@ def background_preprocess_pipeline(socketio=None, upload_id=None, enter_point=No
 	upload_obj = Upload.load(upload_id)
 	time.sleep(1)
 	emit_message('Parsing the uploaded files: %s, %s' %(upload_obj.data_file, upload_obj.metadata_file))
-	expr_df, meta_df = upload_obj.parse()
-	emit_message('Files parsing files with shapes: %s, %s' % (str(expr_df.shape), str(meta_df.shape)))
-	emit_message('Determining the data type of the gene expression file...')
+	try:
+		expr_df, meta_df = upload_obj.parse()
+	except Exception as e:
+		upload_obj.catch_error(e)
+		error_message = get_exception_message(e)
+		emit_message(msg=error_message, error=True, e=error_message)
+	else:
+		emit_message('Files parsing files with shapes: %s, %s' % (str(expr_df.shape), str(meta_df.shape)))
+		emit_message('Determining the data type of the gene expression file...')
+
 	try:
 		expr_dtype = expression_is_valid(expr_df)
 	except ValueError as e:
+		
 		emit_message('Gene expression data file is not valid:')
-		emit_message(str(e))
+		upload_obj.catch_error(e)
+		error_message = get_exception_message(e)
+		emit_message(msg=error_message, error=True, e=error_message)
 	else:
 		emit_message('Expression data type is: %s' % expr_dtype)
 		if expr_dtype == 'counts':

@@ -18,6 +18,9 @@ def expression_is_valid(expr_df):
 	else:
 		raise ValueError('Some columns in the expression matrix are not numbers.')
 
+def get_exception_message(e):
+	msg = '%s: %s.' % (type(e).__name__, str(e))
+	return msg
 
 class Upload(object):
 	"""Class for tracking uploaded files."""
@@ -31,6 +34,7 @@ class Upload(object):
 		if save:
 			self.started = False
 			self.done = False
+			self.error = False
 			self.id = self.save()
 	
 	def save(self):
@@ -38,7 +42,8 @@ class Upload(object):
 			'data_file': self.data_file,
 			'metadata_file': self.metadata_file,
 			'started': self.started,
-			'done': self.done
+			'done': self.done,
+			'error': self.error
 		}
 		insert_result = self.db[self.coll].insert_one(doc)
 		return str(insert_result.inserted_id)
@@ -59,6 +64,11 @@ class Upload(object):
 		self.dataset_id = dataset_id
 		self.db[self.coll].update_one({'_id': ObjectId(self.id)},
 			{'$set': {'done': True, 'dataset_id': dataset_id}})
+
+	def catch_error(self, e):
+		self.error = True
+		self.db[self.coll].update_one({'_id': ObjectId(self.id)},
+			{'$set': {'error': True, 'e': get_exception_message(e)}})
 
 	def parse(self):
 		# Parse the files into pd.DataFrame
@@ -91,5 +101,7 @@ class Upload(object):
 		obj.id = upload_id
 		obj.started = doc['started']
 		obj.done = doc['done']
+		obj.error = doc.get('error', False)
+		obj.e = doc.get('e', None)
 		obj.dataset_id = doc.get('dataset_id', None)
 		return obj

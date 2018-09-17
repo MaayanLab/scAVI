@@ -20,8 +20,13 @@
             <span>Data preprocessing completed, please click this link to start analyzing the data: </span>
             <a href="progress/{{upload_obj.dataset_id}}">{{ upload_obj.dataset_id }}</a>
         </div>
-    		
     	{% endif %}
+        {% if upload_obj.error %}
+        <div class="alert alert-danger">
+            <span>Data preprocessing failed, please refer to the following error message and double check the format of your data: </span>
+            <pre>{{ upload_obj.e }}</pre>
+        </div>
+        {% endif %}
     </div>
 
 {% endblock %}
@@ -41,13 +46,19 @@ $(document).ready(function(){
     	console.log(msg)
     	if (!msg.done){
     		$('#log').append('<br>'+ $('<div/>').text(msg.data).html());	
-    	} else{
+    	} else if (msg.done) {
             var divAlert = $('<div>').attr('class', 'alert alert-info')
             divAlert.append($('<span>').text('Data preprocessing completed, please click this link to start analyzing the data: '))
     		var a = $('<a>').text(msg.dataset_id).attr('href', 'progress/' + msg.dataset_id)
             divAlert.append(a)
     		$('#done').append(divAlert)
-    	}
+    	} 
+        if (msg.error) {
+            var divAlert = $('<div>').attr('class', 'alert alert-danger')
+            divAlert.append($('<span>').text('Data preprocessing failed, please refer to the following error message and double check the format of your data: '))
+            divAlert.append($('<pre>').text(msg.e))
+            $('#done').append(divAlert)
+        }
     });
 
 });
