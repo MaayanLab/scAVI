@@ -1,19 +1,85 @@
 {% extends "base-center.html" %}
 {% block content_center %}
     <form method="post" enctype="multipart/form-data">
+
+
         <div class="form-group">
-            <label for="inputFile1">Expression matrix file</label>
-            <input type="file" id="inputFile1" name="data" class="form-control-file" required>
+
+            <label for="radio" >Data file format:</label>
+            <div id="radio" class="form-check">
+              <input class="form-check-input" type="radio" name="dataType" id="plain_text" value="plain_text" checked>
+              <label class="form-check-label" for="plain_text">
+                Plain text
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="dataType" id="10x_h5" value="10x_h5">
+              <label class="form-check-label" for="10x_h5">
+                .h5 from 10x Genomics 
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="dataType" id="10x_mtx" value="10x_mtx">
+              <label class="form-check-label" for="10x_mtx">
+                .mtx from 10x Genomics
+              </label>
+            </div>
+
+        </div>
+
+        <div class="form-group upload-file" data-type="plain_text">
+            <label for="data_file">Expression matrix file</label>
+            <input type="file" id="data_file" name="data_file" class="form-control-file" required>
             <p class="form-text">Expression matrix file need to be a csv or txt file with genes by samples matrix. The values in the matrix can be read counts or normalized read counts such as CPM, RPKM, FPKM, TPM and etc. <a href="data/sample_read_counts_26511x45.csv">Example</a></p>
         </div>
 
-        <div class="form-group">
-            <label for="inputFile2">Metadata file</label>
-            <input type="file" id="inputFile2" name="metadata" class="form-control-file" required>
+        <div class="form-group upload-file" data-type="plain_text">
+            <label for="metadata_file">Metadata file</label>
+            <input type="file" id="metadata_file" name="metadata_file" class="form-control-file" required>
             <p class="form-text">Metadata file need to be a csv or txt file with the samples on the rows and attributes on the columns. <a href="data/sample_metadata.csv">Example</a></p>
+        </div>
+
+        <div class="form-group upload-file hidden" data-type="10x_h5">
+            <label for="h5_file">Expression file in .h5 format</label>
+            <input type="file" id="h5_file" name="h5_file" class="form-control-file">
+            <p class="form-text">Expression data file from 10x Genomics need to be in HDF5 (.h5) format which contain both the expression data and the metadata. <a href="data/example.h5">Example</a></p>
+        </div>
+
+        <div class="form-group upload-file hidden" data-type="10x_mtx">
+            <label for="mtx_file">Expression file in .mtx format</label>
+            <input type="file" id="mtx_file" name="mtx_file" class="form-control-file">
+            <p class="form-text">Expression data file from 10x Genomics need to be in .mtx format which store the expression data in sparse matrix. <a href="data/matrix.mtx">Example</a></p>
+        </div>
+        <div class="form-group upload-file hidden" data-type="10x_mtx">
+            <label for="genes_file">genes.tsv</label>
+            <input type="file" id="genes_file" name="genes_file" class="form-control-file">
+            <p class="form-text">A tab delimited file of the corresponding genes in the .mtx expression matrix file. <a href="data/genes.tsv">Example</a></p>
+        </div>
+        <div class="form-group upload-file hidden" data-type="10x_mtx">
+            <label for="barcodes_file">barcodes.tsv</label>
+            <input type="file" id="barcodes_file" name="barcodes_file" class="form-control-file">
+            <p class="form-text">A tab delimited file of the corresponding barcodes in the .mtx expression matrix file. <a href="data/barcodes.tsv">Example</a></p>
         </div>
 
         <button type="submit" class="btn btn-primary">Submit</button>
 
     </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // toggle file inputs when radio on change
+    $('input:radio[name=dataType]').change(function(){
+        var selectedRadioId = $(this).attr('id')
+        $("div.upload-file").each(function(){
+            if ($(this).attr("data-type") === selectedRadioId){
+                $(this).removeClass('hidden')
+                $("input", $(this)).prop('required', true)
+            } else {
+                $(this).addClass('hidden')
+                $("input", $(this)).prop('required', false)
+            }
+        })
+    })
+</script>
 {% endblock %}

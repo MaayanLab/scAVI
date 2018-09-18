@@ -262,3 +262,7 @@ https://github.com/minhur/bootstrap-toggle/issues/186
   overflow: scroll;
   background-color: #eee;
 }
+
+.hidden {
+  display: none;
+}

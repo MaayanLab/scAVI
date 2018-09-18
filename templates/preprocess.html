@@ -2,7 +2,7 @@
 {% block content_center %}
     <div class="alert alert-success">
         <h4 class="alert-heading">Success!</h4>
-        <p>Your data file ({{upload_obj.data_file}}) and metadata file ({{upload_obj.metadata_file}}) has been uploaded.</p> 
+        <p>Your files ({{upload_obj.files.values()|join(', ')}}) have been uploaded.</p> 
 
     </div>
 

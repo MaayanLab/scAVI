@@ -97,17 +97,16 @@ from background_pipeline import *
 @app.route(ENTER_POINT + '/upload', methods=['GET', 'POST'])
 def upload_files():
 	if request.method == 'POST':
-		data_file = request.files['data']
-		metadata_file = request.files['metadata']
+		upload_type = request.form['dataType']
+		files = {}
+		for name, uploaded_file in request.files.items():
+			if allowed_file(uploaded_file.filename): 
+				filename = secure_filename(uploaded_file.filename)
+				uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+				files[name] = filename
 
-		if data_file and allowed_file(data_file.filename) and \
-			metadata_file and allowed_file(metadata_file.filename):
-			data_filename = secure_filename(data_file.filename)
-			data_file.save(os.path.join(app.config['UPLOAD_FOLDER'], data_filename))
-			metadata_filename = secure_filename(metadata_file.filename)
-			metadata_file.save(os.path.join(app.config['UPLOAD_FOLDER'], metadata_filename))
-
-			upload_obj = Upload(data_filename, metadata_filename)
+		if len(files) > 0:
+			upload_obj = Upload(files=files, type_=upload_type)
 			return redirect(ENTER_POINT + '/preprocess/%s' % upload_obj.id)
 
 	return render_template('upload.html',

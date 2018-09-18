@@ -4,8 +4,9 @@ import time
 import numpy as np
 import pandas as pd
 from bson.objectid import ObjectId
+from models.gene_expression import parse_10x_h5, parse_10x_mtx
 
-ALLOWED_EXTENSIONS = set(['txt', 'tsv', 'csv'])
+ALLOWED_EXTENSIONS = set(['txt', 'tsv', 'csv', 'h5', 'mtx'])
 def allowed_file(filename):
 	return '.' in filename and \
 		filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -22,15 +23,17 @@ def get_exception_message(e):
 	msg = '%s: %s.' % (type(e).__name__, str(e))
 	return msg
 
+
 class Upload(object):
 	"""Class for tracking uploaded files."""
 	coll = 'upload'
 	# class variables that should be set in application context:
 	upload_folder = None
 	db = None 
-	def __init__(self, data_file, metadata_file=None, save=True):
-		self.data_file = data_file
-		self.metadata_file = metadata_file
+	
+	def __init__(self, files={}, save=True, type_=None):
+		self.files = files
+		self.type_ = type_
 		if save:
 			self.started = False
 			self.done = False
@@ -39,11 +42,11 @@ class Upload(object):
 	
 	def save(self):
 		doc = {
-			'data_file': self.data_file,
-			'metadata_file': self.metadata_file,
+			'files': self.files,
 			'started': self.started,
 			'done': self.done,
-			'error': self.error
+			'error': self.error,
+			'type': self.type_
 		}
 		insert_result = self.db[self.coll].insert_one(doc)
 		return str(insert_result.inserted_id)
@@ -71,22 +74,33 @@ class Upload(object):
 			{'$set': {'error': True, 'e': get_exception_message(e)}})
 
 	def parse(self):
-		# Parse the files into pd.DataFrame
-		if self.data_file.endswith('.csv'):
-			sep = ','
-		elif self.data_file.endswith('.txt') or self.data_file.endswith('.tsv'):
-			sep = '\t'
-		expr_df = pd.read_csv(os.path.join(self.upload_folder, self.data_file), sep=sep)
-		expr_df.set_index(expr_df.columns[0], inplace=True)
-		
-		if self.metadata_file.endswith('.csv'):
-			sep = ','
-		elif self.metadata_file.endswith('.txt') or self.metadata_file.endswith('.tsv'):
-			sep = '\t'
-		meta_df = pd.read_csv(os.path.join(self.upload_folder, self.metadata_file), sep=sep)
-		meta_df.set_index(meta_df.columns[0], inplace=True)
+		# Parse the files into pd.DataFrame(s): expr_df and meta_df
+		files = self.files
+		upload_folder = self.upload_folder
+		if self.type_ == 'plain_text':
+			if files['data_file'].endswith('.csv'):
+				sep = ','
+			elif files['data_file'].endswith('.txt') or files['data_file'].endswith('.tsv'):
+				sep = '\t'
+			expr_df = pd.read_csv(os.path.join(upload_folder, files['data_file']), sep=sep)
+			expr_df.set_index(expr_df.columns[0], inplace=True)
+			
+			if files['metadata_file'].endswith('.csv'):
+				sep = ','
+			elif files['metadata_file'].endswith('.txt') or files['metadata_file'].endswith('.tsv'):
+				sep = '\t'
+			meta_df = pd.read_csv(os.path.join(upload_folder, files['metadata_file']), sep=sep)
+			meta_df.set_index(meta_df.columns[0], inplace=True)
+			meta_df = meta_df.loc[expr_df.columns]
+			
+		elif self.type_ == '10x_h5': # h5 file from 10x Genomics
+			expr_df, meta_df = parse_10x_h5(os.path.join(upload_folder, files['h5_file']))
+		elif self.type_ == '10x_mtx': 
+			# mtx file and metadata files from 10x Genomics
+			expr_df, meta_df = parse_10x_mtx(os.path.join(upload_folder, files['mtx_file']), 
+				os.path.join(upload_folder, files['genes_file']), 
+				os.path.join(upload_folder, files['barcodes_file']))
 
-		meta_df = meta_df.loc[expr_df.columns]
 		return expr_df, meta_df
 
 	@classmethod
@@ -97,11 +111,13 @@ class Upload(object):
 	@classmethod
 	def load(cls, upload_id):
 		doc = cls.db[cls.coll].find_one({'_id': ObjectId(upload_id)})
-		obj = cls(doc['data_file'], doc['metadata_file'], save=False)
+		obj = cls(doc['files'], save=False)
 		obj.id = upload_id
 		obj.started = doc['started']
 		obj.done = doc['done']
 		obj.error = doc.get('error', False)
 		obj.e = doc.get('e', None)
 		obj.dataset_id = doc.get('dataset_id', None)
+		obj.type_ = doc.get('type', None)
 		return obj
+

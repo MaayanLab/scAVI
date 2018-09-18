@@ -83,7 +83,7 @@ def background_preprocess_pipeline(socketio=None, upload_id=None, enter_point=No
 
 	upload_obj = Upload.load(upload_id)
 	time.sleep(1)
-	emit_message('Parsing the uploaded files: %s, %s' %(upload_obj.data_file, upload_obj.metadata_file))
+	emit_message('Parsing the uploaded files: %s' % ', '.join(upload_obj.files.values()))
 	try:
 		expr_df, meta_df = upload_obj.parse()
 	except Exception as e:

@@ -9,6 +9,8 @@ import h5py
 import requests
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
+from scipy import io
 from sklearn.preprocessing import scale
 from bson.codec_options import CodecOptions
 
@@ -17,8 +19,8 @@ from .geo_meta import *
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-def load_read_counts(organism='human', gsms=[]):
-	'''Load data from h5 file using a list of GSMs.
+def load_archs4_read_counts(organism='human', gsms=[]):
+	'''Load data from ARCHS4 h5 file using a list of GSMs.
 	'''
 	fn = os.path.abspath(os.path.join(SCRIPT_DIR, '../data/%s_matrix.h5' % organism))
 	f = h5py.File(fn, 'r')
@@ -45,6 +47,65 @@ def load_read_counts(organism='human', gsms=[]):
 		# expr_df = expr_df.loc[:, valid_sample_mask]
 
 		return expr_df
+
+
+def process_sparse_expr_mat(mat, barcodes=None, genes=None):
+	# The mat should have a shape of (n_sample, n_genes)
+	n_cells_expressed = np.asarray((mat > 0).sum(axis=0)).ravel()
+	mask_expressed_genes = n_cells_expressed > 0
+	# Filter out genes not expressed across all cells
+	mat = mat[:, mask_expressed_genes]
+	# Get some sample QC stats 
+	n_reads = np.asarray(mat.sum(axis=1)).ravel()
+	n_expressed_genes = np.asarray((mat > 0).sum(axis=1)).ravel()
+
+	meta_df = pd.DataFrame({
+		'n_reads': n_reads,
+		'n_expressed_genes': n_expressed_genes
+	}, index=barcodes)
+	expr_df = pd.DataFrame(mat.toarray().T, 
+		index=genes[mask_expressed_genes],
+		columns=barcodes
+		)
+	expr_df.index.name = 'gene'
+	# Sum up duplicated gene symbols
+	expr_df = expr_df.reset_index()\
+		.groupby('gene').agg(np.sum)
+	return expr_df, meta_df
+
+
+def parse_10x_h5(filename):
+	# Parse the h5 file from 10x Genomics
+	with h5py.File(filename, 'r') as f:
+		group_name = f.keys()[0]
+		group = f[group_name]
+		mat = group['data']
+
+		# gene_ids = group['genes']
+		genes = group['gene_names'][:]
+		barcodes = group['barcodes'][:]
+		n_genes, n_samples = len(genes), len(barcodes)
+
+		# Construct a sparse matrix object
+		mat = sp.csr_matrix((group['data'], group['indices'], group['indptr']),
+			shape=(n_samples, n_genes))
+
+	expr_df, meta_df = process_sparse_expr_mat(mat, barcodes, genes)
+	return expr_df, meta_df
+
+
+def parse_10x_mtx(mtx_fn, genes_fn, barcodes_fn):
+	# Parse the .mtx, genes.tsv, barcodes.tsv files from 10x Genomics
+	mat = io.mmread(mtx_fn)
+	genes = pd.read_csv(genes_fn, sep='\t', names=['gene_ids', 'gene_symbols'])['gene_symbols']
+	barcodes = pd.read_csv(barcodes_fn, sep='\t', names=['barcodes'])['barcodes']
+	if mat.shape != (genes.shape[0], barcodes.shape[0]):
+		raise ValueError('The shape of the expression matrix (%d, %d) is inconsistent with \
+			the number of genes (%d) and the number of barcodes (%d)' % \
+			(mat.shape[0], mat.shape[1], genes.shape[0], barcodes.shape[0]))
+	
+	expr_df, meta_df = process_sparse_expr_mat(mat.tocsr().T, barcodes, genes)
+	return expr_df, meta_df
 
 
 def compute_CPMs(expr_df, CPM_cutoff=0.3, at_least_in_persent_samples=10):
@@ -307,7 +368,7 @@ class GEODataset(GeneExpressionDataset):
 
 	def retrieve_expression(self, expression_kwargs={}):
 		'''Retrieve gene expression from the h5 file'''
-		df= load_read_counts(organism=self.organism, gsms=self.sample_ids)
+		df= load_archs4_read_counts(organism=self.organism, gsms=self.sample_ids)
 		df = compute_CPMs(df, **expression_kwargs)
 		return df
 	
