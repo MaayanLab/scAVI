@@ -66,9 +66,12 @@ def background_preprocess_test_pipeline(socketio=None, upload_id=None, enter_poi
 		_emit_message(msg=msg, socketio=socketio, namespace='%s/%s'%(enter_point, upload_id), logger=logger, **kwargs)
 
 	upload_obj = Upload.load(upload_id)
+	emit_message('before the loop')
+	print 'before the loop'
 	for i in range(10):
-		time.sleep(1)
 		emit_message('tick %d from upload_id: %s, finished? %s' % (i, upload_obj.id, upload_obj.done))
+		print 'tick %d from upload_id: %s, finished? %s' % (i, upload_obj.id, upload_obj.done)
+		time.sleep(5)
 
 	dataset_id = 'some_data_id'
 	emit_message(done=True, dataset_id=dataset_id)

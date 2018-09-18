@@ -30,7 +30,9 @@ app.config['UPLOAD_FOLDER'] = os.path.join(SCRIPT_DIR, 'data/uploads')
 mongo.init_app(app)
 
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, path=ENTER_POINT + '/socket.io')
+socketio = SocketIO(app, path=ENTER_POINT + '/socket.io', 
+	async_mode='threading'
+	)
 
 
 @app.route(ENTER_POINT + '/')
