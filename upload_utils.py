@@ -12,9 +12,9 @@ def allowed_file(filename):
 		filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def expression_is_valid(expr_df):
-	if np.alltrue(expr_df.dtypes == np.int):
+	if np.alltrue([np.issubdtype(x, np.integer) for x in expr_df.dtypes]):
 		return 'counts'
-	elif np.alltrue(expr_df.dtypes == np.float):
+	elif np.alltrue([np.issubdtype(x, np.float) for x in expr_df.dtypes]):
 		return 'normed_counts'
 	else:
 		raise ValueError('Some columns in the expression matrix are not numbers.')

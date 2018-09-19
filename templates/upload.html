@@ -42,23 +42,23 @@
         <div class="form-group upload-file hidden" data-type="10x_h5">
             <label for="h5_file">Expression file in .h5 format</label>
             <input type="file" id="h5_file" name="h5_file" class="form-control-file">
-            <p class="form-text">Expression data file from 10x Genomics need to be in HDF5 (.h5) format which contain both the expression data and the metadata. <a href="data/example.h5">Example</a></p>
+            <p class="form-text">Expression data file from 10x Genomics need to be in HDF5 (.h5) format which contain both the expression data and the metadata. <a href="data/example_read_count_matrix.h5">Example</a></p>
         </div>
 
         <div class="form-group upload-file hidden" data-type="10x_mtx">
             <label for="mtx_file">Expression file in .mtx format</label>
             <input type="file" id="mtx_file" name="mtx_file" class="form-control-file">
-            <p class="form-text">Expression data file from 10x Genomics need to be in .mtx format which store the expression data in sparse matrix. <a href="data/matrix.mtx">Example</a></p>
+            <p class="form-text">Expression data file from 10x Genomics need to be in .mtx format which store the expression data in sparse matrix. <a href="data/example_matrix.mtx">Example</a></p>
         </div>
         <div class="form-group upload-file hidden" data-type="10x_mtx">
             <label for="genes_file">genes.tsv</label>
             <input type="file" id="genes_file" name="genes_file" class="form-control-file">
-            <p class="form-text">A tab delimited file of the corresponding genes in the .mtx expression matrix file. <a href="data/genes.tsv">Example</a></p>
+            <p class="form-text">A tab delimited file of the corresponding genes in the .mtx expression matrix file. <a href="data/example_genes.tsv">Example</a></p>
         </div>
         <div class="form-group upload-file hidden" data-type="10x_mtx">
             <label for="barcodes_file">barcodes.tsv</label>
             <input type="file" id="barcodes_file" name="barcodes_file" class="form-control-file">
-            <p class="form-text">A tab delimited file of the corresponding barcodes in the .mtx expression matrix file. <a href="data/barcodes.tsv">Example</a></p>
+            <p class="form-text">A tab delimited file of the corresponding barcodes in the .mtx expression matrix file. <a href="data/example_barcodes.tsv">Example</a></p>
         </div>
 
         <button type="submit" class="btn btn-primary">Submit</button>
@@ -69,8 +69,7 @@
 {% block scripts %}
 <script>
     // toggle file inputs when radio on change
-    $('input:radio[name=dataType]').change(function(){
-        var selectedRadioId = $(this).attr('id')
+    function toggleFormGroups(selectedRadioId) {
         $("div.upload-file").each(function(){
             if ($(this).attr("data-type") === selectedRadioId){
                 $(this).removeClass('hidden')
@@ -80,6 +79,17 @@
                 $("input", $(this)).prop('required', false)
             }
         })
+    }
+    
+    $(document).ready(function(){
+        var currentRadioId = $('input:radio[name=dataType]:checked').attr('id');
+        toggleFormGroups(currentRadioId);
+
+        $('input:radio[name=dataType]').change(function(){
+            var selectedRadioId = $(this).attr('id')
+            toggleFormGroups(selectedRadioId)
+        });
     })
+
 </script>
 {% endblock %}
