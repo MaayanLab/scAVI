@@ -36,7 +36,8 @@ def run_monocle_pipeline(df, n_components=3):
 	for key in list(res.names):
 		df = pandas2ri.ri2py(res[res.names.index(key)])
 		# drop uninformative columns 
-		df = df[df.columns[df.nunique() > 2]]
+		if key == 'data_df':
+			df = df[df.columns[df.nunique() > 2]]
 		parsed_res[key] = df
 	return parsed_res
 
