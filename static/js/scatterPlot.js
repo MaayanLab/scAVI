@@ -781,7 +781,12 @@ var Scatter3dView = Backbone.View.extend({
 		// clear this.clouds
 		this.clearClouds();
 		this.clouds = [];
-		
+		// get current rotation
+		var currentRotation = new THREE.Euler(0, 0, 0, 'XYZ')
+		if (this.scene.children.length > 0){
+			currentRotation = this.scene.children[0].rotation;
+		}
+
 		var textures = this.textures;
 		var symbols = _.map(d3.svg.symbolTypes, function(t){
 			return d3.svg.symbol().type(t)();});
@@ -795,6 +800,10 @@ var Scatter3dView = Backbone.View.extend({
 				sizeAttenuation: this.is3d,
 				labelKey: this.labelKey,
 			});
+			// set rotation to current rotation 
+			cloud.points.rotation.x = currentRotation.x
+			cloud.points.rotation.y = currentRotation.y
+
 			this.clouds.push(cloud)
 			this.scene.add( cloud.points );	
 
@@ -846,7 +855,9 @@ var Scatter3dView = Backbone.View.extend({
 					sizeAttenuation: this.is3d,
 					labelKey: this.labelKey,
 				});
-
+				// set rotation to current rotation 
+				cloud.points.rotation.x = currentRotation.x
+				cloud.points.rotation.y = currentRotation.y
 				this.clouds.push(cloud)
 				this.scene.add( cloud.points );	
 			}
