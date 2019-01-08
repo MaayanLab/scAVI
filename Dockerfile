@@ -21,7 +21,8 @@ RUN pip install \
 	h5py==2.7.1\
 	requests==2.18.4\
 	scipy==1.0.0\
-	scikit-learn==0.19.1
+	scikit-learn==0.19.1\
+	google-cloud-storage==1.13.2
 
 # Dependencies for monocle
 RUN R -e 'install.packages(c("reticulate", "DDRTree", "XML", "RCurl"), repos = "https://cran.rstudio.com/")'
@@ -37,7 +38,8 @@ EXPOSE 5000
 
 # Set the default directory where CMD will execute
 WORKDIR /my_application
-
+# Set up connection to google cloud storage
+RUN mkdir -p .config/gcloud; echo $APPLICATION_DEFAULT_CREDENTIALS > $GOOGLE_APPLICATION_CREDENTIALS
 # Set the default command to execute    
 # when creating a new container
 CMD python app.py

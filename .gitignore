@@ -8,3 +8,5 @@ scripts/*.csv
 *.ipynb 
 .DS_Store
 logs/*.log
+.vscode/
+.config

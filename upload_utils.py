@@ -1,9 +1,12 @@
 '''Utils handling uploaded datasets'''
 import os
 import time
+import h5py
 import numpy as np
 import pandas as pd
 from bson.objectid import ObjectId
+from google.cloud import storage
+
 from models.gene_expression import parse_10x_h5, parse_10x_mtx
 
 ALLOWED_EXTENSIONS = set(['txt', 'tsv', 'csv', 'h5', 'mtx'])
@@ -102,6 +105,45 @@ class Upload(object):
 				os.path.join(upload_folder, files['barcodes_file']))
 
 		return expr_df, meta_df
+
+	def build_h5(self, expr_df=None, meta_df=None):
+		'''Build an h5 file to enclose the expression and metadata.'''
+		outfile = os.path.join(self.upload_folder, self.id +'.h5')
+		if expr_df is None and meta_df is None:
+			expr_df, meta_df = self.parse()
+		try:
+			f = h5py.File(outfile, 'w')
+			# Add data
+			data_grp = f.create_group('data')
+			data_grp.create_dataset('expression', data=expr_df)
+			# Add gene metadata
+			gene_grp = f.create_group('meta/gene')
+			gene_grp.create_dataset('symbol', data=[x.encode('utf-8') for x in expr_df.index], 
+				dtype=h5py.special_dtype(vlen=str))
+			# Add sample metadata
+			sample_metadata_grp = f.create_group('meta/sample')
+			for col in meta_df.columns:
+				sample_metadata_grp.create_dataset(col, 
+					data=meta_df[col].tolist())
+			f.close()
+		except Exception as e:
+			print(e)
+			os.unlink(outfile)
+			outfile = None
+		return outfile
+
+	def upload_h5_to_cloud(self):
+		'''Upload the h5 file to Google cloud storage for other apps to access.'''
+		h5_file = os.path.join(self.upload_folder, self.id +'.h5')
+		client = storage.Client()
+		bucket = client.get_bucket('scavi-user-data')
+		blob = bucket.blob('%s/%s.h5' % (self.id, self.id))
+		blob.upload_from_filename(h5_file, content_type='text/html')
+		blob.make_public()
+		print('File uploaded to GCloud: ', 'https://storage.googleapis.com/scavi-user-data/%s/%s.h5' % (self.id, self.id))
+		# Remove file
+		os.unlink(h5_file)
+
 
 	@classmethod
 	def exists(cls, upload_id):

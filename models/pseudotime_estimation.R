@@ -75,7 +75,7 @@ runMonocleDDRTree <- function(cds) {
 		cds_ordering_genes <- names(gene_variances[order(gene_variances, decreasing = T)])[1:1000]
 	}
 	cds <- setOrderingFilter(cds, ordering_genes = cds_ordering_genes)
-	cds <- reduceDimension(cds, method = 'DDRTree', norm_method = 'log', ncenter=n_clusters)
+	cds <- reduceDimension(cds, method = 'DDRTree', norm_method = 'log')
 	cds <- orderCells(cds)
 	return(cds)
 }
