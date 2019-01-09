@@ -123,6 +123,8 @@ class Upload(object):
 				dtype=h5py.special_dtype(vlen=str))
 			# Add sample metadata
 			sample_metadata_grp = f.create_group('meta/sample')
+			meta_df.index.name = 'Sample'
+			meta_df = meta_df.reset_index()
 			for col in meta_df.columns:
 				sample_metadata_grp.create_dataset(col, 
 					data=meta_df[col].tolist())
