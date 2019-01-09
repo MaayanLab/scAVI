@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y build-essential gfortran libatlas-base-
 	libcurl4-openssl-dev
 
 # Install R 3.5
-RUN echo 'deb http://cran.rstudio.com/bin/linux/debian stretch-cran34/' >> /etc/apt/sources.list 
-RUN apt-get install -y dirmngr && apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
+RUN echo 'deb http://cran.rstudio.com/bin/linux/debian stretch-cran35/' >> /etc/apt/sources.list 
+# RUN apt-get install -y dirmngr && apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
 RUN apt-get update && apt-get install -y  --allow-unauthenticated r-base
 
 # Install required python packages
@@ -18,7 +18,7 @@ RUN pip install \
 	Flask==0.12.2\
 	Flask-PyMongo==0.5.1\
 	Flask-SocketIO==2.9.4\
-	h5py==2.7.1\
+	h5py==2.9.0\
 	requests==2.18.4\
 	scipy==1.0.0\
 	scikit-learn==0.19.1\
@@ -39,7 +39,7 @@ EXPOSE 5000
 # Set the default directory where CMD will execute
 WORKDIR /my_application
 # Set up connection to google cloud storage
-RUN mkdir -p .config/gcloud; echo $APPLICATION_DEFAULT_CREDENTIALS > $GOOGLE_APPLICATION_CREDENTIALS
+RUN mkdir -p .config/gcloud
 # Set the default command to execute    
 # when creating a new container
-CMD python app.py
+CMD echo $APPLICATION_DEFAULT_CREDENTIALS > $GOOGLE_APPLICATION_CREDENTIALS && python app.py

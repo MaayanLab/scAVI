@@ -1,6 +1,7 @@
 '''Utils handling uploaded datasets'''
 import os
 import time
+import tempfile
 import h5py
 import numpy as np
 import pandas as pd
@@ -108,7 +109,7 @@ class Upload(object):
 
 	def build_h5(self, expr_df=None, meta_df=None):
 		'''Build an h5 file to enclose the expression and metadata.'''
-		outfile = os.path.join(self.upload_folder, self.id +'.h5')
+		outfile = tempfile.NamedTemporaryFile(suffix='.h5')
 		if expr_df is None and meta_df is None:
 			expr_df, meta_df = self.parse()
 		try:
@@ -132,17 +133,17 @@ class Upload(object):
 			outfile = None
 		return outfile
 
-	def upload_h5_to_cloud(self):
+	def upload_h5_to_cloud(self, h5_file):
 		'''Upload the h5 file to Google cloud storage for other apps to access.'''
-		h5_file = os.path.join(self.upload_folder, self.id +'.h5')
 		client = storage.Client()
 		bucket = client.get_bucket('scavi-user-data')
 		blob = bucket.blob('%s/%s.h5' % (self.id, self.id))
-		blob.upload_from_filename(h5_file, content_type='text/html')
+		blob.upload_from_filename(h5_file.name, content_type='text/html')
 		blob.make_public()
 		print('File uploaded to GCloud: ', 'https://storage.googleapis.com/scavi-user-data/%s/%s.h5' % (self.id, self.id))
 		# Remove file
-		os.unlink(h5_file)
+		print('Removing tempfile:', h5_file.name)
+		h5_file.close()
 
 
 	@classmethod

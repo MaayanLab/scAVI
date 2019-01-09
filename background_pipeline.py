@@ -108,9 +108,9 @@ def background_preprocess_pipeline(socketio=None, upload_id=None, enter_point=No
 	else:
 		emit_message('Expression data type is: %s' % expr_dtype)
 		emit_message('Packaging dataset to HDF5 file...')
-		upload_obj.build_h5(expr_df, meta_df)
+		h5_file = upload_obj.build_h5(expr_df, meta_df)
 		emit_message('Uploading dataset to Google Cloud...')
-		upload_obj.upload_h5_to_cloud()
+		upload_obj.upload_h5_to_cloud(h5_file)
 
 		if expr_dtype == 'counts':
 			emit_message('Computing CPMs for read counts...')
