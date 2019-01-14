@@ -82,7 +82,7 @@ $(document).ready(function(){
         }
     });
 
-    
+
     $('#generate-notebook-btn').click(function(){
         var upload_id = $(this).data('upload-id');
         generateNotebook(upload_id);
@@ -92,7 +92,14 @@ $(document).ready(function(){
     var generateNotebook = function(upload_id){
         // This function sends POST request to notebook generator server
         // update notebook status
+        var spinner = $('<div>').attr('class', 'spinner-border text-secondary')
+            .attr('role', 'status')
+            .attr('id', 'spinner');
+        spinner.append($('<span>').attr('class', 'sr-only').text('Loading...'))
+
         $('#notebook-status').css('display', 'block').text('Generating notebook...')
+            .append(spinner);
+
         var notebook_config = {
             notebook: {
                 title: 'Example Notebook for user data | BioJupies',
@@ -160,6 +167,8 @@ $(document).ready(function(){
             contentType: 'application/json',
             success: function(resp){
                 console.log(resp)
+                // remove spinner
+                $('#spinner').remove();
                 var linkToNotebook = $('<a>').attr('href', resp.nbviewer_url)
                     .attr('target', '_blank')
                     .text(resp.notebook_uid);
