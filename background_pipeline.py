@@ -111,6 +111,7 @@ def background_preprocess_pipeline(socketio=None, upload_id=None, enter_point=No
 		h5_file = upload_obj.build_h5(expr_df, meta_df)
 		emit_message('Uploading dataset to Google Cloud...')
 		upload_obj.upload_h5_to_cloud(h5_file)
+		emit_message('Dataset is uploaded to Google Cloud', upload_id=upload_id)
 
 		if expr_dtype == 'counts':
 			emit_message('Computing CPMs for read counts...')
