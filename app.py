@@ -4,6 +4,9 @@ import time
 import StringIO
 from collections import Counter, defaultdict
 import subprocess
+import tempfile
+import urllib
+import h5py
 import numpy as np
 np.random.seed(10)
 import pandas as pd
@@ -83,7 +86,7 @@ def all_datasets():
 		geo_datasets[i] = doc
 		i += 1
 	stats = {'n_studies': n_studies, 'n_cells': n_cells}
-	
+
 	return render_template('datasets.html', 
 			ENTER_POINT=ENTER_POINT,
 			geo_datasets=geo_datasets,
@@ -118,6 +121,43 @@ def upload_files():
 
 	return render_template('upload.html',
 			ENTER_POINT=ENTER_POINT)
+
+@app.route(ENTER_POINT + '/preview_data/<string:upload_id>', methods=['GET'])
+def preview_uploaded_data(upload_id):
+	'''An endpoint for previewing uploaded dataset in Google Cloud.'''
+	outfile = tempfile.NamedTemporaryFile(suffix='.h5')
+	# Download the h5 to a temp file
+	urllib.urlretrieve('https://storage.googleapis.com/scavi-user-data/{upload_id}/{upload_id}.h5'.format(**locals()), 
+		outfile.name
+	)
+	try:
+		f = h5py.File(outfile, 'r')
+	except IOError:
+		return Response(json.dumps({'error': 'File not found'}), status=404, mimetype='application/json')
+	else:
+		# Get preview data
+		raw_data = {
+			'index': f['meta']['gene']['symbol'][:].astype(np.str)[:6].tolist(),
+			'columns': f['meta']['sample']['Sample'][:].astype(np.str).tolist(),
+			'data': f['data']['expression'].value[:6].tolist()
+		}
+		# Parse metadata
+		sample_metadata_dataframe = pd.DataFrame({key: value[:] \
+			if type(value) == h5py._hl.dataset.Dataset else [x for x in [y for y in value.items()][0][1].value] \
+			for key, value in f['meta']['sample'].items()})
+		# convert bypes to strings
+		str_col_mask = sample_metadata_dataframe.dtypes == 'object'
+		sample_metadata_dataframe.loc[:, str_col_mask] = \
+			sample_metadata_dataframe.loc[:, str_col_mask].values.astype(np.str)
+		sample_metadata_dataframe.set_index('Sample', inplace=True)
+
+		meta_data = {
+			'index': sample_metadata_dataframe.index.tolist(),
+			'columns': sample_metadata_dataframe.columns.tolist(),
+			'data': sample_metadata_dataframe.values.tolist()
+		}
+		outfile.close()
+		return jsonify({'data': raw_data, 'meta': meta_data})
 
 @app.route(ENTER_POINT + '/preprocess/<string:upload_id>', methods=['GET'])
 def preprocess_uploaded_file(upload_id):

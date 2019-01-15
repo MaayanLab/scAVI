@@ -20,7 +20,7 @@
         <div class="alert alert-info">
             <span>Data preprocessing completed, please click this link to start analyzing the data: </span>
             <a href="progress/{{upload_obj.dataset_id}}" target="_blank">{{ upload_obj.dataset_id }}</a>
-        </div>
+        </div>         
         <div class="alert alert-primary" id="notebook-dashboard">
             <span>Data has been uploaded completed, please click this link to generate a Jupyter Notebook: </span>
             <button class="btn btn-info" id="generate-notebook-btn" data-upload-id="{{upload_obj.id}}">Analyze</button>
@@ -35,9 +35,24 @@
         {% endif %}
     </div>
 
+    <div class="row">
+        <div id="preview-data" class="preview col-12 d-none mt-1 mb-5">
+            <div class="light medium mt-2 mb-2">Data preview</div>
+            <div class="light very-small mb-3">The table below displays a preview of the uploaded expression matrix file:</div>
+        </div>
+    </div>
+    <div class="row">
+        <div id="preview-meta" class="preview col-12 d-none mt-1 mb-5">
+            <div class="light medium mt-2 mb-2">Metadata preview</div>
+            <div class="light very-small mb-3">The table below displays a preview of the uploaded sample groups file:</div>
+        </div>
+    </div>
+
+
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="lib/socket.io.min.js"></script>
+    <script src="js/biojupies.js"></script>
     <script type="text/javascript">
         
 $(document).ready(function(){
@@ -66,6 +81,7 @@ $(document).ready(function(){
             $('#done').append(divAlert)
         }
         if (msg.upload_id){ // data is uploaded to Google Cloud
+            previewDataAndMeta(upload_id);
             var divPrimary = $('<div>').attr('class', 'alert alert-primary').attr('id', 'notebook-dashboard');
             divPrimary.append($('<span>').text('Data has been uploaded completed, please click this link to generate a Jupyter Notebook: '));
             var btn = $('<button>').attr('class', 'btn btn-info').text('Analyze')
@@ -82,103 +98,24 @@ $(document).ready(function(){
         }
     });
 
-
     $('#generate-notebook-btn').click(function(){
         var upload_id = $(this).data('upload-id');
         generateNotebook(upload_id);
     });
-
-
-    var generateNotebook = function(upload_id){
-        // This function sends POST request to notebook generator server
-        // update notebook status
-        var spinner = $('<div>').attr('class', 'spinner-border text-secondary')
-            .attr('role', 'status')
-            .attr('id', 'spinner');
-        spinner.append($('<span>').attr('class', 'sr-only').text('Loading...'))
-
-        $('#notebook-status').css('display', 'block').text('Generating notebook...')
-            .append(spinner);
-
-        var notebook_config = {
-            notebook: {
-                title: 'Example Notebook for user data | BioJupies',
-                live: 'False',
-                version: 'v1.0.5'
-            },
-            tools: [
-                {
-                tool_string: "pca",
-                parameters: {
-                nr_genes: "500",
-                normalization: "CPM",
-                z_score: "True",
-                plot_type: "interactive"
-                }
-            },
-            {
-                tool_string: "pca",
-                parameters: {
-                nr_genes: "500",
-                normalization: "magic",
-                z_score: "True",
-                plot_type: "interactive"
-                }
-            },      
-            {
-                tool_string: "clustering",
-                parameters: {
-                nr_genes: "500",
-                normalization: "logCPM",
-                plot_type: "interactive"
-                }
-            },
-            {
-                tool_string: "monocle",
-                parameters: {
-                color_by: "Pseudotime",
-                plot_type: "interactive"
-                }
-            },
-            {
-                tool_string: "library_size_analysis",
-                parameters: {
-                plot_type: "interactive"
-                }
-            }
-            ],
-            data: {
-                source: 'upload',
-                parameters: {
-                    uid: upload_id
-                }
-            },
-            signature: {},
-            terms: []
-        };
-
-        var NOTEBOOK_GENERATOR_URL = 'http://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate';
-        // post notebook_config to server to generate notebook
-        $.ajax({
-            type: 'post',
-            url: NOTEBOOK_GENERATOR_URL,
-            data: JSON.stringify(notebook_config),
-            dataType: 'json',
-            contentType: 'application/json',
-            success: function(resp){
-                console.log(resp)
-                // remove spinner
-                $('#spinner').remove();
-                var linkToNotebook = $('<a>').attr('href', resp.nbviewer_url)
-                    .attr('target', '_blank')
-                    .text(resp.notebook_uid);
-                $('#notebook-status').text('Notebook generated successfully and can be access via this link: ')
-                $('#notebook-status').append(linkToNotebook);
-            }
-        });
-
-    }
+    
+    // try displaying the preview
+    previewDataAndMeta(upload_id);
 
 });
+
+function previewDataAndMeta(upload_id){
+    $.getJSON('preview_data/'+ upload_id, function(upload_data){
+        addPreviewTable(upload_data['data'], true, '#preview-data');
+        addPreviewTable(upload_data['meta'], false, '#preview-meta');
+    }).fail(function(err){ // data not uploaded yet
+        console.log(err)
+    })
+}
+
     </script>
 {% endblock %}

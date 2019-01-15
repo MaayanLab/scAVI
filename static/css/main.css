@@ -266,3 +266,6 @@ https://github.com/minhur/bootstrap-toggle/issues/186
 .hidden {
   display: none;
 }
+.preview {
+  overflow-x: auto;
+}
