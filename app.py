@@ -44,11 +44,15 @@ def index_page():
 @app.route(ENTER_POINT + '/all')
 def all_datasets():
 	n_cells = 0
-	dataset_ids = mongo.db['dataset'].find(
+	cur = mongo.db['dataset'].find(
 		{'$and': [
 			{'id': {'$regex': r'^GSE'}},
 			{'sample_ids.30': {'$exists': True}}
-		]}).distinct('id')
+		]}, 
+		{'_id': False, 'id': True, 'notebook_uid':True})
+	d_dataset_notebook = {doc['id']: doc.get('notebook_uid') for doc in cur}
+	dataset_ids = d_dataset_notebook.keys()
+
 	projection = {'_id':False, 
 		'pubmed_id':True, 
 		'title':True, 
@@ -75,10 +79,11 @@ def all_datasets():
 			organism = 'mouse'
 		doc['organism'] = organism
 		doc.pop('sample_id', None)
+		doc['notebook_uid'] = d_dataset_notebook[doc['geo_accession']]
 		geo_datasets[i] = doc
 		i += 1
-
 	stats = {'n_studies': n_studies, 'n_cells': n_cells}
+	
 	return render_template('datasets.html', 
 			ENTER_POINT=ENTER_POINT,
 			geo_datasets=geo_datasets,

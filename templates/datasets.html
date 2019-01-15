@@ -7,6 +7,7 @@
         <thead>
             <tr>
                 <th></th>
+                <th></th>
                 <th>Title</th>
                 <th>Samples</th>
                 <th>Organism</th>
@@ -19,6 +20,14 @@
             {% for gds in geo_datasets %}
             <tr>
                 <td><a href="graph_page/{{ gds['geo_accession'] }}/tSNE" class="btn btn-outline-info btn-sm">Launch Viewer</a></td>
+                <td>
+                    {% if gds['notebook_uid'] is not none %}
+                        <a href="https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/{{gds['notebook_uid']}}/{{gds['geo_accession']}} Analysis Notebook.ipynb" 
+                            class="btn btn-outline-info btn-sm" target="_blank">Launch Notebook</a>
+                    {% else %}
+                        <a class="btn btn-outline-info btn-sm disabled">Launch Notebook</a>
+                    {% endif %}
+                </td>
                 <td><a href="graph_page/{{ gds['geo_accession'] }}/tSNE">{{ gds['title'] }} </a></td>
                 <td>{{ gds['n_cells'] }}</td>
                 <td>{{ gds['organism'] }}</td>

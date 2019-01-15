@@ -10,3 +10,4 @@ scripts/*.csv
 logs/*.log
 .vscode/
 .config
+test_*.R
