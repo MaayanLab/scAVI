@@ -1,0 +1,523 @@
+<!-- ###############################################  -->
+<!-- ##### Intro Column ############################  -->
+<!-- ###############################################  -->
+<!-- ### Displays introductory column with icon for use on the landing page. -->
+<!-- ### Used in: index(). -->
+
+{% macro intro_col(icon, title, text, link=None) %}
+
+	<div class="col-4">
+		<div class="mb-4">
+			<i class="{{ icon }} fa-5x"></i>
+		</div>
+		<div class="small regular mb-2">{{ title }}</div>
+		<div class="very-small light pr-0 pr-xl-5">{{ text }}</div>
+		{% if link %}
+			<div class="very-small light mt-3"><a href="{{ url_for(link) }}" class="border-black nodecoration px-2 py-1 mb-0 black tiny">Learn More <i class="fa fa-angle-right ml-1"></i></a></div>		
+		{% endif %}
+	</div>
+
+{% endmacro %}
+
+<!-- ###############################################  -->
+<!-- ##### Option Column ###########################  -->
+<!-- ###############################################  -->
+<!-- ### Displays navigation options with icon, link, and a text description. -->
+<!-- ### Used in: analyze(). -->
+
+{% macro option_col(option, colsize) %}
+
+	<div class="{{colsize}} text-center mb-1 mb-lg-0">
+			<a class="display-1 px-5 py-4 black border-custom rounded d-inline-block" href="{{ url_for(option['link']) }}">
+			{% if option.get('icon') %}
+				<i class="fa fa-{{option['icon']}} my-3"></i>
+			{% else %}
+				<img src="{{ url_for('static', filename='img/logos/{image}.png'.format(**option)) }}" class="w-100"></i>
+			{% endif %}
+			</a>
+		<a class="large mt-3 nodecoration black d-block" href="{{ url_for(option['link']) }}">{{option['title']}}</a>
+		<div class="light small mt-2 pb-5 px-0 px-lg-3 px-xl-5">{{option['description']|safe}}</div>
+	</div>
+	
+{% endmacro %}
+
+<!-- ###############################################  -->
+<!-- ##### Dashboard Option ########################  -->
+<!-- ###############################################  -->
+<!-- ### Displays dashboard options with icon, link, and a text description. -->
+<!-- ### Used in: dashboard(). -->
+
+{% macro dashboard_option(title, tablink, routelink, icon, number) %}
+
+	<div class="col-4">
+		<div class="text-center border-grey rounded d-inline-block overflow-hidden mx-0 mx-xl-4">
+			
+			<!-- Icon -->
+			<i class="{{ icon }} display-3 black mt-4 mx-5 px-0"></i>
+			
+			<!-- Title -->
+			<div class="small light my-2">{{ number }} {{ title if number != 1 else title[:-1] }}</div>
+
+			<!-- Options -->
+			<div class="d-flex border-grey border-bottom-0 border-left-0 border-right-0 very-small">
+
+				<!-- View -->
+				<div class="flex-fill dashboard-link py-1" data-tab="{{ tablink }}">
+					<a href="#" class="black nodecoration w-100 cursor-pointer">View</a>
+				</div>
+
+				<!-- Create -->
+				<div class="flex-fill bg-blue py-1">
+					<a href="{{ url_for(routelink) }}" class="white nodecoration w-100 cursor-pointer">
+						{% if tablink == 'notebooks' %}
+							Create
+						{% elif tablink == 'datasets' %}
+							Upload
+						{% elif tablink == 'alignments' %}
+							Launch
+						{% endif %}
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{% endmacro %}
+
+<!-- ###############################################  -->
+<!-- ##### Dataset Radio ###########################  -->
+<!-- ###############################################  -->
+<!-- ### Displays dataset selection radio buttons for notebook generation. -->
+<!-- ### Used in: search_data(). -->
+
+{% macro dataset_radio(dataset, i) %}
+
+	{% set id = dataset['dataset_accession']+'-'+dataset['platform_accession'] %}
+
+	<div class="row">
+		<div class="col-12">
+			<div class="object-label mt-3 mb-0 px-0 w-100 border-custom rounded bg-lightgrey">
+				<div class="d-table w-100 pl-2 pl-md-0">
+
+					<!-- Icon -->
+					<div class="d-none d-md-table-cell align-middle card-icon px-3 py-3">
+						<img src="{{ url_for('static', filename='img/dataset_icon.png') }}" class="w-100 my-auto">
+					</div>
+
+					<!-- Description -->
+					<div class="d-table-cell align-middle px-2 py-3">
+
+						<!-- Title -->
+						<div class="very-small regular">{{ dataset['dataset_title']|safe }}</div>
+
+						<!-- Info -->
+						<div class="tiny light text-muted">
+							<div class="d-block d-lg-inline-block mr-5 mt-3 mt-lg-2"><span class="font-italic">{{dataset['dataset_accession']}}</span></div>
+							<div class="d-block d-lg-inline-block mr-5 mt-3 mt-lg-2"><span class="font-italic">{{dataset['nr_samples']}} samples</span></div>
+							<!-- <div class="col-3"><span>Organism: </span><span class="font-italic">{{dataset['organism']}}</span></div> -->
+							<div class="d-block d-lg-inline-block mr-5 mt-3 mt-lg-2"><span>Published </span><span class="font-italic">{{dataset['date'].strftime('%B %Y')}}</span></div>
+						</div>
+					</div>
+
+					<!-- Options -->
+					<div class="d-table-cell align-middle card-options px-2">
+						<div class="d-block">
+							<form id="{{id}}-form">
+								<input type="hidden" name="gse-gpl" value="{{id}}">
+							</form>
+							<button class="btn text-center w-100 mb-1 bg-blue white border-grey light tiny mb-1 nodecoration" form="{{id}}-form" type="submit" formaction="{{ url_for('add_tools') }}" formmethod="post">
+								Analyze<i class="fa fa-angle-right ml-2"></i>
+							</button>
+							<button class="btn text-center w-100 border-grey bg-transparent light tiny nodecoration text-muted" data-toggle="collapse" data-target="#{{id}}-info" >
+								More Info<i class="fa fa-angle-down ml-1 fa-1x"></i>
+							</button>
+						</div>
+					</div>
+
+				</div>
+			</div>
+			<div id="{{id}}-info" class="collapse border-grey mx-2 border-top-0 rounded-bottom tiny {{ 'show' if i == 0 else '' }}">
+				<div class="py-3">
+
+					<!-- Summary -->
+					<div class="row px-3">
+						<div class="col-2 col-lg-1 bold">Summary</div>
+						<div class="col-10 col-lg-11 text-muted light pl-4">{{ dataset['summary']|safe }}</div>
+					</div>
+
+					<!-- Organism -->
+					<div class="row px-3 pt-3">
+						<div class="col-2 col-lg-1 bold">Organism</div>
+						<div class="col-10 col-lg-11 text-muted light pl-4 font-italic">{{ dataset['organism'].replace('Human', 'Homo sapiens').replace('Mouse', 'Mus musculus') }}</div>
+					</div>
+
+					<!-- Source -->
+					<div class="row px-3 pt-3">
+						<div class="col-2 col-lg-1 bold">Source</div>
+						<div class="col-10 col-lg-11 text-muted light pl-4"><a target="_blank" href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ dataset['dataset_accession'] }}">https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ dataset['dataset_accession'] }}</a></div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endmacro %}
+
+<!-- ###############################################  -->
+<!-- ##### Tool Checkbox ###########################  -->
+<!-- ###############################################  -->
+<!-- ### Displays tool selection options for notebook generation. -->
+<!-- ### Used in: add_tools(). -->
+
+{% macro tool_checkbox(tool, version) %}
+
+	<div class="row">
+		<div class="col-12">
+			<input type="checkbox" name="tool" id="{{tool['tool_string']}}" value="{{tool['tool_string']}}" {{'checked' if tool['default_selected'] else ''}} class="hidden">
+			<div class="object-label mt-3 mb-0 p-0 w-100 border-custom rounded bg-lightgrey">
+				<div class="d-table w-100 pl-3 pl-md-0">
+
+					<!-- Icon -->
+					<div class="d-none d-md-table-cell align-middle card-icon px-3 py-3">
+						<img src="{{ url_for('static', filename='img/tool/{tool_string}/{tool_string}.png'.format(**tool)) }}" class="w-100 px-1 py-1 rounded bg-white border-grey my-auto">
+					</div>
+
+					<!-- Info -->
+					<div class="d-table-cell align-middle py-2 py-md-0">
+						<div class="very-small regular pb-0 pb-lg-2 pr-5">{{tool['tool_name']|safe}}</div>
+						<div class="tiny light text-muted">
+							<span>{{tool['tool_description']}}</span>
+						</div>
+					</div>
+
+					<!-- Options -->
+					<div class="d-table-cell align-middle text-right card-options px-2 py-2 py-md-0">
+						<div class="d-block">
+							<label class="btn text-center w-100 mb-1 bg-blue white border-grey light tiny mb-1 nodecoration tool-checkbox"  for="{{tool['tool_string']}}">
+								{% if tool['default_selected'] %}
+									<span>Remove</span><i class="fa fa-minus ml-2"></i>
+								{% else %}
+									<span>Add</span><i class="fa fa-plus ml-2"></i>
+								{% endif %}
+							</label>
+							<button class="btn text-center w-100 border-grey bg-transparent light tiny nodecoration" data-toggle="collapse" data-target="#{{tool['tool_string']}}-info" type="button">
+								<span class="{{ 'white' if tool['default_selected'] else 'text-muted' }}">More Info<i class="fa fa-angle-down ml-1 fa-1x"></i></span>
+							</button>
+						</div>
+					</div>
+
+				</div>
+			</div>
+			<div id="{{tool['tool_string']}}-info" class="collapse border-grey mx-2 border-top-0 rounded-bottom tiny {{ 'show' if tool['tool_string'] == '' else '' }}">
+				<div class="row py-3 px-3">
+
+					<!-- Screenshot -->
+					<div class="col-lg-4 my-auto pb-3 pb-lg-0">
+						<img src="{{ url_for('static', filename='img/tool/{tool_string}/{tool_string}-example.png'.format(**tool)) }}" class="w-100">
+						<div class="text-center tiny light mt-3">Screenshot from a sample analysis</div>
+					</div>
+					<div class="col-lg-8 text-muted light pl-4">
+
+						<!-- Overview -->
+						<div class="tiny bold">
+							Description
+							<!-- What
+							{% if tool['tool_string'] in ['signature_table', 'volcano_plot', 'ma_plot']%}
+								is a
+							{% else %}
+								is
+							{% endif %}
+							{{ tool['tool_name'].replace(' Links', '').replace(' Query', '')|safe }}? -->
+						</div>
+						<div class="micro mt-1 text-justify">{{tool['introduction']|safe}}</div>
+
+						<!-- Results -->
+						<div class="tiny bold mt-3">How are the results displayed?</div>
+						<div class="micro mt-1 text-justify">{{tool['result_description']|safe}}</div>
+
+						<!-- Reference -->
+						{% if tool['reference'] %}
+							<div class="tiny bold mt-3">Reference</div>
+							<div><a class="nodecoration" href="{{ tool['reference_link'] }}">{{ tool['reference']|safe }}</a></div>
+						{% endif %}
+
+						<!-- Icons -->
+						<div class="row mt-4">
+
+							<!-- Example -->
+							<div class="col-4 text-left">
+								<a href="http://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/n3Seul6aJ/Normal%20vs%20Metastatic%20Analysis%20Notebook%20%7C%20BioJupies.ipynb#{{tool['tool_string']}}" class="grey nodecoration bold mr-4" target="_blank">
+									<i class="fa fa-book fa-2x align-middle mr-2"></i>Interactive Example
+								</a>
+							</div>
+
+							<!-- Tutorial -->
+							{% if tool['video_tutorial'] %}
+								<div class="col-4 text-left">
+									<a href="{{tool['video_tutorial']}}" class="grey nodecoration bold mr-4" target="_blank">
+										<i class="fab fa-youtube fa-2x align-middle mr-2"></i>Video Tutorial
+									</a>
+								</div>
+							{% endif %}
+
+							<!-- Source Code -->
+							<div class="col-4 text-left">
+								<a href="https://github.com/MaayanLab/biojupies-plugins/tree/master/library/analysis_tools/{{tool['tool_string']}}" class="grey nodecoration bold mr-4" target="_blank">
+									<i class="fab fa-github fa-2x align-middle mr-2"></i>Source Code
+								</a>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endmacro %}
+
+<!-- ###############################################  -->
+<!-- ##### Parameters Card #########################  -->
+<!-- ###############################################  -->
+<!-- ### Displays tool paremeter card for notebook generation. -->
+<!-- ### Used in: configure_analysis(). -->
+
+{% macro parameter_card(tool) %}
+
+	<div class="row">
+		<div class="col-12">
+			<div class="mt-3 mb-0 w-100 border-custom rounded bg-lightgrey">
+				<div class="d-table w-100">
+
+					<!-- Icon -->
+					<div class="d-table-cell align-middle card-icon px-3 py-3">
+						<img src="{{ url_for('static', filename='img/tool/{tool_string}/{tool_string}.png'.format(**tool)) }}" class="w-100 px-1 py-1 rounded bg-white border-grey">
+					</div>
+
+					<!-- Title -->
+					<div class="d-table-cell align-middle">
+						<div class="very-small regular pb-2 pr-5">{{tool.tool_name|safe}} Options</div>
+						<div class="tiny light text-muted">Modify optional configuration parameters for {{tool.tool_name|safe}}</div>
+					</div>
+
+					<!-- Options -->
+					<div class="d-table-cell align-middle card-options pr-3">
+						<button class="btn text-center w-100 border-grey bg-transparent light tiny nodecoration text-muted" data-toggle="collapse" type="button" data-target="#{{tool.tool_string}}-info">
+							Modify Parameters<i class="fa fa-angle-down ml-1 fa-1x"></i>
+						</button>
+					</div>
+
+				</div>
+			</div>
+			<div id="{{tool.tool_string}}-info" class="collapse border-grey mx-2 border-top-0 rounded-bottom tiny">
+				<div class="pt-3">
+					{% for parameter in tool.parameters %}
+						<div class="row px-3 pb-3">
+							<div class="col-2 px-2 bold text-right tiny my-auto">
+								<div>{{parameter.parameter_name}}<sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="{{parameter.parameter_description}}."></i></sup>:</div>
+							</div>
+							<div class="col-3">
+								<select name="{{tool.tool_string}}-{{parameter.parameter_string}}" class="form-control nodecoration tiny bg-white px-2 py-1 mb-0">
+									{% for value in parameter['values'] %}
+										<option class="px-2 py-1 mb-0" value="{{value.value}}" {{'selected' if value.default else ''}}>{{value.value}}</option>
+									{% endfor %}
+								</select>
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endmacro %}
+
+<!-- ###############################################  -->
+<!-- ##### Notebook Settings Card ##################  -->
+<!-- ###############################################  -->
+<!-- ### Displays notebook configuration card. -->
+<!-- ### Used in: configure_analysis(). -->
+
+{% macro notebook_settings(notebook_title) %}
+
+	<div class="row">
+		<div class="col-12">
+			<div class="mt-3 mb-0 w-100 border-custom rounded bg-lightgrey" data-toggle="collapse" data-target="#notebook_settings-info">
+				<div class="d-table w-100 py-2 px-2 py-md-0 px-md-0">
+
+					<!-- Icon -->
+					<div class="d-table-cell align-middle card-icon px-3 py-3">
+						<img src="{{ url_for('static', filename='img/jupyter.png') }}" class="w-100 px-1 py-1 rounded bg-white border-grey">
+					</div>
+
+					<!-- Title -->
+					<div class="d-table-cell align-middle">
+						<div class="very-small regular pb-2 pr-5">Customize Your Notebook</div>
+						<div class="tiny light text-muted">Customize the title of your notebook and add biological tags</div>
+					</div>
+
+				</div>
+			</div>
+			<div id="notebook_settings-info" class="collapse show border-grey mx-2 border-top-0 rounded-bottom tiny">
+				<div class="pt-3">
+
+					<!-- Notebook Title -->
+					<div class="row px-4 px-lg-3 pb-4">
+						<div class="col-lg-3 bold text-lg-right my-auto">
+							How would you like to name your notebook?
+							<!-- <sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Placeholder."></i></sup> -->
+						</div>
+						<div class="col-lg-6 pt-2 pt-lg-0">
+							<input class="form-control tiny nodecoration" type="text" name="notebook_title" value="{{ notebook_title }}">
+						</div>
+					</div>
+
+					<!-- Sample Source -->
+					<div class="row px-4 px-lg-3 pb-4">
+						<div class="col-lg-3 bold text-lg-right my-auto">
+							What tissue or cell line do the samples belong to?
+							<!-- <sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Placeholder."></i></sup> -->
+						</div>
+						<div class="col-lg-6 pt-2 pt-lg-0">
+							<select class="ontology-select" data-ontology="sample_source" name="tags" placeholder="Select tissues or cell lines..."></select>
+						</div>
+					</div>
+
+					<!-- Disease -->
+					<div class="row px-4 px-lg-3 pb-3">
+						<div class="col-lg-3 bold text-lg-right my-auto">
+							Are the samples affected by a disease?
+							<!-- <sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Placeholder."></i></sup> -->
+						</div>
+						<div class="col-lg-1 pt-1 pt-lg-0">
+							<div class="border-grey rounded d-table mt-1 overflow-hidden">
+								<input type="radio" id="disease-radio-yes" name="disease-radio" value="yes" class="d-none">
+								<label for="disease-radio-yes" class="radio-label px-2 py-1 cursor-pointer d-table-cell">Yes</label>
+								<input type="radio" id="disease-radio-no" name="disease-radio" value="no" class="d-none" checked>
+								<label for="disease-radio-no" class="radio-label px-2 py-1 cursor-pointer d-table-cell">No</label>
+							</div>
+						</div>
+						<div class="col-lg-5 pl-lg-4 pt-3 pt-lg-0">
+							<select class="ontology-select hidden" data-ontology="disease" name="tags" placeholder="Select one or more diseases..."></select>
+						</div>
+					</div>
+					
+					<!-- Small Molecule -->
+					<div class="row px-4 px-lg-3 pb-3">
+						<div class="col-lg-3 bold text-lg-right my-auto">
+							Are the samples treated with a drug or small molecule?
+							<!-- <sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Placeholder."></i></sup> -->
+						</div>
+						<div class="col-lg-1 pt-1 pt-lg-0">
+							<div class="border-grey rounded d-table mt-lg-1 overflow-hidden my-auto">
+								<input type="radio" id="drug-radio-yes" name="drug-radio" value="yes" class="d-none">
+								<label for="drug-radio-yes" class="radio-label px-2 py-1 cursor-pointer d-table-cell">Yes</label>
+								<input type="radio" id="drug-radio-no" name="drug-radio" value="no" class="d-none" checked>
+								<label for="drug-radio-no" class="radio-label px-2 py-1 cursor-pointer d-table-cell">No</label>
+							</div>
+						</div>
+						<div class="col-lg-5 pl-lg-4 pt-3 pt-lg-0">
+							<select class="ontology-select hidden" data-ontology="drug_ontology" name="tags" placeholder="Select one or more drugs or small molecules..."></select>
+						</div>
+					</div>
+					
+					<!-- Gene Perturbation -->
+					<div class="row px-4 px-lg-3 pb-3">
+						<div class="col-lg-3 bold text-lg-right my-auto">
+							Are the samples affected by a gene perturbation?
+							<!-- <sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Placeholder."></i></sup> -->
+						</div>
+						<div class="col-lg-1 pt-1 pt-lg-0">
+							<div class="border-grey rounded d-table mt-lg-1 overflow-hidden my-auto">
+								<input type="radio" id="gene-radio-yes" name="gene-radio" value="yes" class="d-none">
+								<label for="gene-radio-yes" class="radio-label px-2 py-1 cursor-pointer d-table-cell">Yes</label>
+								<input type="radio" id="gene-radio-no" name="gene-radio" value="no" class="d-none" checked>
+								<label for="gene-radio-no" class="radio-label px-2 py-1 cursor-pointer d-table-cell">No</label>
+							</div>
+						</div>
+						<div class="col-lg-5 pl-lg-4 pt-3 pt-lg-0">
+							<select class="ontology-select hidden" data-ontology="human_genes" name="tags" placeholder="Select one or more genes..."></select>
+						</div>
+						<div class="col-lg-3">
+							<select class="ontology-select hidden" data-ontology="gene_perturbation" name="tags" placeholder="Select a perturbation type..."></select>
+						</div>
+					</div>
+
+					<!-- Gene Perturbation -->
+					<div class="row px-4 px-lg-3 pb-3">
+						<div class="col-lg-3 bold text-lg-right my-auto">
+							Would you like your notebook to only display static plots?
+							<sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Some BioJupies plugins display results using interactive visualizations which require WebGL. While most modern browsers on desktop and mobile support this feature, these plots may occasionally display incorrectly. By selecting this option, plot will be displayed as static images and rendered more reliably."></i></sup>
+						</div>
+						<div class="col-lg-1 pt-1 pt-lg-0">
+							<div class="border-grey rounded d-table mt-lg-1 overflow-hidden my-auto">
+								<input type="radio" id="static-plots-yes" name="static-plots" value="yes" class="d-none">
+								<label for="static-plots-yes" class="radio-label px-2 py-1 cursor-pointer d-table-cell">Yes</label>
+								<input type="radio" id="static-plots-no" name="static-plots" value="no" class="d-none" checked>
+								<label for="static-plots-no" class="radio-label px-2 py-1 cursor-pointer d-table-cell">No</label>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endmacro %}
+
+<!-- ###############################################  -->
+<!-- ##### Workflow Step ###########################  -->
+<!-- ###############################################  -->
+<!-- ### Displays workflows. -->
+<!-- ### Used in: contribute(), docker(). -->
+
+{% macro workflow_step(icon, number, color, title, description, arrow=True) %}
+	<!-- Step Wrapper -->
+	<div class="rounded px-4 pt-3 pb-2 position-relative white" style="background-color: {{color}}; margin-top: -5px; font-family: 'Helvetica Neue', 'Helvetica', sans-serif;">
+
+		<!-- Title -->
+		<div class="row">
+			<div class="col-2 my-auto text-center">
+				<i class="{{icon}}"></i>
+			</div>
+			<div class="col-10 medium pl-5 pl-sm-4 pl-md-1 pl-lg-4">
+				<div class="bold">Step {{number}}.</div>
+				<div class="ultra-light" style="letter-spacing: 0.7px;">{{title}}</div>
+			</div>
+		</div>
+
+		<!-- Text -->
+		<div class="mt-3 tiny">
+			<ul class="pl-4 regular" style="letter-spacing: 0.5px;">
+				<li>
+					{{description|safe}}
+				</li>
+			</ul>
+		</div>
+
+		<!-- Arrow -->
+		{% if arrow %}
+			<div class="arrow-bottom" style="border-top-color: {{color}};"></div>
+		{% endif %}
+	</div>
+{% endmacro %}
+
+<!-- ###############################################  -->
+<!-- ##### Google Analytics ########################  -->
+<!-- ###############################################  -->
+<!-- ### Adds Google Analytics to pages. -->
+<!-- ### Used in: base.html, notebook.html. -->
+
+{% macro analytics() %}
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-6277639-32"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+
+		gtag('config', 'UA-6277639-32');
+	</script>
+{% endmacro %}

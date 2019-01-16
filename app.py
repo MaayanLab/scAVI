@@ -15,6 +15,9 @@ from flask import Flask, request, redirect, render_template, \
 	jsonify, send_from_directory, abort, Response, send_file
 from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import MetaData, or_, and_, func
 
 import encrypt
 from utils import *
@@ -37,6 +40,14 @@ socketio = SocketIO(app, path=ENTER_POINT + '/socket.io',
 	async_mode='threading'
 	)
 
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+engine = db.engine
+Session = sessionmaker(bind=engine)
+metadata = MetaData()
+metadata.reflect(bind=engine)
+tables = metadata.tables
 
 @app.route(ENTER_POINT + '/')
 def index_page():
@@ -184,6 +195,82 @@ def preprocess_uploaded_file(upload_id):
 			)
 	else:
 		abort(404)
+
+@app.route(ENTER_POINT + '/analyze/tools/<string:upload_id>', methods=['GET'])
+def add_tools(upload_id):
+	'''Allows users to select one or more tools to add to the notebook.'''
+	if Upload.exists(upload_id):
+		upload_obj = Upload.load(upload_id)
+
+		# Perform tool and section query from database
+		tools, sections = [pd.read_sql_table(x, engine) for x in ['tool', 'section']]
+		tools = tools[tools['display'] == True]
+		tools, sections = [x.to_dict(orient='records') for x in [tools, sections]]
+		# Combine tools and sections
+		for section in sections:
+			section.update({'tools': [x for x in tools if x['section_fk'] == section['id']]})
+		# Number of tools
+		nr_tools = len(tools)
+
+		return render_template('analyze-tools.html',
+			ENTER_POINT=ENTER_POINT,
+			upload_obj=upload_obj,
+			sections=sections, 
+			nr_tools=nr_tools, 
+			)
+	else:
+		abort(404)
+
+
+@app.route(ENTER_POINT + '/analyze/configure/<string:upload_id>', methods=['GET', 'POST'])
+def configure_analysis(upload_id):
+	'''Handling the definition of the parameters for notebook configuration.'''
+	# Get form
+	f=request.form
+	print f
+
+	# Get tool query
+	tools = [value for value, key in zip(f.listvalues(), f.keys()) if key == 'tool'][0]
+	session = Session()
+	db_query = session.query(
+			tables['tool'].columns['tool_name'], \
+			tables['tool'].columns['tool_string'], \
+			tables['tool'].columns['tool_description'], \
+			tables['parameter'].columns['parameter_name'], \
+			tables['parameter'].columns['parameter_string'], \
+			tables['parameter'].columns['parameter_description'], \
+			tables['parameter_value'].columns['value'], \
+			tables['parameter_value'].columns['default']) \
+		.outerjoin(tables['parameter']) \
+		.outerjoin(tables['parameter_value']) \
+		.filter(tables['tool'].columns['tool_string'].in_(tools)).all()
+	session.close()
+	p = pd.DataFrame(db_query).set_index(['tool_string'])#pd.read_sql_query('SELECT tool_name, tool_string, tool_description, parameter_name, parameter_description, parameter_string, value, `default` FROM tool t LEFT JOIN parameter p ON t.id=p.tool_fk LEFT JOIN parameter_value pv ON p.id=pv.parameter_fk WHERE t.tool_string IN {}'.format(tool_query_string), engine).set_index(['tool_string'])#.set_index(['tool_name', 'parameter_name', 'parameter_description', 'parameter_string'])
+	
+	# Fix tool parameter data structure
+	t = p[['tool_name', 'tool_description']].drop_duplicates().reset_index().set_index('tool_string', drop=False).to_dict(orient='index')#.groupby('tool_string')[['tool_name', 'tool_description']]#.apply(tuple).to_frame()#drop_duplicates().to_dict(orient='index')
+	p_dict = {tool_string: p.drop(['tool_description', 'tool_name', 'value', 'default'], axis=1).loc[tool_string].drop_duplicates().to_dict(orient='records') if not isinstance(p.loc[tool_string], pd.Series) else [] for tool_string in tools}
+	for tool_string, parameters in p_dict.items():
+		for parameter in parameters:
+			parameter['values'] = p.reset_index().set_index(['tool_string', 'parameter_string'])[['value', 'default']].dropna().loc[(tool_string, parameter['parameter_string'])].to_dict(orient='records')
+	for tool_string in t.keys():
+		t[tool_string]['parameters'] = p_dict[tool_string]
+	t = [t[x] for x in tools]
+
+	# Notebook title
+	if f.get('group_a_label') and f.get('group_b_label'):
+		notebook_title = ' vs '.join([f.get('group_a_label'), f.get('group_b_label')])
+	elif f.get('gse'):
+		notebook_title = f.get('gse')
+	else:
+		notebook_title = 'RNA-seq'
+	notebook_title += ' Analysis Notebook | BioJupies'
+
+	return render_template('review-analysis.html', 
+		t=t, 
+		f=f, 
+		notebook_title=notebook_title)
+
 
 @app.route(ENTER_POINT + '/progress/<string:dataset_id>', methods=['GET'])
 def check_progress(dataset_id):

@@ -1,0 +1,74 @@
+{% extends "base-center.html" %}
+{% import 'macros.html' as macros %}
+
+{% block content_center %}
+<link rel="stylesheet" href="css/biojupies.css">
+<div class="row pt-4">
+    <div class="col-12 very-large text-center light px-5">Which analyses would you like to perform?</div>
+</div>
+
+<hr width="100%" class="my-4">
+<div class="row">
+    <div class="light very-small my-1 col-lg-8 col-xl-9 text-justify">
+        Use the form below to <span class="bold">add or remove data analysis and visualization tools</span> to your notebook.
+        These tools will analyze the selected dataset and embed interactive results in your notebook.
+        Once you have selected the desired tools, click <b>Continue</b> to proceed.
+    </div>
+    <div class="col-lg-4 col-xl-3 my-auto text-center pt-3 pt-lg-0">
+        <button class="btn black border-custom bg-white nodecoration mr-2" onclick="goBack();"><i class="fa fa-angle-left mr-2"></i>Back</button>
+        <button class="btn navigate white border-custom bg-blue nodecoration" 
+            form="add-tools-form" 
+            formaction="{{ url_for('configure_analysis', upload_id=upload_obj.id) }}"
+            type="submit" formmethod="post">
+            Continue<i class="fa fa-angle-right ml-2"></i>
+        </button>
+    </div>
+</div>
+<hr width="100%" class="mt-4 mb-1">
+
+<!-- Add Tools Form -->
+<div class="row">
+    <div id="add-tools-col" class="col-12 px-3 mb-5">
+        <form id="add-tools-form">
+
+            <!-- Add tool selection -->
+            {% for section in sections %}
+                <div class="medium {{ 'mt-1' if loop.index == 1 else 'mt-4' }} pt-2">{{ section.section_name }}</div>
+                <div class="very-small light mt-2">{{ section.section_description }}.</div>
+                {% for tool in section['tools'] %}
+                    {{ macros.tool_checkbox(tool, version='v1.0.5') }}
+                {% endfor %}
+            {% endfor %}
+            <!-- Add selected dataset -->
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="js/biojupies.js"></script>
+<script type="text/javascript">
+
+	// Tool Checkbox Listener
+	$('.tool-checkbox').click(function(evt) {
+		evt.stopPropagation();
+		$(evt.target).parents('.card-options').find('.fa').first().toggleClass('fa-plus fa-minus');
+		$(evt.target).parents('.card-options').find('span').first().html($(evt.target).parents('.card-options').find('span').first().html().replace('Add', 'Add1').replace('Remove', 'Add').replace('Add1', 'Remove'));
+		$(evt.target).parents('.card-options').find('button span').first().toggleClass('white text-muted');
+	})
+
+	// Fix fonts
+	$('input:checked').each(function(index, elem) { $(elem).parent().find('button span').last().addClass('white') });
+
+	// Check tools
+	$('[form="add-tools-form"]').click(function(evt) {
+		// Check tools
+		if ($(':checked').length === 0) {
+			// Prevent default
+			evt.preventDefault();
+			alert('Please select at least one analysis plugin to continue.')
+		}
+	})
+
+</script>
+{% endblock %}

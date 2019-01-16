@@ -23,7 +23,7 @@
         </div>         
         <div class="alert alert-primary" id="notebook-dashboard">
             <span>Data has been uploaded completed, please click this link to generate a Jupyter Notebook: </span>
-            <button class="btn btn-info" id="generate-notebook-btn" data-upload-id="{{upload_obj.id}}">Analyze</button>
+            <a href="analyze/tools/{{upload_obj.id}}" class="btn btn-info"">Analyze</a>
             <div id="notebook-status" style="display: none;"></div>
         </div>
     	{% endif %}
@@ -84,13 +84,9 @@ $(document).ready(function(){
             previewDataAndMeta(upload_id);
             var divPrimary = $('<div>').attr('class', 'alert alert-primary').attr('id', 'notebook-dashboard');
             divPrimary.append($('<span>').text('Data has been uploaded completed, please click this link to generate a Jupyter Notebook: '));
-            var btn = $('<button>').attr('class', 'btn btn-info').text('Analyze')
-                .data('upload-id', msg.upload_id)
-                .attr('id', 'generate-notebook-btn')
-                .click(function(){
-                    var upload_id = $(this).data('upload-id');
-                    generateNotebook(upload_id);
-                });
+            var btn = $('<a>').attr('class', 'btn btn-info').text('Analyze')
+                .attr('href', 'analyze/tools' + upload_id);
+
             divPrimary.append(btn);
             var notebookStatus = $('<div>').attr('id', 'notebook-status').css('display', 'none');
             divPrimary.append(notebookStatus);
@@ -98,10 +94,10 @@ $(document).ready(function(){
         }
     });
 
-    $('#generate-notebook-btn').click(function(){
-        var upload_id = $(this).data('upload-id');
-        generateNotebook(upload_id);
-    });
+    // $('#generate-notebook-btn').click(function(){
+    //     var upload_id = $(this).data('upload-id');
+    //     generateNotebook(upload_id);
+    // });
     
     // try displaying the preview
     previewDataAndMeta(upload_id);

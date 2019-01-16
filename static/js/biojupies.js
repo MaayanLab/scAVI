@@ -1,5 +1,9 @@
 // Utils functions for handling the generation of biojupies notebooks
 
+function goBack() {
+    window.history.back();
+}
+
 // Preview Table
 function addPreviewTable(response, metadata, previewSelector) {
 

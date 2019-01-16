@@ -1,0 +1,74 @@
+{% extends "base-center.html" %}
+{% import 'macros.html' as macros %}
+
+{% block content_center %}
+<link rel="stylesheet" href="css/biojupies.css">
+<div class="px-6">
+
+    <!-- Title -->
+    <div class="row pt-4">
+        <div class="col-12 very-large text-center light px-5">Review and Submit</div>
+    </div>
+
+    <!-- Introduction -->
+    <hr width="100%" class="my-4">
+    <div class="row">
+        <div class="light very-small my-1 col-lg-8 text-justify">
+            Your Jupyter notebook is ready to be generated. Here you can <b>customize your results</b> by modifying optional tool parameters, change the title of the notebook, and <b>add biological tags</b>. Once you have made the desired changes, click on <b>Generate Notebook</b> to proceed.
+        </div>
+        <div class="col-lg-4 my-auto text-center pt-3 pt-lg-0">
+            <button class="btn black border-custom bg-white nodecoration mr-2" onclick="goBack();"><i class="fa fa-angle-left mr-2"></i>Back</button>
+            <button class="btn navigate white border-custom bg-blue nodecoration" form="review-analysis-form" type="submit" 
+            formmethod="post">Generate Notebook</button>
+        </div>
+    </div>
+
+    <!-- Review Analysis Form -->
+    <div class="row pt-2">
+        <hr width="100%" class="mt-3 mb-2">
+        <div class="col-12 mb-5">
+            <form id="review-analysis-form" method="post">
+
+                <!-- Notebook Settings -->
+                {{ macros.notebook_settings(notebook_title) }}
+
+                <!-- Tool Settings -->
+                {% for tool in t %}
+                    {% if tool.parameters|length %}				
+                        {{ macros.parameter_card(tool) }}
+                    {% endif %}				
+                {% endfor %}
+
+                <!-- Form -->
+                {% for key, values in f.lists() %}
+                    {% for value in values %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endfor %}
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+</div>
+    
+
+{% endblock %}
+{% block scripts %}
+<script src="js/biojupies.js"></script>
+<script type="text/javascript">
+
+
+// Toggle select elements
+$('input[type="radio"]').change(function(evt){
+    $(evt.target).parents('.row').first().find('.ontology-select').toggleClass('hidden');
+
+    // Clear selection if no
+    if ($(evt.target).val() === 'no') {
+        $(evt.target).parents('.row').first().find('select.ontology-select').each(function(index, elem){
+            elem.selectize.clear()
+        });
+    }
+})
+</script>
+
+
+{% endblock %}
