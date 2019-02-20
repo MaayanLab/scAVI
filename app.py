@@ -118,13 +118,17 @@ from background_pipeline import *
 @app.route(ENTER_POINT + '/upload', methods=['GET', 'POST'])
 def upload_files():
 	if request.method == 'POST':
-		upload_type = request.form['dataType']
-		files = {}
-		for name, uploaded_file in request.files.items():
-			if allowed_file(uploaded_file.filename): 
-				filename = secure_filename(uploaded_file.filename)
-				uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-				files[name] = filename
+		if not request.form['isExample']:
+			upload_type = request.form['dataType']
+			files = {}
+			for name, uploaded_file in request.files.items():
+				if allowed_file(uploaded_file.filename): 
+					filename = secure_filename(uploaded_file.filename)
+					uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+					files[name] = filename
+		else:
+			upload_type = '10x_h5'
+			files = {'h5_file': 'example_read_count_matrix.h5'}
 
 		if len(files) > 0:
 			upload_obj = Upload(files=files, type_=upload_type)

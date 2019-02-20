@@ -1,6 +1,6 @@
 {% extends "base-center.html" %}
 {% block content_center %}
-    <form method="post" enctype="multipart/form-data">
+    <form id="upload" method="post" enctype="multipart/form-data">
 
 
         <div class="form-group">
@@ -61,7 +61,10 @@
             <p class="form-text">A tab delimited file of the corresponding barcodes in the .mtx expression matrix file. <a href="data/example_barcodes.tsv">Example</a></p>
         </div>
 
+        <input type="hidden" name="isExample" value="false">
+
         <button type="submit" class="btn btn-primary">Submit</button>
+        <button id="example-btn" class="btn btn-info">Load example</button>
 
     </form>
 {% endblock %}
@@ -89,6 +92,11 @@
             var selectedRadioId = $(this).attr('id')
             toggleFormGroups(selectedRadioId)
         });
+
+        $('#example-btn').click(function() {
+            $('input[name="isExample"]').val("true");
+            $('#upload').submit();
+        })
     })
 
 </script>
