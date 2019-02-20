@@ -273,7 +273,60 @@ def configure_analysis(upload_id):
 	return render_template('review-analysis.html', 
 		t=t, 
 		f=f, 
+		upload_id=upload_id,
+		ENTER_POINT=ENTER_POINT,
 		notebook_title=notebook_title)
+
+
+@app.route(ENTER_POINT  + '/analyze/generate/<string:upload_id>', methods=['GET', 'POST'])
+def generate_notebook(upload_id):
+	# print(upload_id)
+	# print(request.form)
+	NOTEBOOK_GENERATOR_URL = 'http://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate'
+	# Check if form has been provided
+	if request.form:
+
+		# Get form
+		d = {key:value if len(value) > 1 else value[0] for key, value in request.form.lists()}
+
+		# Get parameters and groups
+		p = {x:{} for x in d['tool']} if isinstance(d['tool'], list) else {d['tool']: {}}
+		g = {x:[] for x in ['a', 'b', 'none']}
+		for key, value in d.items():
+			if key not in ['sample-table_length', 'gtex-samples-1', 'gtex-samples-2', 'gtex-group-1', 'gtex-group-2', 'static_plots']:
+				if '-' in key:
+					if key.split('-')[0] in d['tool']:
+						tool_string, parameter_string = key.split('-')
+						p[tool_string][parameter_string] = value
+					else:
+						if value not in ['none', 'no', 'yes']:
+							g[value[0]].append(key.rpartition('-')[0])
+
+		### NEW
+		# Plot type static
+		if d.get('static-plots') == 'yes':
+			static_tools = pd.read_sql_query('SELECT tool_string FROM tool t LEFT JOIN parameter p ON t.id=p.tool_fk WHERE parameter_string = "plot_type"', engine)['tool_string'].values
+			for tool in static_tools:
+				if tool in p.keys():
+					p[tool]['plot_type'] = 'static'
+		### NEW
+
+		# Generate notebook configuration
+		c = {
+			'notebook': {'title': d.get('notebook_title'), 'live': 'False', 'version': 'v1.0.5'},
+			'tools': [{'tool_string': x, 'parameters': p.get(x, {})} for x in p.keys()],
+			'data': {'source': 'upload', 'parameters': {'uid': upload_id}},
+			'signature': {},
+			'terms': [],
+		}
+		resp = requests.post(NOTEBOOK_GENERATOR_URL, data=json.dumps(c), headers={'Content-type': 'application/json'})
+		
+		resp_data = resp.json()
+
+		print(resp_data)
+		# Return result
+		return redirect(resp_data['nbviewer_url'])
+
 
 
 @app.route(ENTER_POINT + '/progress/<string:dataset_id>', methods=['GET'])
