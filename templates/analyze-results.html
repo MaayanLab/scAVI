@@ -1,0 +1,310 @@
+{% extends 'base-center.html' %}
+{% import 'macros.html' as macros %}
+
+<!-- Content -->
+{% block content_center %}
+
+<div class="px-6">
+	
+	<div class="row pt-4">
+
+		<!-- Title -->
+		<div class="col-md-2 large pl-4">Results</div>
+
+		<!-- Buttons -->
+		<div class="col-md-10 mt-auto pt-3 pt-md-0">
+			<div class="float-left float-md-right">
+				<a id="reanalyze" class="btn black border-custom bg-white nodecoration mr-2 d-inline-block hidden" href="{{url_for('add_tools', upload_id=upload_id)}}">Re-analyze Dataset</a>
+				<a id="new-notebook" class="btn black border-custom bg-white nodecoration mr-2 d-inline-block hidden" href="{{url_for('upload_files')}}">New Notebook</a>
+                <a id="open-notebook" class="btn white border-custom bg-blue nodecoration mr-2 d-inline-block hidden" 
+                    
+                    target="_blank">Open Notebook</a>
+			</div>
+		</div>
+	</div>
+
+	<!-- Results -->
+	<div class="row">
+		<hr width="100%" class="mt-3 mb-0">
+		<div class="col-12 text-center pb-5" style="overflow: hidden;">
+
+			<!-- Status and Loader -->
+			<div class="notebook-status">
+				<div id="status" class="mt-5 medium">Generating your Jupyter Notebook...</div>
+				<div id="description" class="mt-4 very-small light">A link will be displayed below when the notebook is ready.</div>
+				<div class="loader">Loading...</div>
+				<div id="wait-time">
+					Your notebook should be ready in less than <span id="time">{{ expected_time }}</span> minute<span id="time-s">{{'s' if expected_time > 1 else ''}}</span>.
+				</div>
+			</div>
+
+			<!-- Error -->
+			<div class="mt-5 very-small text-center px-6 mx-xl-5 notebook-status regular d-none">
+				
+				<!-- Error Text -->
+				<div id="error_title" class="medium mb-4"></div>
+				<div id="error_subtitle" class="small light mb-4 pb-2"></div>
+				<hr width="50%" class="my-4">
+
+				<!-- Options -->
+				<div class="small light pt-2 mb-3">To continue, please select one of the options below:</div>
+				<div class="text-center">
+					<form id="retry" class="mb-3 d-none">
+						<button class="btn black border-custom bg-white nodecoration m-auto" type="button" onclick="location.reload();">Retry with current settings</button>
+					</form>
+					<form id="retry-without" class="mb-3 d-none">
+						<input id="new_notebook_configuration" type="hidden" name="notebook_configuration">
+						<button class="btn black border-custom bg-white nodecoration m-auto" type="button" onclick="generate_with_new_configuration();"><span id="retry_without_label"></span></button> 
+					</form>
+					<form id="create-new" action="{{ url_for('add_tools', upload_id=upload_id) }}" class="mb-4 d-none">
+						<button class="btn black border-custom bg-white nodecoration m-auto" type="submit">Create a new notebook</button>
+					</form>
+				</div>
+								
+				<!-- More Info -->
+				<hr width="50%" class="my-4">
+				<div id="help" class="mt-4 pt-3">
+					<div class="mb-4 px-lg-5 mx-lg-5">
+						If you wish to receive more information on the issue, including suggestions on resolving it, please insert your name
+						and e-mail below.
+					</div>
+					<form id="help-form" class='mx-lg-5 px-lg-5'>
+						<div class="form-row">
+							<input type="hidden" name="help_type" value="notebook_generation_error">
+							<input type="hidden" name="error_fk" required>
+							<div class="col-lg-5">
+								<input type='text' name="name" class='form-control' placeholder="Insert name..." required>
+							</div>
+							<div class="col-lg-5 py-3 py-lg-0">
+								<input type='email' name="email" class='form-control' placeholder="Insert email..." required>
+							</div>
+							<div class="col-lg-1">
+								<button type='submit' class='btn btn-primary'>Submit</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<!-- Notebook Link -->
+			<div id="results" class="hidden">
+
+				<!-- Results Row -->
+				<div class="row mt-3 mt-lg-5">
+
+					<!-- Notebook Preview Image Column -->
+					<div class="d-none d-lg-block col-4">
+                        <a id="notebook-link" 
+                        target="_blank" data-notebook_configuration="{{ notebook_configuration }}">
+							<div class="border-custom rounded px-3 py-3">
+								<img src="{{ url_for('static', filename='img/notebook.png') }}" class="w-100" id="notebook-preview-image">
+							</div>
+						</a>
+					</div>
+
+					<!-- Info Column -->
+					<div class="col-12 col-lg-8 text-left pl-4">
+
+						<!-- Notebook Title -->
+                        <div class="regular medium mt-2"><a id="notebook-url" 
+                            target="_blank">{{ notebook_configuration_dict['notebook']['title'] }}</a></div>
+
+						<!-- Dataset -->
+						<div class="text-muted regular very-small mt-3">
+							<span>Dataset:</span>
+							<span class="light font-italic">
+								{% if notebook_configuration_dict['data']['source'] == 'archs4' %}
+									<a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ notebook_configuration_dict['data']['parameters']['gse'] }}" target="_blank">{{ notebook_configuration_dict['data']['parameters']['gse'] }}</a>
+								{% elif notebook_configuration_dict['data']['source'] == 'gtex' %}
+									GTEx
+								{% elif notebook_configuration_dict['data']['source'] == 'upload' %}
+									User-submitted
+								{% endif %}
+							</span>
+						</div>
+
+						<!-- Signature -->
+						{% if notebook_configuration_dict['signature']|length %}
+							<div class="text-muted regular very-small mt-2 light">
+								<span>Signature:</span>
+								<span class="light font-italic">{{ notebook_configuration_dict['signature']['A']['name'] }}</span>
+								<span class="light">vs</span>
+								<span class="light font-italic">{{ notebook_configuration_dict['signature']['B']['name'] }}</span>
+							</div>
+						{% endif %}
+
+						<!-- Tools -->
+						<div id="analysis-tools" class="text-muted regular very-small mt-2">
+							<span class="mr-1">Analysis Tools:</span>
+							{% for tool in selected_tools %}
+								<span class="light bg-lightgrey px-2 py-0 mt-1 rounded border-grey d-inline-block tiny">{{tool|safe}}</span>
+							{% endfor %}
+						</div>
+
+						<!-- Share -->
+						<div class="row mt-4">
+
+							<!-- Twitter -->
+							<div class="d-inline-block pl-3 pr-4">
+								<span id="tweet" class="d-inline-block"></span>
+							</div>
+
+							<!-- Email -->
+							<div class="d-inline-block">
+								<div id="share-email" class="rounded micro bold">
+									<a href="" title="Share by Email" class="white nodecoration">
+										<i class="fa fa-envelope mr-2"></i>E-mail
+									</a>
+								</div>
+							</div>
+							
+							<!-- Copy -->
+							<div class="d-inline-block">
+								<div id="copy-link" class="rounded micro bold d-inline-block white" data-toggle="tooltip" title="Copied!" data-placement="bottom">
+									<i class="fa fa-copy mr-2"></i>Copy Link
+								</div>
+							</div>
+							
+						</div>
+
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+    console.log($('#notebook-link').attr('data-notebook_configuration'));
+	
+	// Remove tooltip from copy link
+	$('#copy-link').tooltip('disable');
+	// Generate notebook
+	generate_notebook = function(notebook_configuration) {
+		$.ajax({	
+			url: "http://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate",
+			method: "POST",
+			data: notebook_configuration,
+			// data: $('#notebook-configuration').val(),
+			contentType: "application/json; charset=utf-8",
+			dataType: 'json',
+			success: function(res) {
+                console.log(res)
+				// Add notebook link
+				$('#status').html('Your Jupyter Notebook is available below:');
+				$('#status').hide();
+				$('#description').hide();
+				$('#results').removeClass('hidden');
+				$('#new-notebook').removeClass('hidden');
+				$('#open-notebook').removeClass('hidden');
+				var notebook_uid = res['notebook_uid'];
+				$('#notebook-link').attr('href', $('#notebook-link').attr('href')+notebook_uid);
+				$('#open-notebook').attr('href', $('#open-notebook').attr('href')+notebook_uid);
+				$('#notebook-url').attr('href', $('#notebook-url').attr('href')+notebook_uid);
+				$('.loader').hide();
+				$('#wait-time').hide();
+				// Add link for uploaded data
+				var dataset_uid = JSON.parse($('#notebook-link').attr('data-notebook_configuration'))['data']['parameters']['uid'];
+				if (dataset_uid) {
+					$('#reanalyze').attr('href', $('#reanalyze').attr('href')+dataset_uid);
+					$('#reanalyze').removeClass('hidden');
+				}
+				// Add Email Sharing
+				// Add Twitter Button
+
+				// Activate Twitter Button
+				window.twttr = (function(d, s, id) {
+				var js, fjs = d.getElementsByTagName(s)[0],
+					t = window.twttr || {};
+				if (d.getElementById(id)) return t;
+				js = d.createElement(s);
+				js.id = id;
+				js.src = "https://platform.twitter.com/widgets.js";
+				fjs.parentNode.insertBefore(js, fjs);
+				t._e = [];
+				t.ready = function(f) {
+					t._e.push(f);
+				};
+				return t;
+				}(document, "script", "twitter-wjs"));
+				// Add Copy Listener
+				$('#copy-link').click(function(evt) {
+					var $temp = $("<input>");
+					$("body").append($temp);
+
+					document.execCommand("copy");
+					$temp.remove();
+					$('#copy-link').tooltip('enable');
+					$('#copy-link').tooltip('show');
+					$('#copy-link').tooltip('disable');
+				})
+			},
+			error: function(e) {
+				// Get response
+				var response = e.responseJSON;
+				// Display error messages
+				$('.notebook-status').toggleClass('d-none');
+				$.each(['error_title', 'error_subtitle', 'retry_without_label'], function(index, elem) {
+					$('#'+elem).html(response[elem]);
+				})
+				// Recommended
+				$('#'+response['recommend']).append($('<div>', {'class': 'my-auto pt-2'}).html('(recommended)'));
+				$('#'+response['recommend']+' button').toggleClass('black bg-blue white bg-white');
+				// Add new configuration
+				if ('new_configuration' in response) {
+					$('[name="notebook_configuration"]').val(JSON.stringify(response['new_configuration']));
+				}
+				// Display buttons
+				$.each(response['options'], function(index, elem) {
+					$('#'+elem).removeClass('d-none');
+				})
+				// Help submission
+				$('#help-form').on('submit', function (evt) {
+					// Prevent default
+					evt.preventDefault();
+					$('#help-form [name="error_fk"]').val(response['error_id']);
+					// Ajax call
+					$.ajax({
+						url: "https://amp.pharm.mssm.edu/notebook-generator-server{{ '-dev' if dev else '' }}/api/help",
+						method: "POST",
+						data: $('#help-form').serialize(),
+						dataType: 'json',
+						success: function (response) {
+							$('#help').html('Thank you for the submission.')
+						},
+						error: function(err) {
+							$('#help').html('Sorry, there has been an error submitting the help request. Please <a class="nodecoration" href="mailto:avi.maayan@mssm.edu,denis.torre@mssm.edu?Subject=BioJupies%20Error&amp;Body=">contact us</a> for more information.');
+						}
+					})
+				})
+			}
+		})
+		
+	}
+	// Generate notebook with new configuration
+	generate_with_new_configuration = function() {
+		$('.notebook-status').toggleClass('d-none');
+		generate_notebook($('#new_notebook_configuration').val());
+		$('#time').html("{{ expected_time }}");
+		$('#analysis-tools').addClass('d-none');
+	}
+	// Generate
+	generate_notebook($('#notebook-link').attr('data-notebook_configuration'));
+	// Check interval
+	var interval = setInterval(function () {
+		var new_time = parseInt($('#time').html())-1;
+		if (new_time > 0) {
+			$('#time').html(new_time);
+		}
+		if (new_time === 1) {
+			$('#time-s').html('');
+		}
+	}, 60000);
+</script>
+
+{% endblock %}

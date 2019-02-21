@@ -319,13 +319,20 @@ def generate_notebook(upload_id):
 			'signature': {},
 			'terms': [],
 		}
-		resp = requests.post(NOTEBOOK_GENERATOR_URL, data=json.dumps(c), headers={'Content-type': 'application/json'})
+		# resp = requests.post(NOTEBOOK_GENERATOR_URL, data=json.dumps(c), headers={'Content-type': 'application/json'})
 		
-		resp_data = resp.json()
+		# resp_data = resp.json()
 
-		print(resp_data)
+		# print(resp_data)
 		# Return result
-		return redirect(resp_data['nbviewer_url'])
+		# return redirect(resp_data['nbviewer_url'])
+		return render_template('analyze-results.html', 
+			notebook_configuration_dict=c,
+			notebook_configuration=json.dumps(c),
+			upload_id=upload_id,
+			ENTER_POINT=ENTER_POINT,
+			expected_time=2,
+			)
 
 
 
