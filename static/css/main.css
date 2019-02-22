@@ -197,13 +197,13 @@ text.legendTitle{
 #footer a,
 #footer li,
 #footer p {
-  color: black;
+  color: #777;
   font-family: 'Rubik', sans-serif;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 100;
 }
-#footer h3 {
-  color: black;
+#footer * h5 {
+  color: #777;
 }
 #footer a {
   color: #777;
