@@ -1,0 +1,46 @@
+{% extends "base-center.html" %}
+{% block content_center %}
+
+
+<div class="row">
+    <div class="jumbotron-fluid">
+        <h1 class="display-4">scAVI</h1>
+        <p class="lead">
+                scAVI is a web-application enable users to analyze and visualize public and private scRNA-seq datasets with the state-of-the-art algorithms and visualization techniques.
+        </p>
+        <hr class="my-4">
+        <p id="stats">
+            {{ stats['n_studies'] }} public single cell RNA-seq studies from GEO covering {{ stats['n_cells'] }} individual single cells/samples have been analyzed and visualized. 
+        </p>
+        <a href="{{url_for('all_datasets')}}" class="btn btn-primary">Browse datasets</a>
+    </div>
+</div>
+<hr>
+<h1>scRNA-seq Tools</h1>
+<div class="row">
+    <hr>
+    <div class="col-6">
+        <h3>Implemented tools</h3>
+        <ol>
+        {% for section in sections %}
+            <li>{{ section.section_name }}</li>
+            <ul>
+            {% for tool in section['tools'] %}
+                {% if tool.reference_link != '' %}
+                    <li><a href="{{tool.reference_link}}" target="_blank">{{ tool.tool_name }}</a></li>
+                {% else %}
+                    <li>{{ tool.tool_name }}</li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+        {% endfor %}
+        </ol>
+    </div>
+    <div class="col-6">
+        <h3>Coming soon...</h3>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

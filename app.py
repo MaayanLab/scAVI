@@ -52,7 +52,45 @@ tables = metadata.tables
 @app.route(ENTER_POINT + '/')
 def index_page():
 	# The default main page
-	return redirect(ENTER_POINT+'/all', code=302)
+	# return redirect(ENTER_POINT+'/all', code=302)
+	n_cells = 0
+	cur = mongo.db['dataset'].find(
+		{'$and': [
+			{'id': {'$regex': r'^GSE'}},
+			{'sample_ids.30': {'$exists': True}}
+		]}, 
+		{'_id': False, 'id': True, 'notebook_uid':True})
+	d_dataset_notebook = {doc['id']: doc.get('notebook_uid') for doc in cur}
+	dataset_ids = d_dataset_notebook.keys()
+
+	projection = {'_id':False, 
+		'sample_id':True
+		}
+
+	cur = mongo.db['geo'].find({'geo_accession': {'$in': dataset_ids}}, 
+		projection,
+		cursor_type=CursorType.EXHAUST
+		)
+
+	n_studies = cur.count()
+
+	for doc in cur:
+		n_cells += len(doc['sample_id'])
+	stats = {'n_studies': n_studies, 'n_cells': n_cells}
+
+	# Perform tool and section query from database
+	tools, sections = [pd.read_sql_table(x, engine) for x in ['tool', 'section']]
+	tools = tools[tools['display'] == True]
+	tools, sections = [x.to_dict(orient='records') for x in [tools, sections]]
+	# Combine tools and sections
+	for section in sections:
+		section.update({'tools': [x for x in tools if x['section_fk'] == section['id']]})
+
+	return render_template('home.html', 
+		ENTER_POINT=ENTER_POINT,
+		stats=stats,
+		sections=sections
+	)
 
 
 @app.route(ENTER_POINT + '/all')
