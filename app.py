@@ -334,6 +334,13 @@ def generate_notebook(upload_id):
 			expected_time=2,
 			)
 
+@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>', methods=['GET'])
+def view_notebook(notebook_uid):
+	nbviewer_url = "https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/%s/RNA-seq Analysis Notebook | BioJupies.ipynb" % notebook_uid
+	return render_template('view-notebook.html',
+		nbviewer_url=nbviewer_url,
+		ENTER_POINT=ENTER_POINT
+	)
 
 
 @app.route(ENTER_POINT + '/progress/<string:dataset_id>', methods=['GET'])
