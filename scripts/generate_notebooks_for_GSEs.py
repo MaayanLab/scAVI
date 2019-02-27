@@ -31,11 +31,9 @@ notebook_configuration_base = {
       }
     },
     {
-        "tool_string": "pca",
+        "tool_string": "magic_impute",
         "parameters": {
-          "nr_genes": "500",
-          "normalization": "magic",
-          "z_score": "True",
+          "normalization": "logCPM",
           "plot_type": "interactive"
         }
      },     
@@ -52,6 +50,12 @@ notebook_configuration_base = {
       "parameters": {
         "color_by": "Pseudotime",
         "plot_type": "interactive"
+      }
+    },
+    {
+      "tool_string": "singler",
+      "parameters": {
+        "species": "Human",
       }
     },
     {
@@ -77,8 +81,8 @@ cur = db['dataset'].find(
 	{'$and': [
 		{'id': {'$regex': r'^GSE'}},
 		{'sample_ids.30': {'$exists': True}},
-        {'notebook_uid': {'$exists': False}}
-	]}, projection={'id':True, 'meta': True})
+        {'notebook_uid': {'$exists': True}}
+	]}, projection={'id':True, 'meta': True, 'organism': True})
     
 gse_df = [] 
 for doc in cur:
@@ -86,7 +90,7 @@ for doc in cur:
         gpl = doc['meta'].get('platform_id')
     else:
         gpl = doc['meta'].get('Sample_platform_id')
-    rec = {'gse': doc['id'], 'gpl': gpl}
+    rec = {'gse': doc['id'], 'gpl': gpl, 'organism': doc['organism']}
     gse_df.append(rec)
 
 print('N GSEs: ', len(gse_df))
@@ -102,6 +106,9 @@ for _, row in gse_df.dropna().iterrows():
         notebook_configuration['notebook']['title'] = '%s Analysis Notebook' % gse_id
         notebook_configuration['data']['parameters']['gse'] = gse_id
         notebook_configuration['data']['parameters']['platform'] = gpl_id
+
+        if row['organism'] == 'mouse':
+          notebook_configuration['tools'][4]['parameters']['species'] = 'Mouse'
 
         try:
             response =  requests.post(endpoint, json=notebook_configuration)
