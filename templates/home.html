@@ -8,18 +8,21 @@
         <p class="lead">
                 scAVI is a web-application enable users to analyze and visualize public and private scRNA-seq datasets with the state-of-the-art algorithms and visualization techniques.
         </p>
-        <hr class="my-4">
+        <hr class="my-2">
         <p id="stats">
             {{ stats['n_studies'] }} public single cell RNA-seq studies from GEO covering {{ stats['n_cells'] }} individual single cells/samples have been analyzed and visualized. 
         </p>
         <a href="{{url_for('all_datasets')}}" class="btn btn-primary">Browse datasets</a>
     </div>
 </div>
-<hr>
-<h1>scRNA-seq Tools</h1>
+<div class="my-4"></div>
+
+
 <div class="row">
     <hr>
     <div class="col-6">
+        <h1>scRNA-seq Tools</h1>
+        <hr>
         <h3>Implemented tools</h3>
         <ol>
         {% for section in sections %}
@@ -35,9 +38,12 @@
             </ul>
         {% endfor %}
         </ol>
+        <h3>Coming soon...</h3>
     </div>
     <div class="col-6">
-        <h3>Coming soon...</h3>
+        <h1>Video tutorials</h1>
+        <hr>
+        <p>To be added...</p>
     </div>
 </div>
 {% endblock %}
