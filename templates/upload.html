@@ -1,7 +1,16 @@
 {% extends "base-center.html" %}
 {% block content_center %}
-    <form id="upload" method="post" enctype="multipart/form-data">
-
+    <div class="row">
+        <h2>Upload your scRNA-seq dataset for analysis and visualization</h2>
+        <hr>
+        <p>
+            On this page, you can upload your own processed scRNA-seq expression data in various formats.  
+        </p>
+        <p>
+            Once the your dataset is uploaded, we will start to process your data using our computational pipeline. You will also be able to create a Jupyter Notebook analyzing your dataset by configuring the analysis tools through the website's user interface.
+        </p>
+    </div>
+    <form id="upload" method="post" enctype="multipart/form-data">        
 
         <div class="form-group">
 

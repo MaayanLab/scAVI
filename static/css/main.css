@@ -268,3 +268,6 @@ https://github.com/minhur/bootstrap-toggle/issues/186
 .preview {
   overflow-x: auto;
 }
+.flex-grow {
+  flex: 1;
+}
