@@ -4,7 +4,8 @@ FROM python:2.7-slim
 RUN apt-get update && apt-get install -y build-essential gfortran libatlas-base-dev \
 	libxml2-dev \
 	aptitude \
-	libcurl4-openssl-dev
+	libcurl4-openssl-dev \
+	default-libmysqlclient-dev
 
 # Install R 3.5
 RUN echo 'deb http://cran.rstudio.com/bin/linux/debian stretch-cran35/' >> /etc/apt/sources.list 
@@ -22,7 +23,9 @@ RUN pip install \
 	requests==2.18.4\
 	scipy==1.0.0\
 	scikit-learn==0.19.1\
-	google-cloud-storage==1.13.2
+	google-cloud-storage==1.13.2\
+	flask_sqlalchemy==2.0\
+	MySQL-python
 
 # Dependencies for monocle
 RUN R -e 'install.packages(c("reticulate", "DDRTree", "XML", "RCurl"), repos = "https://cran.rstudio.com/")'
