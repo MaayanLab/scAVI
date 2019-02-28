@@ -2,7 +2,7 @@
   <nav class="navbar navbar-expand-md navbar-dark bg-dark">
     <a class="navbar-brand" title="Visualization of Single-Cell Transcriptomics" href="#">
       <span>
-        <img src="images/favicon.ico" width="50px" height="50px">
+        <img src="images/favicon.png" width="50px" height="50px">
       </span>
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
@@ -17,9 +17,12 @@
           {% endif %}
       </ul>
       <form class="form-inline my-2 my-lg-0">
-        <a class="nav-link btn btn-info" href="upload">
-          <i class="fas fa-cloud-upload-alt"></i>  
-          upload your own dataset <span class="sr-only">(current)</span></a>
+        <a class="nav-link btn btn-info mx-1" href="upload">
+          Upload Dataset <span class="sr-only">(current)</span>
+        </a>
+        <a href="{{url_for('all_datasets')}}" class="nav-link btn btn-info mx-1">
+          Browse GEO Studies
+        </a>
       </form>
     </div>
   </nav>

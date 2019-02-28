@@ -271,3 +271,7 @@ https://github.com/minhur/bootstrap-toggle/issues/186
 .flex-grow {
   flex: 1;
 }
+.tool-section-name {
+  font-weight: bold;
+  text-decoration: underline;
+}
