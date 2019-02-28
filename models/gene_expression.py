@@ -108,7 +108,7 @@ def parse_10x_mtx(mtx_fn, genes_fn, barcodes_fn):
 	return expr_df, meta_df
 
 
-def compute_CPMs(expr_df, CPM_cutoff=0.3, at_least_in_persent_samples=10):
+def compute_CPMs(expr_df, CPM_cutoff=0.3, at_least_in_persent_samples=1):
 	'''Convert expression counts to CPM.
 	'''
 	n_samples = expr_df.shape[1]

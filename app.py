@@ -156,7 +156,7 @@ from background_pipeline import *
 @app.route(ENTER_POINT + '/upload', methods=['GET', 'POST'])
 def upload_files():
 	if request.method == 'POST':
-		if not request.form['isExample']:
+		if not bool(int(request.form['isExample'])):
 			upload_type = request.form['dataType']
 			files = {}
 			for name, uploaded_file in request.files.items():
