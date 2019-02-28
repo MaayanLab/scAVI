@@ -52,7 +52,7 @@
 	// Tool Checkbox Listener
 	$('.tool-checkbox').click(function(evt) {
 		evt.stopPropagation();
-		$(evt.target).parents('.card-options').find('.fa').first().toggleClass('fa-plus fa-minus');
+		$(evt.target).parents('.card-options').find('.svg-inline--fa').first().toggleClass('fa-plus fa-minus');
 		$(evt.target).parents('.card-options').find('span').first().html($(evt.target).parents('.card-options').find('span').first().html().replace('Add', 'Add1').replace('Remove', 'Add').replace('Add1', 'Remove'));
 		$(evt.target).parents('.card-options').find('button span').first().toggleClass('white text-muted');
 	})

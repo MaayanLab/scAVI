@@ -254,7 +254,10 @@ https://github.com/minhur/bootstrap-toggle/issues/186
 #log {
   max-height: 300px;
   overflow: scroll;
-  background-color: #eee;
+  background-color:rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 14px;
+  font-family: 'Anonymous Pro', monospace;
 }
 
 .hidden {

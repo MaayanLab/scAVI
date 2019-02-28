@@ -9,7 +9,6 @@ html {
   }
   
   body {
-    font-family: "Nunito", Helvetica, sans-serif !important;
     font-weight: 300 !important;
     height: 100%;
     margin: 0;
@@ -75,16 +74,16 @@ html {
   .border-hover-blue:hover { border: 1px solid #3cb2f7 !important; border-bottom: 2px solid #3bb1f7 !important; }
   .border-black-custom { border: 1px solid black !important; border-bottom: 2px solid #8a8a8a !important; }
   .border-grey-light { border: 1px solid rgba(0,0,0,0.1); }
-  .border-blue { border: 1px solid #007bff; }
+  .border-blue { border: 1px solid #17a2b8; }
   .border-none { border: none; }
   /*.border-black-custom:focus { border-bottom: 1px solid black !important; }*/
   
   /* Decoration */
   .cursor-pointer { cursor: pointer; }
-  .nodecoration { text-decoration: none !important; outline: none !important; box-shadow: none !important; }
+  .nodecoration { text-decoration: none !important; outline: none !important; box-shadow: none !important; white-space: nowrap !important; }
   .bg-transparent { background-color: transparent; }
   .highlight { font-weight: 500; font-style: normal; color: #525dff; }
-  .bg-blue { background-color: #007bff !important; }
+  .bg-blue { background-color: #17a2b8 !important; }
   .bg-lightblue { background-color: #dfefff !important; }
   .bg-grey { background-color: rgba(238, 238, 238, 1) !important; }
   .bg-lightgrey { background-color: #f8f8f9; }
@@ -153,7 +152,7 @@ html {
   /********************************/
   
   input:checked + .object-label {
-      background-color: #007bff;
+      background-color: #17a2b8;
       color: white;
       /*border-bottom-width: 1px;*/
   }
@@ -167,7 +166,7 @@ html {
   }
   
   input:checked + .radio-label {
-    background-color: #007bff;
+    background-color: #17a2b8;
       color: white;
   }
   
@@ -472,14 +471,14 @@ html {
     z-index: 1;
   }
   
-  .blue-1 { background-color: #525dff; } .blue-1 .arrow-bottom { border-top-color: #525dff; }
+  .blue-1 { background-color: #17a2b8; } .blue-1 .arrow-bottom { border-top-color: #17a2b8; }
   
   /********************************/
   /***** Help ******/
   /********************************/
   
   #categories a { color: black; background-color: transparent !important; border-left: 2px solid transparent;}
-  #categories a.active { color: #207aff; border-left: 2px solid #207aff;}
+  #categories a.active { color: #17a2b8; border-left: 2px solid #17a2b8;}
   
   #categories nav nav { display: none; }
   #categories nav a.active + nav { display: block; }
@@ -488,7 +487,7 @@ html {
   #help img { margin: 10px auto 15px auto; max-width: 100%;; }
   
   .selectize-control.multi .selectize-input [data-value] {
-    background-color: #207aff !important;
+    background-color: #17a2b8 !important;
     background-image: none !important;
     border: 1px solid #c9c9c9 !important;
     box-shadow: none !important;

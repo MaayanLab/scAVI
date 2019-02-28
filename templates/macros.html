@@ -136,7 +136,7 @@
 
 				</div>
 			</div>
-			<div id="{{id}}-info" class="collapse border-grey mx-2 border-top-0 rounded-bottom tiny {{ 'show' if i == 0 else '' }}">
+			<div id="{{id}}-info" class="collapse border-grey border-top-0 rounded-bottom tiny {{ 'show' if i == 0 else '' }}">
 				<div class="py-3">
 
 					<!-- Summary -->
@@ -209,7 +209,7 @@
 
 				</div>
 			</div>
-			<div id="{{tool['tool_string']}}-info" class="collapse border-grey mx-2 border-top-0 rounded-bottom tiny {{ 'show' if tool['tool_string'] == '' else '' }}">
+			<div id="{{tool['tool_string']}}-info" class="collapse border-grey border-top-0 rounded-bottom tiny {{ 'show' if tool['tool_string'] == '' else '' }}">
 				<div class="row py-3 px-3">
 
 					<!-- Screenshot -->
@@ -239,7 +239,7 @@
 						<!-- Reference -->
 						{% if tool['reference'] %}
 							<div class="tiny bold mt-3">Reference</div>
-							<div><a class="nodecoration" href="{{ tool['reference_link'] }}">{{ tool['reference']|safe }}</a></div>
+							<div><a class="" href="{{ tool['reference_link'] }}">{{ tool['reference']|safe }}</a></div>
 						{% endif %}
 
 						<!-- Icons -->
@@ -310,12 +310,12 @@
 
 				</div>
 			</div>
-			<div id="{{tool.tool_string}}-info" class="collapse border-grey mx-2 border-top-0 rounded-bottom tiny">
+			<div id="{{tool.tool_string}}-info" class="collapse border-grey border-top-0 rounded-bottom tiny">
 				<div class="pt-3">
 					{% for parameter in tool.parameters %}
 						<div class="row px-3 pb-3">
 							<div class="col-2 px-2 bold text-right tiny my-auto">
-								<div>{{parameter.parameter_name}}<sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="{{parameter.parameter_description}}."></i></sup>:</div>
+								<div>{{parameter.parameter_name}}<sup data-toggle="tooltip" title="{{parameter.parameter_description}}."><i class="fa fa-question-circle ml-1"></i></sup>:</div>
 							</div>
 							<div class="col-3">
 								<select name="{{tool.tool_string}}-{{parameter.parameter_string}}" class="form-control nodecoration tiny bg-white px-2 py-1 mb-0">
@@ -359,7 +359,7 @@
 
 				</div>
 			</div>
-			<div id="notebook_settings-info" class="collapse show border-grey mx-2 border-top-0 rounded-bottom tiny">
+			<div id="notebook_settings-info" class="collapse show border-grey border-top-0 rounded-bottom tiny">
 				<div class="pt-3">
 
 					<!-- Notebook Title -->
@@ -370,93 +370,6 @@
 						</div>
 						<div class="col-lg-6 pt-2 pt-lg-0">
 							<input class="form-control tiny nodecoration" type="text" name="notebook_title" value="{{ notebook_title }}">
-						</div>
-					</div>
-
-					<!-- Sample Source -->
-					<div class="row px-4 px-lg-3 pb-4">
-						<div class="col-lg-3 bold text-lg-right my-auto">
-							What tissue or cell line do the samples belong to?
-							<!-- <sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Placeholder."></i></sup> -->
-						</div>
-						<div class="col-lg-6 pt-2 pt-lg-0">
-							<select class="ontology-select" data-ontology="sample_source" name="tags" placeholder="Select tissues or cell lines..."></select>
-						</div>
-					</div>
-
-					<!-- Disease -->
-					<div class="row px-4 px-lg-3 pb-3">
-						<div class="col-lg-3 bold text-lg-right my-auto">
-							Are the samples affected by a disease?
-							<!-- <sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Placeholder."></i></sup> -->
-						</div>
-						<div class="col-lg-1 pt-1 pt-lg-0">
-							<div class="border-grey rounded d-table mt-1 overflow-hidden">
-								<input type="radio" id="disease-radio-yes" name="disease-radio" value="yes" class="d-none">
-								<label for="disease-radio-yes" class="radio-label px-2 py-1 cursor-pointer d-table-cell">Yes</label>
-								<input type="radio" id="disease-radio-no" name="disease-radio" value="no" class="d-none" checked>
-								<label for="disease-radio-no" class="radio-label px-2 py-1 cursor-pointer d-table-cell">No</label>
-							</div>
-						</div>
-						<div class="col-lg-5 pl-lg-4 pt-3 pt-lg-0">
-							<select class="ontology-select hidden" data-ontology="disease" name="tags" placeholder="Select one or more diseases..."></select>
-						</div>
-					</div>
-					
-					<!-- Small Molecule -->
-					<div class="row px-4 px-lg-3 pb-3">
-						<div class="col-lg-3 bold text-lg-right my-auto">
-							Are the samples treated with a drug or small molecule?
-							<!-- <sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Placeholder."></i></sup> -->
-						</div>
-						<div class="col-lg-1 pt-1 pt-lg-0">
-							<div class="border-grey rounded d-table mt-lg-1 overflow-hidden my-auto">
-								<input type="radio" id="drug-radio-yes" name="drug-radio" value="yes" class="d-none">
-								<label for="drug-radio-yes" class="radio-label px-2 py-1 cursor-pointer d-table-cell">Yes</label>
-								<input type="radio" id="drug-radio-no" name="drug-radio" value="no" class="d-none" checked>
-								<label for="drug-radio-no" class="radio-label px-2 py-1 cursor-pointer d-table-cell">No</label>
-							</div>
-						</div>
-						<div class="col-lg-5 pl-lg-4 pt-3 pt-lg-0">
-							<select class="ontology-select hidden" data-ontology="drug_ontology" name="tags" placeholder="Select one or more drugs or small molecules..."></select>
-						</div>
-					</div>
-					
-					<!-- Gene Perturbation -->
-					<div class="row px-4 px-lg-3 pb-3">
-						<div class="col-lg-3 bold text-lg-right my-auto">
-							Are the samples affected by a gene perturbation?
-							<!-- <sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Placeholder."></i></sup> -->
-						</div>
-						<div class="col-lg-1 pt-1 pt-lg-0">
-							<div class="border-grey rounded d-table mt-lg-1 overflow-hidden my-auto">
-								<input type="radio" id="gene-radio-yes" name="gene-radio" value="yes" class="d-none">
-								<label for="gene-radio-yes" class="radio-label px-2 py-1 cursor-pointer d-table-cell">Yes</label>
-								<input type="radio" id="gene-radio-no" name="gene-radio" value="no" class="d-none" checked>
-								<label for="gene-radio-no" class="radio-label px-2 py-1 cursor-pointer d-table-cell">No</label>
-							</div>
-						</div>
-						<div class="col-lg-5 pl-lg-4 pt-3 pt-lg-0">
-							<select class="ontology-select hidden" data-ontology="human_genes" name="tags" placeholder="Select one or more genes..."></select>
-						</div>
-						<div class="col-lg-3">
-							<select class="ontology-select hidden" data-ontology="gene_perturbation" name="tags" placeholder="Select a perturbation type..."></select>
-						</div>
-					</div>
-
-					<!-- Gene Perturbation -->
-					<div class="row px-4 px-lg-3 pb-3">
-						<div class="col-lg-3 bold text-lg-right my-auto">
-							Would you like your notebook to only display static plots?
-							<sup><i class="fa fa-question-circle ml-1" data-toggle="tooltip" title="Some BioJupies plugins display results using interactive visualizations which require WebGL. While most modern browsers on desktop and mobile support this feature, these plots may occasionally display incorrectly. By selecting this option, plot will be displayed as static images and rendered more reliably."></i></sup>
-						</div>
-						<div class="col-lg-1 pt-1 pt-lg-0">
-							<div class="border-grey rounded d-table mt-lg-1 overflow-hidden my-auto">
-								<input type="radio" id="static-plots-yes" name="static-plots" value="yes" class="d-none">
-								<label for="static-plots-yes" class="radio-label px-2 py-1 cursor-pointer d-table-cell">Yes</label>
-								<input type="radio" id="static-plots-no" name="static-plots" value="no" class="d-none" checked>
-								<label for="static-plots-no" class="radio-label px-2 py-1 cursor-pointer d-table-cell">No</label>
-							</div>
 						</div>
 					</div>
 
