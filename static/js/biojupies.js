@@ -8,13 +8,13 @@ function goBack() {
 function addPreviewTable(response, metadata, previewSelector) {
 
 	// Define table
-	var $table = $('<table>', {'class': 'table-striped w-100'}).append($('<thead>').append($('<tr>', {'class': 'very-small text-center border-grey border-left-0 border-right-0'}))).append($('<tbody>'));
+	var $table = $('<table>', {'class': 'table table-sm table-hover table-striped w-100'}).append($('<thead>').append($('<tr>', {'class': 'very-small text-center border-grey border-left-0 border-right-0'}))).append($('<tbody>'));
 
 	// Add headers
 	label = metadata ? 'Gene' : 'Sample'
-	$table.find('tr').append($('<th>', {'class': 'px-2 py-1'}).html(label));
+	$table.find('tr').append($('<th>', {'class': 'text-nowrap'}).html(label));
 	$.each(response['columns'], function(i, col) {
-		$table.find('tr').append($('<th>', {'class': 'px-2 py-1'}).html(col));
+		$table.find('tr').append($('<th>', {'class': 'text-nowrap'}).html(col));
 	})
 
 	// Get row number
@@ -22,16 +22,18 @@ function addPreviewTable(response, metadata, previewSelector) {
 
 	// Add rows
 	for (i=0; i<n; i++) {
-		var $tr = $('<tr>').append($('<td>', {'class': 'bold text-center px-2 py-1'}).html(response['index'][i]));
+		var $tr = $('<tr>').append($('<td>', {'class': 'font-weight-bold text-center text-nowrap'}).html(response['index'][i]));
 		$.each(response['data'][i], function(i, val) {
-			$tr.append($('<td>', {'class': 'light text-center tiny'}).html(val));
+			$tr.append($('<td>', {'class': 'font-weight-light text-center tiny'}).html(val));
 		})
 		$table.find('tbody').append($tr);
 	}
 
 	// Add
-	// $('#loader').addClass('d-none');
-	$(previewSelector).append($table).removeClass('d-none');
+    // $('#loader').addClass('d-none');
+    var $tableWrapper = $('<div>', {'class': 'table-wrapper'})
+    $tableWrapper.append($table)
+	$(previewSelector).append($tableWrapper).removeClass('d-none');
 }
 
 
