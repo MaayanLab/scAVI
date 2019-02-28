@@ -274,3 +274,7 @@ https://github.com/minhur/bootstrap-toggle/issues/186
   overflow-y: scroll;
   max-height: 300px;
 }
+
+.jumbotron {
+  background-color: transparent;
+}

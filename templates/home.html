@@ -1,75 +1,76 @@
-{% extends "base-center.html" %}
-{% block content_center %}
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fuild flex-grow">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="row" style="background-image: url(images/scAVI_jumbotron.jpg); background-size: cover;">
+                <div class="jumbotron" >
+                    <h1 class="display-6">Single Cell Analysis and VIsualization (scAVI)</h1>
+                    <p class="lead">
+                        is a web-based platform developed to enable users to analyze and visualize published and not published single cell RNA sequencing (scRNA-seq) datasets with state-of-the-art algorithms and visualization methods.
+                    </p>
+                    <p class="lead" id="stats">
+                        The scAVI platform supports the analysis and visualization of {{ stats['n_studies'] }} publicly available scRNA-seq studies from GEO covering {{ "{:,}".format(stats['n_cells']) }} single cells/samples. Analyses are provided as <a href="{{url_for('all_datasets')}}">{{ stats['n_studies'] }} dedicated landing pages</a> and Jupyter Notebook reports for each study.
+                    </p>
+                </div>
+            </div>
+        </div>
 
-
-<div class="row">
-    <div class="jumbotron-fluid">
-        <h1 class="display-4">scAVI</h1>
-        <p class="lead">
-            Single Cell Analysis and VIsualization (scAVI) is a web-based platform developed to enable users to analyze and visualize published and not published single cell RNA sequencing (scRNA-seq) datasets with state-of-the-art algorithms and visualization methods.
-        </p>
-        <p class="lead" id="stats">
-            The scAVI platform supports the analysis and visualization of {{ stats['n_studies'] }} publicly available scRNA-seq studies from GEO covering {{ "{:,}".format(stats['n_cells']) }} single cells/samples. Analyses are provided as <a href="{{url_for('all_datasets')}}">{{ stats['n_studies'] }} dedicated landing pages</a> and Jupyter Notebook reports for each study.
-        </p>
-    </div>
-</div>
-<div class="my-4"></div>
-
-
-<div class="row">
-    <hr>
-    <div class="col">
-        <h1>scRNA-seq Tools</h1>
-        <hr>
-        <h3>Implemented tools</h3>
-        <!-- <ol>
-        {% for section in sections %}
-            <li>{{ section.section_name }}</li>
-            <ul>
-            {% for tool in section['tools'] %}
-                {% if tool.reference_link != '' %}
-                    <li><a href="{{tool.reference_link}}" target="_blank">{{ tool.tool_name }}</a></li>
-                {% else %}
-                    <li>{{ tool.tool_name }}</li>
-                {% endif %}
+    
+        <div class="col-10 mt-4">        
+            <!-- <h1>scRNA-seq Tools</h1> -->
+            
+            <h3 class="text-center">scAVI currently contains implementations of the following methods:</h3>
+            <hr>
+            <!-- <ol>
+            {% for section in sections %}
+                <li>{{ section.section_name }}</li>
+                <ul>
+                {% for tool in section['tools'] %}
+                    {% if tool.reference_link != '' %}
+                        <li><a href="{{tool.reference_link}}" target="_blank">{{ tool.tool_name }}</a></li>
+                    {% else %}
+                        <li>{{ tool.tool_name }}</li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
             {% endfor %}
-            </ul>
-        {% endfor %}
-        </ol> -->
+            </ol> -->
 
-        <ul class="list-unstyled">
-            <li class="tool-section-name">Exploratory Data Analysis and Visualization</li>
-            <ul>
-                <li>2D and 3D PCA, t-SNE, and Monocole visualization of single cells</li>
-                <li>Library Size Analysis</li>
-                <li>K-means clustering</li>
+            <ul class="list-unstyled">
+                <li class="tool-section-name">Exploratory Data Analysis and Visualization</li>
+                <ul>
+                    <li>2D and 3D PCA, t-SNE, and Monocole visualization of single cells</li>
+                    <li>Library Size Analysis</li>
+                    <li>K-means clustering</li>
+                </ul>
+                <li class="tool-section-name">Data Imputation</li>
+                <ul>
+                    <li>MAGIC - A diffusion-based imputation method to predict dropout expression</li>
+                </ul>
+                <li class="tool-section-name">Trajectory Inference Analysis</li>
+                <ul>
+                    <li>Monocle trajectory inference</li>
+                </ul>
+                <li class="tool-section-name">Cell Type Predictions</li>
+                <ul>
+                    <li>SingleR cell type prediction</li>
+                    <li>Cell type predictions with Enrichr and ARCHS4</li>
+                </ul>
+                <li class="tool-section-name">Enrichment Analysis</li>
+                <ul>
+                    <li>Gene Ontology, KEGG, WikiPathways, MGI, HPO, transcription factor enrichment analysis with ENCODE and ChEA, kinase and miRNA enrichment analysis</li>
+                </ul>
             </ul>
-            <li class="tool-section-name">Data Imputation</li>
-            <ul>
-                <li>MAGIC - A diffusion-based imputation method to predict dropout expression</li>
-            </ul>
-            <li class="tool-section-name">Trajectory Inference Analysis</li>
-            <ul>
-                <li>Monocle trajectory inference</li>
-            </ul>
-            <li class="tool-section-name">Cell Type Predictions</li>
-            <ul>
-                <li>SingleR cell type prediction</li>
-                <li>Cell type predictions with Enrichr and ARCHS4</li>
-            </ul>
-            <li class="tool-section-name">Enrichment Analysis</li>
-            <ul>
-                <li>Gene Ontology, KEGG, WikiPathways, MGI, HPO, transcription factor enrichment analysis with ENCODE and ChEA, kinase and miRNA enrichment analysis</li>
-            </ul>
-        </ul>
 
-        <!-- <h3>Coming soon...</h3> -->
-    </div>
+            <!-- <h3>Coming soon...</h3> -->
+        </div>
     <!-- <div class="col-6">
         <h1>Video tutorials</h1>
         <hr>
         <p>To be added...</p>
     </div> -->
+    </div>
 </div>
 {% endblock %}
 
