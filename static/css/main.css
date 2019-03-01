@@ -281,3 +281,7 @@ https://github.com/minhur/bootstrap-toggle/issues/186
 .jumbotron {
   background-color: transparent;
 }
+.jumbotron-wrapper {
+  background: linear-gradient(rgba(255,255,255,.6), rgba(255,255,255,.6)), url(../images/scAVI_jumbotron.jpg);
+  background-size: cover;
+}
