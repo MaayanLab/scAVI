@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    /* debug only */
+/* .selectize-dropdown {
+    display: block !important; 
+} */
+</style>
 <div class="container-fuild flex-grow">
     <div class="row justify-content-center">
         <div class="col-12">
@@ -15,12 +21,12 @@
                 </div>
             </div>
         </div>
-
-    
-        <div class="col-10 mt-4">        
+    </div>
+    <div class="row mx-5 mt-3">
+        <div class="col-6">        
             <!-- <h1>scRNA-seq Tools</h1> -->
             
-            <h3 class="text-center">scAVI currently contains implementations of the following methods:</h3>
+            <h3>scAVI currently contains implementations of the following methods:</h3>
             <hr>
             <!-- <ol>
             {% for section in sections %}
@@ -65,6 +71,18 @@
 
             <!-- <h3>Coming soon...</h3> -->
         </div>
+        <div class="col-6">
+            <div class="col-12">
+                <h3>Explore public scRNA-seq datasets</h3>
+                <div class="input-group mb-3">
+                    <input id="main-search-box" type="text" class="form-control" placeholder="e.g. GSE82187, reprogramming">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button">Search</button>
+                    </div>
+                </div>
+                      
+            </div>
+        </div>
     <!-- <div class="col-6">
         <h1>Video tutorials</h1>
         <hr>
@@ -72,7 +90,72 @@
     </div> -->
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
+<script>
+    var aClicked = function(href){ // simulate <a> clicked
+        location.href = href;
+    }
+
+    // Search bar
+    var selectizeDom = $("#main-search-box").selectize({
+        create: false,
+        maxItems: 1,
+        closeAfterSelect: false,
+        options: [],
+        labelField: 'geo_accession',
+        valueField: 'geo_accession',
+        searchField: ['title', 'geo_accession'],
+        placeholder: 'e.g. GSE82187, reprogramming',
+        render: {
+            option: function(item, escape){
+                var notebookUrl = 'view_notebook/' + item.notebook_uid + '/' + item.geo_accession;
+                var visUrl = 'graph_page/' + item.geo_accession + '/tSNE';
+
+                var html = '<div class="geo-item">';
+                html += '<span class="badge badge-secondary mr-1">'+ item.geo_accession +'</span>'
+                if (item.organism === 'human') {
+                    html += '<span class="badge badge-human">'+ item.organism +'</span>'    
+                } else {
+                    html += '<span class="badge badge-mouse">'+ item.organism +'</span>'    
+                }
+                
+                html += '<span class="geo-title">' + item.title + '</span>'
+                html += '<ul class="geo-meta list-inline">'
+                html += '<li class="list-inline-item">Cells: <span class="geo-n-cells">' + item.n_cells + '</span></li>'
+                html += '<li class="list-inline-item">Date: <span class="geo-date">' + item.submission_date + '</span></li>'
+                html += '</ul>'
+
+                html += '<a onmousedown="aClicked(this.href);" class="btn btn-sm btn-outline-info mx-1" href="'+ visUrl + '">Viewer</a>'
+                if (item.notebook_uid !== null){
+                    html += '<a onmousedown="aClicked(this.href);" class="btn btn-sm btn-info" href="'+ notebookUrl + '">Notebook</a>'
+                }
+
+                html += '</div>'
+                return html;
+            }
+        },
+        load: function(query, callback){
+            if (query.length > 1){
+                $.ajax({
+                    url: 'q?query=' + encodeURIComponent(query),
+                    type: 'GET',
+                    dataType: 'json',
+                    error: function(){
+                        callback();
+                    },
+                    success: function(res){
+                        console.log(res)
+                        return callback(res['results']);
+                    }
+                });
+            }
+        },
+        onItemAdd: function (value, $item) {  
+        }
+    });
+
+</script>
 {% endblock %}

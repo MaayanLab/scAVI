@@ -285,3 +285,41 @@ https://github.com/minhur/bootstrap-toggle/issues/186
   background: linear-gradient(rgba(255,255,255,.6), rgba(255,255,255,.6)), url(../images/scAVI_jumbotron.jpg);
   background-size: cover;
 }
+
+/* overwrite selectize */
+.selectize-dropdown [data-selectable] {
+  cursor: inherit;
+}
+.selectize-dropdown .active {
+  background-color: #5bc0de61;
+  color: black;
+}
+.selectize-dropdown-content {
+  max-height: 500px;
+}
+
+.geo-item {
+  margin: 0.5rem;
+}
+.geo-title {
+  display: block;
+  font-weight: bolder;
+}
+.geo-meta {
+  display: block;
+  font-size: 12px;
+}
+.geo-n-cells {
+  font-weight: bold;
+}
+.geo-date {
+  font-weight: lighter;
+}
+.badge-human {
+  color: #fff;
+  background-color: #17a2b8;
+}
+.badge-mouse {
+  color: #212529;
+  background-color: #ffc107;
+}

@@ -50,7 +50,7 @@ function generateNotebook (upload_id){
 
     var notebook_config = {
         notebook: {
-            title: 'Example Notebook for user data | BioJupies',
+            title: 'Example Notebook for user data',
             live: 'False',
             version: 'v1.0.5'
         },

@@ -52,7 +52,6 @@ tables = metadata.tables
 @app.route(ENTER_POINT + '/')
 def index_page():
 	# The default main page
-	# return redirect(ENTER_POINT+'/all', code=302)
 	n_cells = 0
 	cur = mongo.db['dataset'].find(
 		{'$and': [
@@ -142,6 +141,58 @@ def all_datasets():
 			stats=stats
 			)
 
+
+@app.route(ENTER_POINT + '/q', methods=['GET'])
+def query_datasets():
+	'''API for query GEO datasets with analyses.'''
+	query_str = request.args.get('query')
+
+	# Get GSEs with analyses
+	cur = mongo.db['dataset'].find(
+		{'$and': [
+			{'id': {'$regex': r'^GSE'}},
+			{'sample_ids.30': {'$exists': True}}
+		]}, 
+		{'_id': False, 'id': True, 'notebook_uid':True})
+	d_dataset_notebook = {doc['id']: doc.get('notebook_uid') for doc in cur}
+	dataset_ids = d_dataset_notebook.keys()
+
+	projection = {'_id':False, 
+		'pubmed_id':True, 
+		'title':True, 
+		'submission_date':True,
+		'platform_taxid':True,
+		'geo_accession':True,
+		'sample_id':True
+		}
+	# Query title 
+	cur = mongo.db['geo'].find(
+		{'$and': [
+			{'geo_accession': {'$in': dataset_ids}},
+			{'$or': [
+				{'title': {'$regex': r'.*%s.*' % query_str, '$options': 'i'}},
+				{'geo_accession': {'$regex': r'.*%s.*' % query_str, '$options': 'i'}}
+			]}
+		]},
+		projection,
+		cursor_type=CursorType.EXHAUST
+		)
+
+	n_results = cur.count()
+	results = [None] * n_results
+
+	i = 0
+	for doc in cur:
+		organism = 'human'
+		doc['n_cells'] = len(doc['sample_id'])
+		if str(doc['platform_taxid']) == '10090':
+			organism = 'mouse'
+		doc['organism'] = organism
+		doc.pop('sample_id', None)
+		doc['notebook_uid'] = d_dataset_notebook[doc['geo_accession']]
+		results[i] = doc
+		i += 1
+	return jsonify({'results': results, 'n': n_results})
 
 from upload_utils import *
 with app.app_context():
@@ -269,7 +320,6 @@ def configure_analysis(upload_id):
 	'''Handling the definition of the parameters for notebook configuration.'''
 	# Get form
 	f=request.form
-	print f
 
 	# Get tool query
 	tools = [value for value, key in zip(f.listvalues(), f.keys()) if key == 'tool'][0]
@@ -306,7 +356,7 @@ def configure_analysis(upload_id):
 		notebook_title = f.get('gse')
 	else:
 		notebook_title = 'RNA-seq'
-	notebook_title += ' Analysis Notebook | BioJupies'
+	notebook_title += ' Analysis Notebook'
 
 	return render_template('review-analysis.html', 
 		t=t, 
@@ -372,9 +422,13 @@ def generate_notebook(upload_id):
 			expected_time=2,
 			)
 
-@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>', methods=['GET'])
-def view_notebook(notebook_uid):
-	nbviewer_url = "https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/%s/RNA-seq Analysis Notebook | BioJupies.ipynb" % notebook_uid
+@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>', defaults={'gse_id': None}, methods=['GET'])
+@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>/<string:gse_id>', methods=['GET'])
+def view_notebook(notebook_uid, gse_id):
+	if gse_id is None:
+		gse_id = 'RNA-seq'
+	nbviewer_url = "https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/%s/%s Analysis Notebook.ipynb" % \
+		(notebook_uid, gse_id)
 	return render_template('view-notebook.html',
 		nbviewer_url=nbviewer_url,
 		ENTER_POINT=ENTER_POINT
