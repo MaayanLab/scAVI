@@ -174,10 +174,11 @@ text.legendTitle{
 #header form button:hover {
   opacity: .8;
 }
-#header .navbar-brand {
+.navbar-brand {
 	text-transform: none;
 	font-size: 30px;
   float: none;
+  font-family: 'Fredoka One', cursive !important;
 }
 
 .brush {
@@ -322,4 +323,12 @@ https://github.com/minhur/bootstrap-toggle/issues/186
 .badge-mouse {
   color: #212529;
   background-color: #ffc107;
+}
+
+.string-search-example {
+  color: #1689E5 !important;
+  cursor: pointer;
+}
+.string-search-example:hover {
+  text-decoration: underline !important;
 }

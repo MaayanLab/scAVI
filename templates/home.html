@@ -10,8 +10,8 @@
     <div class="row justify-content-center">
         <div class="col-12">
             <div class="row jumbotron-wrapper">
-                <div class="jumbotron mx-5">
-                    <h1 class="display-6">Single Cell Analysis and VIsualization (scAVI)</h1>
+                <div class="jumbotron mx-5 px-5 my-1 py-3">
+                    <h1 class="display-6">scAVI</h1>
                     <p class="lead">
                         is a web-based platform developed to enable users to analyze and visualize published and not published single cell RNA sequencing (scRNA-seq) datasets with state-of-the-art algorithms and visualization methods.
                     </p>
@@ -22,65 +22,75 @@
             </div>
         </div>
     </div>
-    <div class="row mx-5 mt-3">
-        <div class="col-6">        
-            <!-- <h1>scRNA-seq Tools</h1> -->
-            
-            <h3>scAVI currently contains implementations of the following methods:</h3>
-            <hr>
-            <!-- <ol>
-            {% for section in sections %}
-                <li>{{ section.section_name }}</li>
-                <ul>
-                {% for tool in section['tools'] %}
-                    {% if tool.reference_link != '' %}
-                        <li><a href="{{tool.reference_link}}" target="_blank">{{ tool.tool_name }}</a></li>
-                    {% else %}
-                        <li>{{ tool.tool_name }}</li>
-                    {% endif %}
+    <div class="row mx-5 px-3 mt-3">
+        <div class="col-lg-6 col-sm-12">
+            <div class="mr-lg-5 pr-lg-5">
+
+                <h3>scAVI currently contains implementations of the following methods:</h3>
+                <hr>
+                <!-- <ol>
+                {% for section in sections %}
+                    <li>{{ section.section_name }}</li>
+                    <ul>
+                    {% for tool in section['tools'] %}
+                        {% if tool.reference_link != '' %}
+                            <li><a href="{{tool.reference_link}}" target="_blank">{{ tool.tool_name }}</a></li>
+                        {% else %}
+                            <li>{{ tool.tool_name }}</li>
+                        {% endif %}
+                    {% endfor %}
+                    </ul>
                 {% endfor %}
-                </ul>
-            {% endfor %}
-            </ol> -->
+                </ol> -->
 
-            <ul class="list-unstyled">
-                <li class="tool-section-name">Exploratory Data Analysis and Visualization</li>
-                <ul>
-                    <li>2D and 3D PCA, t-SNE, and Monocole visualization of single cells</li>
-                    <li>Library Size Analysis</li>
-                    <li>K-means clustering</li>
+                <ul class="list-unstyled">
+                    <li class="tool-section-name">Exploratory Data Analysis and Visualization</li>
+                    <ul>
+                        <li>2D and 3D PCA, t-SNE, and Monocole visualization of single cells</li>
+                        <li>Library Size Analysis</li>
+                        <li>K-means clustering</li>
+                    </ul>
+                    <li class="tool-section-name">Data Imputation</li>
+                    <ul>
+                        <li>MAGIC - A diffusion-based imputation method to predict dropout expression</li>
+                    </ul>
+                    <li class="tool-section-name">Trajectory Inference Analysis</li>
+                    <ul>
+                        <li>Monocle trajectory inference</li>
+                    </ul>
+                    <li class="tool-section-name">Cell Type Predictions</li>
+                    <ul>
+                        <li>SingleR cell type prediction</li>
+                        <li>Cell type predictions with Enrichr and ARCHS4</li>
+                    </ul>
+                    <li class="tool-section-name">Enrichment Analysis</li>
+                    <ul>
+                        <li>Gene Ontology, KEGG, WikiPathways, MGI, HPO, transcription factor enrichment analysis with ENCODE and ChEA, kinase and miRNA enrichment analysis</li>
+                    </ul>
                 </ul>
-                <li class="tool-section-name">Data Imputation</li>
-                <ul>
-                    <li>MAGIC - A diffusion-based imputation method to predict dropout expression</li>
-                </ul>
-                <li class="tool-section-name">Trajectory Inference Analysis</li>
-                <ul>
-                    <li>Monocle trajectory inference</li>
-                </ul>
-                <li class="tool-section-name">Cell Type Predictions</li>
-                <ul>
-                    <li>SingleR cell type prediction</li>
-                    <li>Cell type predictions with Enrichr and ARCHS4</li>
-                </ul>
-                <li class="tool-section-name">Enrichment Analysis</li>
-                <ul>
-                    <li>Gene Ontology, KEGG, WikiPathways, MGI, HPO, transcription factor enrichment analysis with ENCODE and ChEA, kinase and miRNA enrichment analysis</li>
-                </ul>
-            </ul>
-
-            <!-- <h3>Coming soon...</h3> -->
+            </div>
         </div>
-        <div class="col-6">
-            <div class="col-12">
+        <div class="col-lg-6 col-sm-12">
+            <div class="ml-lg-5 pl-lg-5">
                 <h3>Explore public scRNA-seq datasets</h3>
-                <div class="input-group mb-3">
+                <ul class="list-inline">
+                    Examples:
+                    <li class="list-inline-item"><span class="string-search-example">GSE82187</span></li>
+                    <li class="list-inline-item"><span class="string-search-example">reprogramming</span></li>
+                    <li class="list-inline-item"><span class="string-search-example">stem cell</span></li>
+                </ul>
+                      
+                <div class="input-group mb-5">
                     <input id="main-search-box" type="text" class="form-control" placeholder="e.g. GSE82187, reprogramming">
                     <div class="input-group-append">
                         <button class="btn btn-outline-secondary" type="button">Search</button>
                     </div>
+
                 </div>
-                      
+                
+                <h3>Analyze your own dataset</h3>
+                <p>Multiple formats for the expression data are supported: plain text, HDF5(h5) and sparse matrix (mtx).</p>
+                <a href="upload" class="btn btn-info">Get Started</a>
             </div>
         </div>
     <!-- <div class="col-6">
@@ -102,6 +112,7 @@
     // Search bar
     var selectizeDom = $("#main-search-box").selectize({
         create: false,
+        preload: 'focus',
         maxItems: 1,
         closeAfterSelect: false,
         options: [],
@@ -138,23 +149,31 @@
             }
         },
         load: function(query, callback){
-            if (query.length > 1){
-                $.ajax({
-                    url: 'q?query=' + encodeURIComponent(query),
-                    type: 'GET',
-                    dataType: 'json',
-                    error: function(){
-                        callback();
-                    },
-                    success: function(res){
-                        console.log(res)
-                        return callback(res['results']);
-                    }
-                });
-            }
+            if (query.length === 0){ // preload
+                query = 're'
+            } 
+            $.ajax({
+                url: 'q?query=' + encodeURIComponent(query),
+                type: 'GET',
+                dataType: 'json',
+                error: function(){
+                    callback();
+                },
+                success: function(res){
+                    console.log(res)
+                    return callback(res['results']);
+                }
+            });
         },
         onItemAdd: function (value, $item) {  
-        }
+        },
+        onInitialize: function() {
+            $(".string-search-example").click(function(){
+                var exampleStr = $(this).text()
+                selectizeDom[0].selectize.setTextboxValue(exampleStr)
+                selectizeDom[0].selectize.open()
+            });
+        },
     });
 
 </script>
