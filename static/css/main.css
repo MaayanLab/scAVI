@@ -176,9 +176,11 @@ text.legendTitle{
 }
 .navbar-brand {
 	text-transform: none;
-	font-size: 30px;
+	font-size: 60px;
   float: none;
-  font-family: 'Fredoka One', cursive !important;
+  /* font-family: 'Fredoka One', cursive !important; */
+  font-family: 'Open Sans Condensed', sans-serif;
+  color: #fff !important;
 }
 
 .brush {
@@ -331,4 +333,7 @@ https://github.com/minhur/bootstrap-toggle/issues/186
 }
 .string-search-example:hover {
   text-decoration: underline !important;
+}
+strong#brand {
+  font-size: xx-large;
 }

@@ -11,9 +11,9 @@
         <div class="col-12">
             <div class="row jumbotron-wrapper">
                 <div class="jumbotron mx-5 px-5 my-1 py-3">
-                    <h1 class="display-6">scAVI</h1>
+                    <h1 class="display-6"></h1>
                     <p class="lead">
-                        is a web-based platform developed to enable users to analyze and visualize published and not published single cell RNA sequencing (scRNA-seq) datasets with state-of-the-art algorithms and visualization methods.
+                        <strong id="brand">scAVI</strong> is a web-based platform developed to enable users to analyze and visualize published and not published single cell RNA sequencing (scRNA-seq) datasets with state-of-the-art algorithms and visualization methods.
                     </p>
                     <p class="lead" id="stats">
                         The scAVI platform supports the analysis and visualization of {{ stats['n_studies'] }} publicly available scRNA-seq studies from GEO covering {{ "{:,}".format(stats['n_cells']) }} single cells/samples. Analyses are provided as <a href="{{url_for('all_datasets')}}">{{ stats['n_studies'] }} dedicated landing pages</a> and Jupyter Notebook reports for each study.
@@ -89,7 +89,7 @@
                 </div>
                 
                 <h3>Analyze your own dataset</h3>
-                <p>Multiple formats for the expression data are supported: plain text, HDF5(h5) and sparse matrix (mtx).</p>
+                <p>Multiple formats for single cell expression data are supported by scAVI: plain text, HDF5 (h5), and sparse matrix (mtx).</p>
                 <a href="upload" class="btn btn-info">Get Started</a>
             </div>
         </div>
