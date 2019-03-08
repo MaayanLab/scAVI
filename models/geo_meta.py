@@ -102,6 +102,8 @@ class _GSMList(object):
 			.set_index(self.id_field)
 		# remove columns with only 1 unique value
 		meta_df = meta_df.loc[:, meta_df.nunique() > 1]
+		# replace column names with '.' 
+		meta_df.columns = meta_df.columns.map(lambda x:x.replace('.', '_'))
 		# attempt to convert columns to numerical type
 		meta_df.replace('NA', np.nan, inplace=True)
 		for col in meta_df.columns:
@@ -122,3 +124,7 @@ class _GSMList(object):
 
 		return obj
 
+db['gsm'].delete_many({'geo_accession': {'$in': gds.sample_ids}})
+db['geo'].delete_one({'geo_accession': gds.id})
+db['dataset'].delete_one({'id': gds.id})
+db['expression'].delete_many({'dataset_id': gds.id})

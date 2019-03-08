@@ -4,6 +4,7 @@ Search the NCBI GEO database to find single-cell RNA-seq studies.
 from __future__ import division
 import math
 import json
+import time
 from datetime import datetime
 
 import pandas as pd
@@ -37,26 +38,32 @@ gse_meta_df = pd.DataFrame(columns=['GSE', 'n_samples', 'organism', 'title'])
 
 c = 0
 for i in range(n_batches):
+    time.sleep(1)
     retstart = (i*batch_size)+1
-    handle = Entrez.esummary(db='gds', 
-                             rettype='summary',
-                             retmode='json',
-                             retstart=retstart,
-                             retmax=batch_size,
-                             webenv=search_result['WebEnv'],
-                             query_key=search_result['QueryKey']
-                            )
-    
-    results = json.loads(handle.read())
-    for key, rec in results['result'].items():
-        if key != 'uids':
-            gse = 'GSE%s' % rec['gse']
-            if rec['taxon'] == 'Mus musculus':
-                organism = 'mouse'
-            elif rec['taxon'] == 'Homo sapiens':
-                organism = 'human'
-            gse_meta_df.loc[c] = (gse, rec['n_samples'], organism, rec['title'])
-            c += 1
+    try:
+        handle = Entrez.esummary(db='gds', 
+                                rettype='summary',
+                                retmode='json',
+                                retstart=retstart,
+                                retmax=batch_size,
+                                webenv=search_result['WebEnv'],
+                                query_key=search_result['QueryKey']
+                                )
+    except Exception as e:
+        print e
+        pass
+    else:
+        results = json.loads(handle.read())
+        for key, rec in results['result'].items():
+            if key != 'uids':
+                gse = 'GSE%s' % rec['gse']
+                if rec['taxon'] == 'Mus musculus':
+                    organism = 'mouse'
+                elif rec['taxon'] == 'Homo sapiens':
+                    organism = 'human'
+                gse_meta_df.loc[c] = (gse, rec['n_samples'], organism, rec['title'])
+                c += 1
+        print 'Batch-%d GSEs retrieved: %d' % (i, gse_meta_df.shape[0])
 
 print 'GSEs retrieved: ', gse_meta_df.shape[0]
 

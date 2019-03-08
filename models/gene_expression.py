@@ -385,7 +385,7 @@ class GEODataset(GeneExpressionDataset):
 			'sample_ids': self.sample_ids,
 			'genes': self.genes.tolist(),
 			'avg_expression': self.avg_expression.tolist(),
-			'd_sample_userListId': self.d_sample_userListId
+			'd_sample_userListId': d_sample_userListId
 		}
 		insert_result = db[self.coll].insert_one(doc)
 		gene_expression_docs = [
@@ -413,6 +413,14 @@ class GEODataset(GeneExpressionDataset):
 	def load_series_meta(self, db):
 		'''Load series-level meta from `geo` collection.'''
 		self.series = GSE.load(self.id, db).meta
+
+	def purge(self, db):
+		'''Remove every documents about this object across collections.'''
+		db['gsm'].delete_many({'geo_accession': {'$in': gds.sample_ids}})
+		db['geo'].delete_one({'geo_accession': gds.id})
+		db['dataset'].delete_one({'id': gds.id})
+		for coll in ['expression', 'enrichr', 'enrichr_temp', 'vis', 'preds']:
+			db[coll].delete_many({'dataset_id': gds.id})
 
 	@classmethod
 	def load(cls, gse_id, db, meta_only=False):
