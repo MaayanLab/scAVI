@@ -416,11 +416,11 @@ class GEODataset(GeneExpressionDataset):
 
 	def purge(self, db):
 		'''Remove every documents about this object across collections.'''
-		db['gsm'].delete_many({'geo_accession': {'$in': gds.sample_ids}})
-		db['geo'].delete_one({'geo_accession': gds.id})
-		db['dataset'].delete_one({'id': gds.id})
+		db['gsm'].delete_many({'geo_accession': {'$in': self.sample_ids}})
+		db['geo'].delete_one({'geo_accession': self.id})
+		db['dataset'].delete_one({'id': self.id})
 		for coll in ['expression', 'enrichr', 'enrichr_temp', 'vis', 'preds']:
-			db[coll].delete_many({'dataset_id': gds.id})
+			db[coll].delete_many({'dataset_id': self.id})
 
 	@classmethod
 	def load(cls, gse_id, db, meta_only=False):

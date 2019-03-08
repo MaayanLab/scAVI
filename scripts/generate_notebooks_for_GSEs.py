@@ -46,6 +46,18 @@ notebook_configuration_base = {
       }
     },
     {
+      "tool_string": "enrichr",
+      "parameters": {
+        "geneset_size": "200"
+      }
+    },
+    {
+      "tool_string": "go_enrichment",
+      "parameters": {
+        "plot_type": "interactive"
+      }
+    },
+    {
       "tool_string": "monocle",
       "parameters": {
         "color_by": "Pseudotime",
@@ -56,6 +68,7 @@ notebook_configuration_base = {
       "tool_string": "singler",
       "parameters": {
         "species": "Human",
+        "ref": "archs4_human_tissues"
       }
     },
     {
@@ -108,7 +121,8 @@ for _, row in gse_df.dropna().iterrows():
         notebook_configuration['data']['parameters']['platform'] = gpl_id
 
         if row['organism'] == 'mouse':
-          notebook_configuration['tools'][4]['parameters']['species'] = 'Mouse'
+          notebook_configuration['tools'][-2]['parameters']['species'] = 'Mouse'
+          notebook_configuration['tools'][-2]['parameters']['ref'] = 'archs4_mouse_tissues'
 
         try:
             response =  requests.post(endpoint, json=notebook_configuration)

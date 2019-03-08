@@ -5,9 +5,9 @@ Insert scRNA-seq data from GEO into the MongoDB
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-g', '--gsl', help='Gene set libraries (comma separated strings)', 
-	default='KEGG_2016,ChEA_2016,KEA_2015,ARCHS4_Cell-lines,ARCHS4_Tissues')
+	default='KEGG_2016,KEA_2015')
 parser.add_argument('-v', '--vis', help='Visualizations (comma separated strings)', 
-	default='PCA,tSNE')
+	default='PCA,tSNE,tSNE-3d')
 parser.add_argument('-i', '--input', help='Input csv file with columns `GSE` and `organism`', 
 	default='')
 parser.add_argument('-t', '--cpu', help='Number of CPUs to use', 
@@ -36,7 +36,8 @@ print '# GSEs in %s: %d' %(input_file, input_df.shape[0])
 
 vis_funcs = {
 	'PCA': do_pca,
-	'tSNE': do_tsne
+	'tSNE-3d': do_tsne,
+	'tSNE': lambda x: do_tsne(x, n_components=2)
 }
 
 # Get a list of existing GSEs in the DB
@@ -62,9 +63,9 @@ def inner_func(gse_id, organism):
 		print gds.df.shape
 		if gds.df.shape[1] > 30:
 
-			print 'POSTing DEGs to Enrichr'
-			d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
-			print len(d_sample_userListId)
+			# print 'POSTing DEGs to Enrichr'
+			# d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
+			# print len(d_sample_userListId)
 
 			rid = gds.save(db)
 			print 'Dataset %s saved to DB' % gse_id
@@ -77,17 +78,17 @@ def inner_func(gse_id, organism):
 				vis.save(db)
 				print 'Finished %s for dataset %s' % (vis_name, gse_id)
 
-			for gene_set_library in gene_set_libraries:
-				print 'Performing enrichment analysis on %s for dataset %s' % (gene_set_library, gse_id)
-				er = EnrichmentResults(gds, gene_set_library)
-				try:
-					er.do_enrichment(db)
-					er.summarize(db)
-					print 'Finished enrichment analysis on %s for dataset %s' % (gene_set_library, gse_id)
-					print er.save(db)
-					er.remove_intermediates(db)
-				except:
-					pass
+			# for gene_set_library in gene_set_libraries:
+			# 	print 'Performing enrichment analysis on %s for dataset %s' % (gene_set_library, gse_id)
+			# 	er = EnrichmentResults(gds, gene_set_library)
+			# 	try:
+			# 		er.do_enrichment(db)
+			# 		er.summarize(db)
+			# 		print 'Finished enrichment analysis on %s for dataset %s' % (gene_set_library, gse_id)
+			# 		print er.save(db)
+			# 		er.remove_intermediates(db)
+			# 	except:
+			# 		pass
 	return
 
 if n_cpus == 1:
