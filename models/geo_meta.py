@@ -123,8 +123,3 @@ class _GSMList(object):
 		obj.GSMs = [doc for doc in cur]
 
 		return obj
-
-db['gsm'].delete_many({'geo_accession': {'$in': gds.sample_ids}})
-db['geo'].delete_one({'geo_accession': gds.id})
-db['dataset'].delete_one({'id': gds.id})
-db['expression'].delete_many({'dataset_id': gds.id})
