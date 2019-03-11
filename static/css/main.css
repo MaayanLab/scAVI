@@ -337,3 +337,8 @@ https://github.com/minhur/bootstrap-toggle/issues/186
 strong#brand {
   font-size: xx-large;
 }
+iframe.embed-responsive-item {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
