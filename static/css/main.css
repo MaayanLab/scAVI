@@ -182,7 +182,9 @@ text.legendTitle{
   font-family: 'Open Sans Condensed', sans-serif;
   color: #fff !important;
 }
-
+.navbar-brand:hover {
+  color: #ddd !important;
+}
 .brush {
   fill-opacity: .1;
   stroke: #fff;
