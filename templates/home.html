@@ -21,57 +21,11 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> <!-- end of 1st row  -->
+    
     <div class="row mx-5 px-3 mt-3">
         <div class="col-lg-6 col-sm-12">
             <div class="mr-lg-5 pr-lg-5">
-
-                <h3>scAVI currently contains implementations of the following methods:</h3>
-                <hr>
-                <!-- <ol>
-                {% for section in sections %}
-                    <li>{{ section.section_name }}</li>
-                    <ul>
-                    {% for tool in section['tools'] %}
-                        {% if tool.reference_link != '' %}
-                            <li><a href="{{tool.reference_link}}" target="_blank">{{ tool.tool_name }}</a></li>
-                        {% else %}
-                            <li>{{ tool.tool_name }}</li>
-                        {% endif %}
-                    {% endfor %}
-                    </ul>
-                {% endfor %}
-                </ol> -->
-
-                <ul class="list-unstyled">
-                    <li class="tool-section-name">Exploratory Data Analysis and Visualization</li>
-                    <ul>
-                        <li>2D and 3D PCA, t-SNE, and Monocole visualization of single cells</li>
-                        <li>Library Size Analysis</li>
-                        <li>K-means clustering</li>
-                    </ul>
-                    <li class="tool-section-name">Data Imputation</li>
-                    <ul>
-                        <li>MAGIC - A diffusion-based imputation method to predict dropout expression</li>
-                    </ul>
-                    <li class="tool-section-name">Trajectory Inference Analysis</li>
-                    <ul>
-                        <li>Monocle trajectory inference</li>
-                    </ul>
-                    <li class="tool-section-name">Cell Type Predictions</li>
-                    <ul>
-                        <li>SingleR cell type prediction</li>
-                        <li>Cell type predictions with Enrichr and ARCHS4</li>
-                    </ul>
-                    <li class="tool-section-name">Enrichment Analysis</li>
-                    <ul>
-                        <li>Gene Ontology, KEGG, WikiPathways, MGI, HPO, transcription factor enrichment analysis with ENCODE and ChEA, kinase and miRNA enrichment analysis</li>
-                    </ul>
-                </ul>
-            </div>
-        </div>
-        <div class="col-lg-6 col-sm-12">
-            <div class="ml-lg-5 pl-lg-5">
                 <h3>Explore public scRNA-seq datasets</h3>
                 <ul class="list-inline">
                     Examples:
@@ -79,7 +33,7 @@
                     <li class="list-inline-item"><span class="string-search-example">reprogramming</span></li>
                     <li class="list-inline-item"><span class="string-search-example">stem cell</span></li>
                 </ul>
-                      
+                        
                 <div class="input-group mb-5">
                     <input id="main-search-box" type="text" class="form-control" placeholder="e.g. GSE82187, reprogramming">
                     <div class="input-group-append">
@@ -93,12 +47,97 @@
                 <a href="upload" class="btn btn-info">Get Started</a>
             </div>
         </div>
-    <!-- <div class="col-6">
-        <h1>Video tutorials</h1>
-        <hr>
-        <p>To be added...</p>
-    </div> -->
-    </div>
+        
+        <div class="col-lg-6 col-sm-12">
+            <div class="ml-lg-5 pl-lg-5">
+
+                <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                    <ol class="carousel-indicators">
+                        {% for tool in tools %}
+                            {% if loop.index - 1 == 0 %}
+                                <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+                            {% else %}
+                                <li data-target="#carouselExampleIndicators" data-slide-to="{{loop.index - 1}}"></li>
+                            {% endif %}
+                        {% endfor %}
+                    </ol>
+                    <div class="carousel-inner">
+                        {% for tool in tools %}
+                            {% if loop.index - 1 == 0 %}
+                                <div class="carousel-item active">
+                            {% else %}
+                                <div class="carousel-item">
+                            {% endif %}
+                                    <img src="img/tool/{{tool['tool_string']}}-example.png" class="d-block w-100">
+                                    <div class="carousel-caption d-none d-md-block">
+                                        <h5>{{tool['tool_name']}}</h5>
+                                        <p>{{tool['tool_description']}}</p>
+                                    </div>
+                                </div>
+                        {% endfor %}
+                    </div>
+                    <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+                        <i class="fas fa-angle-left fa-2x"></i>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+                        <i class="fas fa-angle-right fa-2x"></i>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div> <!-- end of 2nd row  -->
+
+    <div class="row mx-5 px-3 mt-3">
+        <div class="col-sm-12">
+            <h3>scAVI currently contains implementations of the following methods:</h3>
+            <hr>
+            <!-- <ol>
+            {% for section in sections %}
+                <li>{{ section.section_name }}</li>
+                <ul>
+                {% for tool in section['tools'] %}
+                    {% if tool.reference_link != '' %}
+                        <li><a href="{{tool.reference_link}}" target="_blank">{{ tool.tool_name }}</a></li>
+                    {% else %}
+                        <li>{{ tool.tool_name }}</li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
+            {% endfor %}
+            </ol> -->
+
+            <ul class="list-unstyled">
+                <li class="tool-section-name">Exploratory Data Analysis and Visualization</li>
+                <ul>
+                    <li>2D and 3D PCA, t-SNE, and Monocole visualization of single cells</li>
+                    <li>Library Size Analysis</li>
+                    <li>K-means clustering</li>
+                </ul>
+                <li class="tool-section-name">Data Imputation</li>
+                <ul>
+                    <li>MAGIC - A diffusion-based imputation method to predict dropout expression</li>
+                </ul>
+                <li class="tool-section-name">Trajectory Inference Analysis</li>
+                <ul>
+                    <li>Monocle trajectory inference</li>
+                </ul>
+                <li class="tool-section-name">Cell Type Predictions</li>
+                <ul>
+                    <li>SingleR cell type prediction</li>
+                    <li>Cell type predictions with Enrichr and ARCHS4</li>
+                </ul>
+                <li class="tool-section-name">Enrichment Analysis</li>
+                <ul>
+                    <li>Gene Ontology, KEGG, WikiPathways, MGI, HPO, transcription factor enrichment analysis with ENCODE and ChEA, kinase and miRNA enrichment analysis</li>
+                </ul>
+            </ul>
+        </div>
+    </div> <!-- end of 3rd row  -->
+
 </div>
 
 {% endblock %}

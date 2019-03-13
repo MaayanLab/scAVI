@@ -84,11 +84,13 @@ def index_page():
 	# Combine tools and sections
 	for section in sections:
 		section.update({'tools': [x for x in tools if x['section_fk'] == section['id']]})
-
+	
+	tools_on_carousel = set(['pca', 'pathway_enrichment', 'singler', 'monocle'])
 	return render_template('home.html', 
 		ENTER_POINT=ENTER_POINT,
 		stats=stats,
-		sections=sections
+		sections=sections,
+		tools=[x for x in tools if x['tool_string'] in tools_on_carousel]
 	)
 
 

@@ -344,3 +344,25 @@ iframe.embed-responsive-item {
   height: 100vh;
   position: relative;
 }
+.carousel-item img {
+  height: 350px;
+  max-height: 350px;  
+}
+.carousel-caption {
+  color: #000;
+  position: relative;
+  left: auto;
+  right: auto;
+}
+.carousel-control-next, .carousel-control-prev {
+  color: #000;
+}
+.carousel-control-next:hover, .carousel-control-prev:hover {
+  color: #333;
+}
+.carousel-control-next:focus, .carousel-control-prev:focus {
+  color: #333;
+}
+.carousel-indicators li {
+  background-color: #333;
+}
