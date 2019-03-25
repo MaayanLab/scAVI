@@ -25,7 +25,7 @@
     
     <div class="row mx-5 px-3 mt-3">
         <div class="col-lg-6 col-sm-12">
-            <div class="mr-lg-5 pr-lg-5">
+            <div class="mr-lg-3 pr-lg-3">
                 <h3>Explore public scRNA-seq datasets</h3>
                 <ul class="list-inline">
                     Examples:
@@ -42,14 +42,14 @@
 
                 </div>
                 
-                <h3>Analyze your own dataset</h3>
+                <h3>Analyze your own scRNA-seq dataset</h3>
                 <p>Multiple formats for single cell expression data are supported by scAVI: plain text, HDF5 (h5), and sparse matrix (mtx).</p>
                 <a href="upload" class="btn btn-info">Get Started</a>
             </div>
         </div>
         
         <div class="col-lg-6 col-sm-12">
-            <div class="ml-lg-5 pl-lg-5">
+            <div class="ml-lg-3 pl-lg-3">
 
                 <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
                     <ol class="carousel-indicators">
@@ -68,7 +68,7 @@
                             {% else %}
                                 <div class="carousel-item">
                             {% endif %}
-                                    <img src="img/tool/{{tool['tool_string']}}-example.png" class="d-block w-100">
+                                    <img src="img/tool/{{tool['tool_string']}}-example.png" class="d-block">
                                     <div class="carousel-caption d-none d-md-block">
                                         <h5>{{tool['tool_name']}}</h5>
                                         <p>{{tool['tool_description']}}</p>
