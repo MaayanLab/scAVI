@@ -97,6 +97,7 @@
     }
     
     $(document).ready(function(){
+        // toggle form groups with the radio
         var currentRadioId = $('input:radio[name=dataType]:checked').attr('id');
         toggleFormGroups(currentRadioId);
 
@@ -105,10 +106,17 @@
             toggleFormGroups(selectedRadioId)
         });
 
+        // example button
         $('#example-btn').click(function() {
             $('input[name="isExample"]').val("1");
             $('#upload').submit();
         })
+
+        // change label to filename when uploaded
+        $(".custom-file-input").on('change', function(){
+            var filename = $(this).val().split(/(\\|\/)/g).pop();
+            $(this).prev('.custom-file-label').html(filename);
+        });
     })
 
 </script>
