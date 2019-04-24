@@ -208,6 +208,12 @@ from background_pipeline import *
 
 @app.route(ENTER_POINT + '/upload', methods=['GET', 'POST'])
 def upload_files():
+
+	d_datatype_files = {
+		'plain_text': ('data_file', 'metadata_file'), 
+		'10x_h5': ('h5_file'),
+		'10x_mtx': ('mtx_file', 'genes_file', 'barcodes_file')
+	} 
 	if request.method == 'POST':
 		if not bool(int(request.form['isExample'])):
 			upload_type = request.form['dataType']
@@ -215,8 +221,10 @@ def upload_files():
 			for name, uploaded_file in request.files.items():
 				if allowed_file(uploaded_file.filename): 
 					filename = secure_filename(uploaded_file.filename)
-					uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-					files[name] = filename
+					if name in d_datatype_files[upload_type]:
+						# To ignore additional files uploaded by user based on data type
+						uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+						files[name] = filename
 		else:
 			upload_type = '10x_h5'
 			files = {'h5_file': 'example_read_count_matrix.h5'}

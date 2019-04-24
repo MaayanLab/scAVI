@@ -62,12 +62,12 @@
             <div class="form-group upload-file hidden custom-file my-4" data-type="10x_mtx">
                 <label class="custom-file-label" for="genes_file">genes.tsv</label>
                 <input type="file" id="genes_file" name="genes_file" class="form-control-file custom-file-input">
-                <p class="form-text text-muted">A tab delimited file of the corresponding genes in the .mtx expression matrix file. <a href="data/example_genes.tsv">Example</a></p>
+                <p class="form-text text-muted">A tab delimited file of the corresponding genes in the .mtx expression matrix file. The first column should be the gene IDs whereas the secound column corresponds to gene symbols. <a href="data/example_genes.tsv">Example</a></p>
             </div>
             <div class="form-group upload-file hidden custom-file my-4" data-type="10x_mtx">
                 <label class="custom-file-label" for="barcodes_file">barcodes.tsv</label>
                 <input type="file" id="barcodes_file" name="barcodes_file" class="form-control-file custom-file-input">
-                <p class="form-text text-muted">A tab delimited file of the corresponding barcodes in the .mtx expression matrix file. <a href="data/example_barcodes.tsv">Example</a></p>
+                <p class="form-text text-muted">A tab delimited file of the corresponding barcodes in the .mtx expression matrix file. The first column should be the unique barcodes for cells.<a href="data/example_barcodes.tsv">Example</a></p>
             </div>
 
             <input type="hidden" name="isExample" value="0">
