@@ -97,7 +97,8 @@ def parse_10x_h5(filename):
 def parse_10x_mtx(mtx_fn, genes_fn, barcodes_fn):
 	# Parse the .mtx, genes.tsv, barcodes.tsv files from 10x Genomics
 	mat = io.mmread(mtx_fn)
-	genes = pd.read_csv(genes_fn, sep='\t', names=['gene_ids', 'gene_symbols'])['gene_symbols']
+	# assume the 2nd column are gene symbols
+	genes = pd.read_csv(genes_fn, sep='\t', header=None)[1]
 	barcodes = pd.read_csv(barcodes_fn, sep='\t', names=['barcodes'])['barcodes']
 	if mat.shape != (genes.shape[0], barcodes.shape[0]):
 		raise ValueError('The shape of the expression matrix (%d, %d) is inconsistent with \
