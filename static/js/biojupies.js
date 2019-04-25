@@ -29,8 +29,10 @@ function addPreviewTable(response, metadata, previewSelector) {
 		$table.find('tbody').append($tr);
 	}
 
-	// Add
-    // $('#loader').addClass('d-none');
+    // Remove spinner
+    var spinnerSelector = previewSelector + " > div.spinner-border";
+    $(spinnerSelector).addClass('d-none');
+    // Add table
     var $tableWrapper = $('<div>', {'class': 'table-wrapper'})
     $tableWrapper.append($table)
 	$(previewSelector).append($tableWrapper).removeClass('d-none');
