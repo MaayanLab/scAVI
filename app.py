@@ -365,7 +365,7 @@ def configure_analysis(upload_id):
 	elif f.get('gse'):
 		notebook_title = f.get('gse')
 	else:
-		notebook_title = 'RNA-seq'
+		notebook_title = 'scRNA-seq'
 	notebook_title += ' Analysis Notebook'
 
 	return render_template('review-analysis.html', 
@@ -436,7 +436,7 @@ def generate_notebook(upload_id):
 @app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>/<string:gse_id>', methods=['GET'])
 def view_notebook(notebook_uid, gse_id):
 	if gse_id is None:
-		gse_id = 'RNA-seq'
+		gse_id = 'scRNA-seq'
 	nbviewer_url = "https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/%s/%s Analysis Notebook.ipynb" % \
 		(notebook_uid, gse_id)
 	return render_template('view-notebook.html',
