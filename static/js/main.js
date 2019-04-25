@@ -148,3 +148,11 @@ var visBtnGroup = new VisualizationBtnGroup({scatterPlot: sdv,
 })
 
 var overlay = new Overlay({scatterPlot: sdv})
+// respond to sdv.change events 
+overlay.listenTo(sdv, 'modelChanging', function(url){
+	this.render()
+	this.changeMessage('Switching visualization...')
+})
+overlay.listenTo(sdv, 'modelChanged', function(url){
+	this.remove()
+})

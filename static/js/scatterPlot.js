@@ -686,6 +686,7 @@ var Scatter3dView = Backbone.View.extend({
 
 	changeModel: function(url){
 		// change model and update the visualization
+		this.trigger('modelChanging', url)
 		if (this.is3d){
 			this.stopAnimate();
 		}
