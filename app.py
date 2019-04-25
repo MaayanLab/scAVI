@@ -476,7 +476,7 @@ def check_progress(dataset_id):
 
 		ds['visualizations'] = visualizations
 		ds['enrichment_results'] = [er for er in enrichments]
-		
+
 		return render_template('progress.html', 
 			ENTER_POINT=ENTER_POINT,
 			logger_msg=Logger.get_all_msg(dataset_id),
@@ -502,16 +502,22 @@ def graph_page_with_ndim(graph_name, dataset_id, n_dim):
 	# pick the attributes for default shaping and coloring
 	if dataset_id.startswith('GSE'):
 		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+		meta_df = gds.meta_df
+		n_samples = len(gds.sample_ids)
 	else:
-		gds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
-	n_samples = len(gds.sample_ids)
+		gds = GeneExpressionDataset.load_meta(dataset_id, mongo.db)
+		n_samples = gds['n_samples']
+		doc = mongo.db['dataset'].find_one({'id': dataset_id}, {'_id': False, 'meta.meta_df': True})
+		meta_df = pd.DataFrame(doc['meta']['meta_df'])
+		
 	d_col_nuniques = {}
-	for col in gds.meta_df.columns:
-		n_uniques = gds.meta_df[col].nunique()
+	for col in meta_df.columns:
+		n_uniques = meta_df[col].nunique()
 		if n_uniques < n_samples:
 			d_col_nuniques[col] = n_uniques
 
 	d_col_nuniques = sorted(d_col_nuniques.items(), key=lambda x:x[1])
+	print d_col_nuniques
 
 	if len(d_col_nuniques) == 0: 
 		# color by clustering if no meta col properly group cells
