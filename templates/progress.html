@@ -4,20 +4,20 @@
         <h1>Dataset</h1>
         <dl class="row">
             <dt class="col-4">Dataset ID</dt>
-            <dd class="col-8">{{ ds.id }}</dd>
+            <dd class="col-8">{{ ds['id'] }}</dd>
             <dt class="col-4">N samples</dt>
-            <dd class="col-8">{{ ds.sample_ids|length }}</dd>
+            <dd class="col-8">{{ ds['n_samples'] }}</dd>
             <dt class="col-4">N genes</dt>
-            <dd class="col-8">{{ ds.genes|length }}</dd>
+            <dd class="col-8">{{ ds['n_genes'] }}</dd>
         </dl>                    
     </div>
     <div>
         <h1>Visualizations</h1>
         <ul id="visualization">
-            {% for vis in ds.visualizations %}
-                <li><a href="graph_page/{{ds.id}}/{{vis['name']}}/2">{{vis['name']}}-2D</a></li>
+            {% for vis in ds['visualizations'] %}
+                <li><a href="graph_page/{{ds['id']}}/{{vis['name']}}/2">{{vis['name']}}-2D</a></li>
                 {% if vis['has3d'] %}
-                    <li><a href="graph_page/{{ds.id}}/{{vis['name']}}/3">{{vis['name']}}-3D</a></li>
+                    <li><a href="graph_page/{{ds['id']}}/{{vis['name']}}/3">{{vis['name']}}-3D</a></li>
                 {% endif %}
             {% endfor %}
         </ul>
@@ -26,15 +26,15 @@
         <h1>Enrichment analysis</h1>
         <h4>Finished:</h4>
         <ul id="enrichment">
-            {% for er in ds.enrichment_results %}
+            {% for er in ds['enrichment_results'] %}
             <li>{{er['gene_set_library']}}</li>
             {% endfor %}
         </ul>
 
-        {% if ds.er_pendings|length > 0 %}
+        {% if ds['er_pendings']|length > 0 %}
         <h4>Pending:</h4>
         <ul>
-            {% for er in ds.er_pendings %}
+            {% for er in ds['er_pendings'] %}
             <li>{{er['gene_set_library']}}, {{er['count']}}/{{ds.sample_ids|length}} finished</li>
             {% endfor %}
         </ul>
@@ -57,7 +57,7 @@
         
 $(document).ready(function(){
     var enter_point = '/' + window.location.pathname.split('/')[1]
-    var namespace = enter_point + '/' + '{{ds.id}}';
+    var namespace = enter_point + '/' + '{{ds['id']}}';
     var url = 'http://' + document.domain + ':' + location.port + namespace
     var socket = io(url, {path: enter_point + '/socket.io'})
 
@@ -69,16 +69,16 @@ $(document).ready(function(){
         } else { // Add DOM(s) to corresponding positions
             if (msg.done === 'visualization'){
                 if (msg.name === 'PCA'){
-                    var a = $('<a>').attr('href', 'graph_page/{{ds.id}}/PCA/2').text('PCA-2D')
+                    var a = $('<a>').attr('href', 'graph_page/{{ds["id"]}}/PCA/2').text('PCA-2D')
                     var li = $('<li>').append(a)
                     $("#" + msg.done).append(li)
-                    var a = $('<a>').attr('href', 'graph_page/{{ds.id}}/PCA/3').text('PCA-3D')
+                    var a = $('<a>').attr('href', 'graph_page/{{ds["id"]}}/PCA/3').text('PCA-3D')
                     var li = $('<li>').append(a)
                     $("#" + msg.done).append(li)
                 } else {
                     var ndim = msg.name.split('-').slice(-1)[0][0];
                     var name = msg.name.split('-')[0]
-                    var href = 'graph_page/{{ds.id}}/'+name+'/3'
+                    var href = 'graph_page/{{ds["id"]}}/'+name+'/3'
                     var li = $('<li>')
                     li.append($('<a>').attr('href', href).text(name + '-' + ndim + 'D'))
                     $("#" + msg.done).append(li)

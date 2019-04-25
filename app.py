@@ -449,12 +449,12 @@ def view_notebook(notebook_uid, gse_id):
 def check_progress(dataset_id):
 	'''Given dataset_id, return some metadata and the progress of its associated 
 	objects: visualizations, enrichment.'''
-	ds = GeneExpressionDataset.load(dataset_id, mongo.db, meta_only=True)
+	ds = GeneExpressionDataset.load_meta(dataset_id, mongo.db)
 	if ds is None:
 		abort(404)
 	else:
 		# Check if dataset_id has started the process
-		if not ds.started:
+		if not ds['started']:
 			# run the pipeline
 			logger = Logger(dataset_id)
 			thread = socketio.start_background_task(
@@ -466,18 +466,16 @@ def check_progress(dataset_id):
 				logger=logger,
 				db=mongo.db
 				)
-			ds.start(mongo.db)
+			# ds.start(mongo.db)
+			mongo.db['dataset'].update_one({'id': dataset_id},
+				{'$set': {'started': True}})
 
 		visualizations = get_available_vis(mongo.db, dataset_id)
 		enrichments = mongo.db['enrichr'].find({'dataset_id': dataset_id}, 
 			{'_id': False, 'gene_set_library':True})
-		er_pendings = mongo.db['enrichr_temp'].find({'dataset_id': dataset_id}, 
-			{'_id': False, 'gene_set_library':True})
 
-		ds.visualizations = visualizations
-		ds.enrichment_results = [er for er in enrichments]
-		er_pendings = Counter([er['gene_set_library'] for er in er_pendings])
-		ds.er_pendings = [{'gene_set_library': key, 'count': val} for key, val in er_pendings.items()]	
+		ds['visualizations'] = visualizations
+		ds['enrichment_results'] = [er for er in enrichments]
 		
 		return render_template('progress.html', 
 			ENTER_POINT=ENTER_POINT,

@@ -310,6 +310,27 @@ class GeneExpressionDataset(object):
 		return obj
 
 	@classmethod
+	def load_meta(cls, dataset_id, db):
+		'''Only load number of samples and number of genes, for fast response under /progress endpoint.
+		'''
+		cur = db[cls.coll].aggregate([
+			{'$match': {'id': dataset_id} },
+			{'$group': {
+				'_id': '$id',
+				'id': {'$first': '$id'},
+				'n_genes': {'$sum': {'$size': '$genes'} },
+				'n_samples': {'$sum': {'$size': '$sample_ids'} },
+				'started': {'$first': '$started'},
+				'done': {'$first': '$done'},
+				} }
+		])
+		try:
+			doc = cur.next()
+		except StopIteration: # dataset doesn't exist
+			doc = None
+		return doc
+
+	@classmethod
 	def query_gene(cls, dataset_id, query_string, db):
 		'''Given a query string for gene symbols, return matched
 		gene symbols and their avg_expression.'''
