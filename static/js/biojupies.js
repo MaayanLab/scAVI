@@ -35,7 +35,7 @@ function addPreviewTable(response, metadata, previewSelector) {
     // Add table
     var $tableWrapper = $('<div>', {'class': 'table-wrapper'})
     $tableWrapper.append($table)
-	$(previewSelector).append($tableWrapper).removeClass('d-none');
+	$(previewSelector).append($tableWrapper).removeClass('d-none').addClass('preview');
 }
 
 
