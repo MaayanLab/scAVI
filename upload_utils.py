@@ -92,7 +92,8 @@ class Upload(object):
 			elif files['data_file'].endswith('.txt') or files['data_file'].endswith('.tsv'):
 				sep = '\t'
 			expr_df = pd.read_csv(os.path.join(upload_folder, files['data_file']), sep=sep)
-			expr_df.set_index(expr_df.columns[0], inplace=True)
+			# expr_df.set_index(expr_df.columns[0], inplace=True)
+			expr_df = expr_df.groupby(expr_df.columns[0]).agg(np.sum)
 			
 			if files['metadata_file'].endswith('.csv'):
 				sep = ','
@@ -101,7 +102,7 @@ class Upload(object):
 			meta_df = pd.read_csv(os.path.join(upload_folder, files['metadata_file']), sep=sep)
 			meta_df.set_index(meta_df.columns[0], inplace=True)
 			meta_df = meta_df.loc[expr_df.columns]
-			
+
 		elif self.type_ == '10x_h5': # h5 file from 10x Genomics
 			expr_df, meta_df = parse_10x_h5(os.path.join(upload_folder, files['h5_file']))
 		elif self.type_ == '10x_mtx': 

@@ -115,6 +115,8 @@ def background_preprocess_pipeline(socketio=None, upload_id=None, enter_point=No
 		error_message = get_exception_message(e)
 		emit_message(msg=error_message, error=True, e=error_message)
 	else:
+		# replace '.' to prevent MongoDB error
+		meta_df.columns = meta_df.columns.map(lambda x: x.replace('.', '_'))
 		emit_message('Expression data type is: %s' % expr_dtype)
 		emit_message('Packaging dataset to HDF5 file...')
 		h5_file = upload_obj.build_h5(expr_df, meta_df)
