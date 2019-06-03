@@ -97,6 +97,15 @@ def background_preprocess_pipeline(socketio=None, upload_id=None, enter_point=No
 		emit_message('Files parsing files with shapes: %s, %s' % (str(expr_df.shape), str(meta_df.shape)))
 		emit_message('Determining the data type of the gene expression file...')
 
+	# Only do filtering for sparse expr_df
+	meta_df_cols = set(meta_df.columns)
+	if 'n_reads' in meta_df_cols and 'n_expressed_genes' in meta_df_cols:
+		emit_message('Filtering out low quality cells')
+		cell_mask = (meta_df['n_reads'] > 2000) & (meta_df['n_expressed_genes'] > 500)
+		meta_df = meta_df.loc[cell_mask]
+		expr_df = expr_df.loc[:, cell_mask]
+		emit_message('Data after filtering have shapes: %s' % str(expr_df.shape))
+
 	try:
 		expr_dtype = expression_is_valid(expr_df)
 	except ValueError as e:

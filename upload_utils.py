@@ -16,10 +16,15 @@ def allowed_file(filename):
 		filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def expression_is_valid(expr_df):
-	if np.alltrue([np.issubdtype(x, np.integer) for x in expr_df.dtypes]):
+	dtypes = expr_df.dtypes
+	if np.alltrue([np.issubdtype(x, np.integer) for x in dtypes]):
 		return 'counts'
-	elif np.alltrue([np.issubdtype(x, np.float) for x in expr_df.dtypes]):
+	elif np.alltrue([np.issubdtype(x, np.float) for x in dtypes]):
 		return 'normed_counts'
+	elif np.alltrue([np.issubdtype(x, np.number) for x in dtypes]): # mixture of ints and floats
+		raise ValueError('Columns in the expression matrix have inconsistant data types: \n' + \
+			str(dtypes.sort_values())
+		)
 	else:
 		raise ValueError('Some columns in the expression matrix are not numbers.')
 
