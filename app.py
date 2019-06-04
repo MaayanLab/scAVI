@@ -312,9 +312,14 @@ def add_tools(upload_id):
 		# Combine tools and sections
 		for section in sections:
 			section.update({'tools': [x for x in tools if x['section_fk'] == section['id']]})
+		
+		# Put Enrichr links at the first in section 5
+		section5_tool_names = [t['tool_name'] for t in sections[-1]['tools']]
+		enrichr_idx = section5_tool_names.index('Enrichr Links')
+		sections[-1]['tools'][enrichr_idx], sections[-1]['tools'][0] = sections[-1]['tools'][0], sections[-1]['tools'][enrichr_idx]
+
 		# Number of tools
 		nr_tools = len(tools)
-
 		return render_template('analyze-tools.html',
 			ENTER_POINT=ENTER_POINT,
 			upload_obj=upload_obj,
@@ -412,7 +417,7 @@ def generate_notebook(upload_id):
 		# Generate notebook configuration
 		c = {
 			'notebook': {'title': d.get('notebook_title'), 'live': 'False', 'version': 'v1.0.5'},
-			'tools': [{'tool_string': x, 'parameters': p.get(x, {})} for x in p.keys()],
+			'tools': [{'tool_string': x, 'parameters': p.get(x, {})} for x in d['tool']],
 			'data': {'source': 'upload', 'parameters': {'uid': upload_id}},
 			'signature': {},
 			'terms': [],
