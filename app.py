@@ -264,6 +264,7 @@ def preview_uploaded_data(upload_id):
 		sample_metadata_dataframe.loc[:, str_col_mask] = \
 			sample_metadata_dataframe.loc[:, str_col_mask].values.astype(np.str)
 		sample_metadata_dataframe.set_index('Sample', inplace=True)
+		sample_metadata_dataframe.fillna('', inplace=True)
 
 		meta_data = {
 			'index': sample_metadata_dataframe.index.tolist(),
