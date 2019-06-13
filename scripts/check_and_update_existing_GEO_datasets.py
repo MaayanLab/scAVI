@@ -3,11 +3,14 @@ This script check the completeness of all GEO datasets in the MongoDB,
 and perform analyses to get the vis/enrichr results if anything is missing.
 
 '''
-
+import os
 import argparse
+import pandas as pd
 parser = argparse.ArgumentParser()
 parser.add_argument('-g', '--gsl', help='Gene set libraries (comma separated strings)', 
-	default='KEGG_2016,ARCHS4_Cell-lines')
+	default='KEGG_2016,ARCHS4_Tissues,ChEA_2016')
+parser.add_argument('-e', '--etype', help='Enrichment type', 
+	default='samplewise-z')
 
 # predict pathways and upstream regulators:
 # 'ChEA_2016,KEA_2015,KEGG_2016'
@@ -20,7 +23,19 @@ parser.add_argument('-v', '--vis', help='Visualizations (comma separated strings
 args = parser.parse_args()
 
 gene_set_libraries = args.gsl.split(',')
+etype = args.etype
 visualization_names = args.vis.split(',')
+
+if etype == 'background-z':
+	SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+	meta_file_path = os.path.abspath(os.path.join(SCRIPT_DIR, '../../scMeta/scripts/results'))
+
+	genes_meta_human = pd.read_csv(os.path.join(meta_file_path, 'human_scRNAseq_gene_stats_df.csv'))\
+		.set_index('gene')[['mean_cpm', 'std_cpm']]
+	genes_meta_mouse = pd.read_csv(os.path.join(meta_file_path, 'mouse_scRNAseq_gene_stats_df.csv'))\
+		.set_index('gene')[['mean_cpm', 'std_cpm']]
+	print 'Background files loaded:', genes_meta_human.shape, genes_meta_mouse.shape
+
 
 import sys
 sys.path.append('../')
@@ -59,7 +74,10 @@ for c, gse_id in enumerate(existing_GSE_ids):
 	visualizations = [doc['name'] for doc in cur]
 
 	# get available enrichr results in the DB
-	cur = db['enrichr'].find({'dataset_id': gse_id}, 
+	cur = db['enrichr'].find({'$and': [
+			{'dataset_id': gse_id}, 
+			{'type': etype}
+		]},
 		{'_id':False, 'gene_set_library':True})
 	gene_sets_avail = [doc['gene_set_library'] for doc in cur]
 
@@ -83,26 +101,32 @@ for c, gse_id in enumerate(existing_GSE_ids):
 				print 'Finished %s for dataset %s' % (vis_name, gse_id)
 		
 			if set(gene_sets_avail) != set(gene_set_libraries):
-				if not gds.DEGs_posted(db):
+				if not gds.DEGs_posted(db, etype=etype):
 					print 'POSTing DEGs to Enrichr'
-					d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
-					gds.save_DEGs(db)
+					genes_meta = None
+					if etype == 'background-z':
+						if gds.organism == 'human':
+							genes_meta = genes_meta_human
+						else:
+							genes_meta = genes_meta_mouse
+					d_sample_userListId = gds.post_DEGs_to_Enrichr(db, etype=etype, genes_meta=genes_meta)
+					gds.save_DEGs(db, etype=etype)
 				else:
-					d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
+					d_sample_userListId = gds.post_DEGs_to_Enrichr(db, etype=etype)
 
-				print len(d_sample_userListId)
+				print d_sample_userListId.keys(), len(d_sample_userListId[etype])
 
 				for gene_set_name in set(gene_set_libraries) - set(gene_sets_avail):
 					print 'Performing enrichment analysis on %s for dataset %s' % (gene_set_name, gse_id)
-					er = EnrichmentResults(gds, gene_set_name)
-					# try:
-					er.do_enrichment(db)
-					er.summarize(db)
-					print 'Finished enrichment analysis on %s for dataset %s' % (gene_set_name, gse_id)
-					print er.save(db)
-					er.remove_intermediates(db)
-					# except Exception as e:
-					# 	print e
-					# 	pass
+					er = EnrichmentResults(gds, gene_set_name, etype=etype)
+					try:
+						er.do_enrichment(db)
+						er.summarize(db)
+						print 'Finished enrichment analysis on %s for dataset %s' % (gene_set_name, gse_id)
+						print er.save(db)
+						er.remove_intermediates(db)
+					except Exception as e:
+						print e
+						# pass
 
 

@@ -42,6 +42,7 @@ notebook_configuration_base = {
       "parameters": {
         "nr_genes": "500",
         "normalization": "logCPM",
+        "signature_generation_method": "wilcoxon",
         "plot_type": "interactive"
       }
     },
@@ -61,6 +62,7 @@ notebook_configuration_base = {
       "tool_string": "monocle",
       "parameters": {
         "color_by": "Pseudotime",
+        "ordering": "variance",
         "plot_type": "interactive"
       }
     },
@@ -94,7 +96,7 @@ cur = db['dataset'].find(
 	{'$and': [
 		{'id': {'$regex': r'^GSE'}},
 		{'sample_ids.30': {'$exists': True}},
-        {'notebook_uid': {'$exists': True}}
+    {'notebook_uid': {'$exists': False}}
 	]}, projection={'id':True, 'meta': True, 'organism': True})
     
 gse_df = [] 
@@ -128,6 +130,7 @@ for _, row in gse_df.dropna().iterrows():
             response =  requests.post(endpoint, json=notebook_configuration)
             notebook_uid = response.json()['notebook_uid']
         except Exception as e:
+            print(gse_id, gpl_id)
             print(e)
             pass
         else:
