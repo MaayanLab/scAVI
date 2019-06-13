@@ -96,43 +96,35 @@ def index_page():
 
 @app.route(ENTER_POINT + '/all')
 def all_datasets():
-	n_cells = 0
-	cur = mongo.db['dataset'].find(
-		{'$and': [
-			{'id': {'$regex': r'^GSE'}},
-			{'sample_ids.30': {'$exists': True}}
-		]}, 
-		{'_id': False, 'id': True, 'notebook_uid':True})
-	d_dataset_notebook = {doc['id']: doc.get('notebook_uid') for doc in cur}
-	dataset_ids = d_dataset_notebook.keys()
-
-	projection = {'_id':False, 
-		'pubmed_id':True, 
-		'title':True, 
-		'submission_date':True,
-		'platform_taxid':True,
-		'geo_accession':True,
-		'sample_id':True
-		}
-
-	cur = mongo.db['geo'].find({'geo_accession': {'$in': dataset_ids}}, 
-		projection,
+	# Find upload id for datasets
+	cur = mongo.db['upload'].find({}, 
+		{'_id': True, 'dataset_id': True, 'type': True, 'files': True},
 		cursor_type=CursorType.EXHAUST
 		)
 
+	d_dataset_upload_obj = {doc['dataset_id']: doc for doc in cur}
+
+	n_cells = 0
+	cur = mongo.db['dataset'].find(
+		{}, 
+		{'_id': False, 'id': True, 'sample_ids':True, 'genes': True},
+		cursor_type=CursorType.EXHAUST)
+	# d_dataset_notebook = {doc['id']: doc.get('notebook_uid') for doc in cur}
+	# dataset_ids = d_dataset_notebook.keys()
 	n_studies = cur.count()
+
+
 	geo_datasets = [None] * n_studies
 
 	i = 0
 	for doc in cur:
-		n_cells += len(doc['sample_id'])
-		doc['n_cells'] = len(doc['sample_id'])
-		organism = 'human'
-		if str(doc['platform_taxid']) == '10090':
-			organism = 'mouse'
-		doc['organism'] = organism
-		doc.pop('sample_id', None)
-		doc['notebook_uid'] = d_dataset_notebook[doc['geo_accession']]
+		n_cells += len(doc['sample_ids'])
+		doc['n_cells'] = len(doc['sample_ids'])
+		doc['n_genes'] = len(doc['genes'])
+		doc.pop('sample_ids', None)
+		doc.pop('genes', None)
+
+		doc['upload'] = d_dataset_upload_obj[doc['id']]
 		geo_datasets[i] = doc
 		i += 1
 	stats = {'n_studies': n_studies, 'n_cells': n_cells}

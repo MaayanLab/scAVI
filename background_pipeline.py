@@ -180,17 +180,17 @@ def background_pipeline(socketio=None, dataset_id=None, enter_point=None, gene_s
 	emit_message(done='visualization', name='tSNE-3')
 	vis.save(db)
 
-	emit_message('Performing Monocle-2d...')
-	pe = PseudotimeEstimator(gds, name='monocle', func=lambda x: run_monocle_pipeline(x, n_components=2))
-	try:
-		pe.fit()
-	except RRuntimeError as e:
-		emit_message(get_exception_message(e))
-		pass
-	else:
-		emit_message('Monocle analysis finished')
-		emit_message(done='visualization', name='monocle-2')
-		pe.save(db)
+	# emit_message('Performing Monocle-2d...')
+	# pe = PseudotimeEstimator(gds, name='monocle', func=lambda x: run_monocle_pipeline(x, n_components=2))
+	# try:
+	# 	pe.fit()
+	# except RRuntimeError as e:
+	# 	emit_message(get_exception_message(e))
+	# 	pass
+	# else:
+	# 	emit_message('Monocle analysis finished')
+	# 	emit_message(done='visualization', name='monocle-2')
+	# 	pe.save(db)
 
 	# step 3.
 	emit_message('POSTing DEGs to Enrichr for enrichment analysis')

@@ -13,10 +13,10 @@
                 <div class="jumbotron mx-5 px-5 my-1 py-3">
                     <h1 class="display-6"></h1>
                     <p class="lead">
-                        <strong id="brand">scAVI</strong> is a web-based platform developed to enable users to analyze and visualize published and not published single cell RNA sequencing (scRNA-seq) datasets with state-of-the-art algorithms and visualization methods.
+                        <strong id="brand">scAVI0</strong> is a web-based platform developed to enable users to analyze and visualize datasets with state-of-the-art algorithms and visualization methods.
                     </p>
                     <p class="lead" id="stats">
-                        The scAVI platform supports the analysis and visualization of {{ stats['n_studies'] }} publicly available scRNA-seq studies from GEO covering {{ "{:,}".format(stats['n_cells']) }} single cells/samples. Analyses are provided as <a href="{{url_for('all_datasets')}}">{{ stats['n_studies'] }} dedicated landing pages</a> and Jupyter Notebook reports for each study.
+                        The scAVI0 platform supports the analysis and visualization of {{ stats['n_studies'] }} uploaded datasets covering {{ "{:,}".format(stats['n_cells']) }} samples. Analyses are provided as <a href="{{url_for('all_datasets')}}">{{ stats['n_studies'] }} dedicated landing pages</a> and Jupyter Notebook reports for each study.
                     </p>
                 </div>
             </div>
@@ -43,7 +43,7 @@
                 </div>
                 
                 <h3>Analyze your own scRNA-seq dataset</h3>
-                <p>Multiple formats for single cell expression data are supported by scAVI: plain text, HDF5 (h5), and sparse matrix (mtx).</p>
+                <p>Multiple formats for single cell expression data are supported by scAVI0: plain text, HDF5 (h5), and sparse matrix (mtx).</p>
                 <a href="upload" class="btn btn-info">Get Started</a>
             </div>
         </div>
@@ -93,7 +93,7 @@
 
     <div class="row mx-5 px-3 mt-3">
         <div class="col-sm-12">
-            <h3>scAVI currently contains implementations of the following methods:</h3>
+            <h3>scAVI0 currently contains implementations of the following methods:</h3>
             <hr>
             <!-- <ol>
             {% for section in sections %}

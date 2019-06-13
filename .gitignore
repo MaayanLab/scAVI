@@ -3,6 +3,7 @@ data/
 .ipynb_checkpoints/
 static/node_modules
 secrets.sh
+secrets0.sh
 scripts/*.csv
 # notebooks in this repo is for debugging codes only
 *.ipynb 

@@ -1,47 +1,39 @@
 {% extends "base-center.html" %}
 {% block content_center %}
     <div id="stats" class="alert alert-primary my-3" role="alert">
-        Analysis and visualization of {{ stats['n_studies'] }} single cell RNA-seq studies containing {{ "{:,}".format(stats['n_cells']) }} individual single cells/samples.
+        Analysis and visualization of {{ stats['n_studies'] }} datasets containing {{ "{:,}".format(stats['n_cells']) }} individual samples.
     </div>
     <table class="table table-hover table-sm">
         <thead>
             <tr>
                 <th></th>
                 <th></th>
-                <th>Title</th>
+                <th>ID</th>
                 <th>Samples</th>
-                <th>Organism</th>
+                <th>Genes</th>
                 <th>Submission date</th>
-                <th>Link to PubMed</th>
-                <th>GEO accession</th>
+                <th>Link to upload page</th>
             </tr>
         </thead>
         <tbody>
             {% for gds in geo_datasets %}
             <tr>
-                <td><a href="graph_page/{{ gds['geo_accession'] }}/tSNE" class="btn btn-outline-info btn-sm">Launch Viewer</a></td>
+                <td><a href="graph_page/{{ gds['id'] }}/tSNE" class="btn btn-outline-info btn-sm">Launch Viewer</a></td>
                 <td>
-                    {% if gds['notebook_uid'] is not none %}
-                        <a href="view_notebook/{{gds['notebook_uid']}}/{{gds['geo_accession']}}" 
+                    {% if gds.get('notebook_uid') is not none %}
+                        <a href="view_notebook/{{gds['notebook_uid']}}/{{gds['id']}}" 
                             class="btn btn-outline-info btn-sm" target="_blank">Launch Notebook</a>
                     {% else %}
                         <a class="btn btn-outline-info btn-sm disabled">Launch Notebook</a>
                     {% endif %}
                 </td>
-                <td><a href="graph_page/{{ gds['geo_accession'] }}/tSNE">{{ gds['title'] }} </a></td>
+                <td>{{ gds['id'] }}</td>
                 <td>{{ gds['n_cells'] }}</td>
-                <td>{{ gds['organism'] }}</td>
-                <td>{{ gds['submission_date'] }}</td>
+                <td>{{ gds['n_genes'] }}</td>
+                <td>{{ gds['upload']['_id'].generation_time }}</td>
                 <td>
-                    {% if gds['pubmed_id'] is iterable and gds['pubmed_id'] is not string %}
-                        {% for pmid in gds['pubmed_id'] %}
-                            <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={{ pmid }}" target="_blank">{{ pmid }}</a> 
-                        {% endfor %}
-                    {% else %}
-                        <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={{ gds['pubmed_id'] }}" target="_blank">{{ gds['pubmed_id'] }}</a>
-                    {% endif %}
+                    <a href="preprocess/{{ gds['upload']['_id']|string }}" target="_blank">{{ gds['upload']['_id']|string }}</a>
                 </td>
-                <td><a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={{ gds['geo_accession'] }}" target="_blank">{{ gds['geo_accession'] }}</a></td>
             </tr>
             {% endfor %}
         </tbody>
