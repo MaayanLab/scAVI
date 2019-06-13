@@ -54,27 +54,16 @@ def index_page():
 	# The default main page
 	n_cells = 0
 	cur = mongo.db['dataset'].find(
-		{'$and': [
-			{'id': {'$regex': r'^GSE'}},
-			{'sample_ids.30': {'$exists': True}}
-		]}, 
-		{'_id': False, 'id': True, 'notebook_uid':True})
-	d_dataset_notebook = {doc['id']: doc.get('notebook_uid') for doc in cur}
-	dataset_ids = d_dataset_notebook.keys()
+		{}, 
+		{'_id': False, 'id': True, 'sample_ids':True, 'genes': True})
+	# d_dataset_notebook = {doc['id']: doc.get('notebook_uid') for doc in cur}
+	# dataset_ids = d_dataset_notebook.keys()
 
-	projection = {'_id':False, 
-		'sample_id':True
-		}
-
-	cur = mongo.db['geo'].find({'geo_accession': {'$in': dataset_ids}}, 
-		projection,
-		cursor_type=CursorType.EXHAUST
-		)
 
 	n_studies = cur.count()
 
 	for doc in cur:
-		n_cells += len(doc['sample_id'])
+		n_cells += len(doc['sample_ids'])
 	stats = {'n_studies': n_studies, 'n_cells': n_cells}
 
 	# Perform tool and section query from database
