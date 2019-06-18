@@ -31,5 +31,5 @@ coll_enrichr.create_index('terms') # keywords index
 coll_vis.create_index([('dataset_id', ASCENDING), ('name', ASCENDING)], 
 	unique=True)
 
-coll_upload.create_index('dataset_id', unique=True)
+coll_upload.create_index('dataset_id', unique=True, sparse=True)
 
