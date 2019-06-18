@@ -86,7 +86,7 @@ def index_page():
 @app.route(ENTER_POINT + '/all')
 def all_datasets():
 	# Find upload id for datasets
-	cur = mongo.db['upload'].find({}, 
+	cur = mongo.db['upload'].find({'done': True}, 
 		{'_id': True, 'dataset_id': True, 'type': True, 'files': True},
 		cursor_type=CursorType.EXHAUST
 		)
@@ -113,7 +113,7 @@ def all_datasets():
 		doc.pop('sample_ids', None)
 		doc.pop('genes', None)
 
-		doc['upload'] = d_dataset_upload_obj[doc['id']]
+		doc['upload'] = d_dataset_upload_obj.get(doc['id'], {})
 		geo_datasets[i] = doc
 		i += 1
 	stats = {'n_studies': n_studies, 'n_cells': n_cells}

@@ -4,7 +4,7 @@ from models.database import *
 from pymongo import MongoClient
 mongo = MongoClient(MONGOURI)
 
-db = mongo['SCV']
+db = mongo['SCV0']
 coll = db['dataset']
 
 from models.gene_expression import *
