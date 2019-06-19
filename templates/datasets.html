@@ -8,32 +8,25 @@
             <tr>
                 <th></th>
                 <th></th>
-                <th>ID</th>
+                <th>Label</th>
+                <th>Description</th>
                 <th>Samples</th>
                 <th>Genes</th>
                 <th>Submission date</th>
-                <th>Link to upload page</th>
             </tr>
         </thead>
         <tbody>
             {% for gds in geo_datasets %}
             <tr>
-                <td><a href="graph_page/{{ gds['id'] }}/tSNE" class="btn btn-outline-info btn-sm">Launch Viewer</a></td>
+                <td><a href="graph_page/{{ gds['id'] }}/PCA/2" class="btn btn-outline-info btn-sm">Launch Viewer</a></td>
                 <td>
-                    {% if gds.get('notebook_uid') is not none %}
-                        <a href="view_notebook/{{gds['notebook_uid']}}/{{gds['id']}}" 
-                            class="btn btn-outline-info btn-sm" target="_blank">Launch Notebook</a>
-                    {% else %}
-                        <a class="btn btn-outline-info btn-sm disabled">Launch Notebook</a>
-                    {% endif %}
+                    <a href="preprocess/{{ gds['upload']['_id']|string }}" class="btn btn-outline-info btn-sm">Dataset Upload Page</a>
                 </td>
-                <td>{{ gds['id'] }}</td>
+                <td>{{ gds['dataset_meta']['label'] }}</td>
+                <td>{{ gds['dataset_meta']['description'] }}</td>
                 <td>{{ gds['n_cells'] }}</td>
                 <td>{{ gds['n_genes'] }}</td>
                 <td>{{ gds['upload']['_id'].generation_time }}</td>
-                <td>
-                    <a href="preprocess/{{ gds['upload']['_id']|string }}" target="_blank">{{ gds['upload']['_id']|string }}</a>
-                </td>
             </tr>
             {% endfor %}
         </tbody>

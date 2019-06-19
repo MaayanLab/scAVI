@@ -93,6 +93,12 @@ def all_datasets():
 
 	d_dataset_upload_obj = {doc['dataset_id']: doc for doc in cur}
 
+	# Find additional info on datasets
+	cur = mongo.db['dataset_meta'].find({}, {'_id': False})
+
+	d_dataset_meta = {doc['graph_id']: doc for doc in cur}
+
+	# Find datasets
 	n_cells = 0
 	cur = mongo.db['dataset'].find(
 		{}, 
@@ -114,6 +120,7 @@ def all_datasets():
 		doc.pop('genes', None)
 
 		doc['upload'] = d_dataset_upload_obj.get(doc['id'], {})
+		doc['dataset_meta'] = d_dataset_meta.get(doc['id'], {})
 		geo_datasets[i] = doc
 		i += 1
 	stats = {'n_studies': n_studies, 'n_cells': n_cells}
@@ -352,7 +359,7 @@ def configure_analysis(upload_id):
 	elif f.get('gse'):
 		notebook_title = f.get('gse')
 	else:
-		notebook_title = 'scRNA-seq'
+		notebook_title = 'GIVWE'
 	notebook_title += ' Analysis Notebook'
 
 	return render_template('review-analysis.html', 
@@ -423,7 +430,7 @@ def generate_notebook(upload_id):
 @app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>/<string:gse_id>', methods=['GET'])
 def view_notebook(notebook_uid, gse_id):
 	if gse_id is None:
-		gse_id = 'scRNA-seq'
+		gse_id = 'GIVWE'
 	nbviewer_url = "https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/%s/%s Analysis Notebook.ipynb" % \
 		(notebook_uid, gse_id)
 	return render_template('view-notebook.html',
@@ -496,22 +503,13 @@ def graph_page_with_ndim(graph_name, dataset_id, n_dim):
 		n_samples = gds['n_samples']
 		doc = mongo.db['dataset'].find_one({'id': dataset_id}, {'_id': False, 'meta.meta_df': True})
 		meta_df = pd.DataFrame(doc['meta']['meta_df'])
-		
-	d_col_nuniques = {}
-	for col in meta_df.columns:
-		n_uniques = meta_df[col].nunique()
-		if n_uniques < n_samples:
-			d_col_nuniques[col] = n_uniques
 
-	d_col_nuniques = sorted(d_col_nuniques.items(), key=lambda x:x[1])
-	print d_col_nuniques
-
-	if len(d_col_nuniques) == 0: 
-		# color by clustering if no meta col properly group cells
-		sdvConfig['colorKey'] = 'KMeans-clustering'
+	# Find if this dataset is in dataset_meta
+	doc = mongo.db['dataset_meta'].find_one({'graph_id': dataset_id})
+	if doc:
+		sdvConfig['colorKey'] = doc['default_color_col']
 	else:
-		sdvConfig['colorKey'] = d_col_nuniques[0][0]
-
+		sdvConfig['colorKey'] = meta_df.columns[0]
 	sdvConfig['shapeKey'] = None
 
 	visualizations = get_available_vis(mongo.db, dataset_id)
@@ -890,6 +888,22 @@ def page_not_found(e):
 @app.errorhandler(500)
 def error_json(e):
 	return jsonify(error=500, text=str(e)), 500
+
+'''
+Internal
+'''
+@app.route(ENTER_POINT + '/_delete/<string:dataset_id>', methods=['GET'])
+def delete_dataset(dataset_id):
+	if request.method == 'GET':
+		doc = dataset_info = mongo.db['dataset'].find_one({'id': dataset_id}, 
+			{'_id': False, 'id': True, 'genes':True, 'sample_ids': True})
+		dataset_info = {
+			'id': doc['id'],
+			'n_genes': len(doc['genes']),
+			'n_samples': len(doc['sample_ids'])
+		}
+		GeneExpressionDataset.remove_all(dataset_id, mongo.db)
+		return jsonify({'message': 'dataset deleted', 'dataset': dataset_info})
 
 from jinja2 import Markup
 app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])
