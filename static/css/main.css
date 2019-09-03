@@ -10,7 +10,12 @@ body {
   
 	font-size: 16px;
 }
-canvas { width: 100%; height: 100% }
+
+#renderer {
+  left: 0px;
+  top: 0px;
+  position: absolute;
+}
 
 a {
   color: #1689E5;
@@ -35,9 +40,6 @@ a {
 @media only screen and (max-width: 420px){
   #body {
     height: auto;
-    margin-top: 0;
-    margin-left: 0;
-    margin-right: 40px;
   }
   #brush {
     width: 100%;
