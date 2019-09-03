@@ -25,7 +25,8 @@ RUN pip install \
 	scikit-learn==0.19.1\
 	google-cloud-storage==1.13.2\
 	flask_sqlalchemy==2.0\
-	MySQL-python
+	MySQL-python\
+	flask_cors==2.0.1
 
 # Dependencies for monocle
 RUN R -e 'install.packages(c("reticulate", "DDRTree", "XML", "RCurl"), repos = "https://cran.rstudio.com/")'

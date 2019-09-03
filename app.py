@@ -18,6 +18,7 @@ from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import MetaData, or_, and_, func
+from flask_cors import cross_origin
 
 import encrypt
 from utils import *
@@ -559,6 +560,7 @@ def load_graph_layout_coords(graph_name, dataset_id):
 	'''
 	return redirect(ENTER_POINT + '/graph/%s/%s/2' % (dataset_id, graph_name))
 
+@cross_origin()
 @app.route(ENTER_POINT + '/graph/<string:dataset_id>/<string:graph_name>/<int:n_dim>', methods=['GET'])
 def load_graph_layout_coords_with_dim(graph_name, dataset_id, n_dim):
 	'''API for different graphs'''
