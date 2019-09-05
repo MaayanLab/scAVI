@@ -560,8 +560,8 @@ def load_graph_layout_coords(graph_name, dataset_id):
 	'''
 	return redirect(ENTER_POINT + '/graph/%s/%s/2' % (dataset_id, graph_name))
 
-@cross_origin()
 @app.route(ENTER_POINT + '/graph/<string:dataset_id>/<string:graph_name>/<int:n_dim>', methods=['GET'])
+@cross_origin()
 def load_graph_layout_coords_with_dim(graph_name, dataset_id, n_dim):
 	'''API for different graphs'''
 	if request.method == 'GET':
