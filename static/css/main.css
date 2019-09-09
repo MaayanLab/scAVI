@@ -67,7 +67,7 @@ a {
 }
 
 #legend{
-	/*z-index: 10;*/
+	z-index: 10;
 	position: absolute;
 	left: 0px;
 	top: 0px;
