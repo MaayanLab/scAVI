@@ -1,38 +1,55 @@
-FROM python:2.7-slim
+FROM ubuntu:18.04
 
-# Install numpy/scipy dependencies
-RUN apt-get update && apt-get install -y build-essential gfortran libatlas-base-dev \
-	libxml2-dev \
-	aptitude \
-	libcurl4-openssl-dev \
-	default-libmysqlclient-dev
-
-# Install R 3.5
-RUN echo 'deb http://cran.rstudio.com/bin/linux/debian stretch-cran35/' >> /etc/apt/sources.list 
-# RUN apt-get install -y dirmngr && apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
-RUN apt-get update && apt-get install -y  --allow-unauthenticated r-base
-
-# Install required python packages
-RUN pip install \
-	pandas==0.21.0\
-	gevent==1.2.2\
-	Flask==0.12.2\
-	Flask-PyMongo==0.5.1\
-	Flask-SocketIO==2.9.4\
-	h5py==2.9.0\
-	requests==2.18.4\
-	scipy==1.0.0\
-	scikit-learn==0.19.1\
-	google-cloud-storage==1.13.2\
-	flask_sqlalchemy==2.0\
-	MySQL-python\
-	flask_cors==2.0.1
+# Install system dependencies
+ENV R_BASE_VERSION 3.5.3
+RUN set -x \
+	&& echo "Preparing system..." \
+	&& apt-get update -y \
+	&& apt-get install -y \
+		apt-transport-https \
+		ca-certificates \
+		dirmngr \
+		gnupg2 \
+		software-properties-common \
+		tzdata \
+	&& echo "Applying timezone fix..." \
+	&& ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime \
+	&& dpkg-reconfigure --frontend noninteractive tzdata \
+	&& echo "Trusting and adding R-repository..." \
+	&& apt-key adv --keyserver keyserver.ubuntu.com --recv-keys '51716619E084DAB9' \
+	&& add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' \
+	&& echo "Installing system dependencies..." \
+	&& apt-get update -y \
+	&& apt-get upgrade -y \
+	&& apt-get install -y \
+		aptitude \
+		build-essential \
+		default-libmysqlclient-dev \
+		gfortran \
+		libatlas-base-dev \
+		libcurl4-openssl-dev \
+		libicu60 \
+		libjpeg8 \
+		libxml2-dev \
+		r-base \
+		r-base-core \
+		r-base-dev \
+    python-pip \
+    python2.7 \
+    python2.7-dev
 
 # Dependencies for monocle
-RUN R -e 'install.packages(c("reticulate", "DDRTree", "XML", "RCurl"), repos = "https://cran.rstudio.com/")'
-RUN R -e 'source("http://bioconductor.org/biocLite.R"); biocLite("monocle");'
+RUN set -x \
+	&& echo "Installing R dependencies..." \
+	&& R -e 'install.packages(c("reticulate", "DDRTree", "XML", "RCurl", "BiocManager"), repos = "https://cran.rstudio.com/")' \
+	&& R -e 'BiocManager::install(c("monocle"))'
 
-RUN pip install rpy2==2.8.6
+# Install required python packages
+ADD requirements.txt /requirements.txt
+RUN set -x \
+	&& echo "Installing python dependencies..." \
+	&& pip2 install -r requirements.txt \
+	&& rm /requirements.txt
 
 # Copy the application folder inside the container
 ADD . /my_application
