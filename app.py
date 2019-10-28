@@ -38,7 +38,9 @@ mongo.init_app(app)
 
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, path=ENTER_POINT + '/socket.io', 
-	async_mode='threading'
+	async_mode='threading',
+	engineio_logger=True,
+	cors_allowed_origins=[os.environ['ORIGIN']]
 	)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']

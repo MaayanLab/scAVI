@@ -5,7 +5,14 @@ services:
     image: maayanlab/scv:1.0.2
     ports:
       - 5000:5000
-    env_file:
-    - .env
+    environment:
+      - APPLICATION_DEFAULT_CREDENTIALS=${APPLICATION_DEFAULT_CREDENTIALS}
+      - ENTER_POINT=${ENTER_POINT}
+      - GCLOUD_PROJECT=${GCLOUD_PROJECT}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+      - MONGOURI=${MONGOURI}
+      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
+      - debug=${debug}
+      - ORIGIN=${ORIGIN}
     volumes:
       - ./data:/my_application/data
