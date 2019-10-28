@@ -350,8 +350,8 @@ def configure_analysis(upload_id):
 			tables['parameter'].columns['parameter_description'], \
 			tables['parameter_value'].columns['value'], \
 			tables['parameter_value'].columns['default']) \
-		.outerjoin(tables['parameter']) \
-		.outerjoin(tables['parameter_value']) \
+		.outerjoin(tables['parameter'], tables['parameter'].columns['tool_fk'] == tables['tool'].columns['id']) \
+		.outerjoin(tables['parameter_value'], tables['parameter_value'].columns['parameter_fk'] == tables['parameter'].columns['id']) \
 		.filter(tables['tool'].columns['tool_string'].in_(tools)).all()
 	session.close()
 	p = pd.DataFrame(db_query).set_index(['tool_string'])#pd.read_sql_query('SELECT tool_name, tool_string, tool_description, parameter_name, parameter_description, parameter_string, value, `default` FROM tool t LEFT JOIN parameter p ON t.id=p.tool_fk LEFT JOIN parameter_value pv ON p.id=pv.parameter_fk WHERE t.tool_string IN {}'.format(tool_query_string), engine).set_index(['tool_string'])#.set_index(['tool_name', 'parameter_name', 'parameter_description', 'parameter_string'])
