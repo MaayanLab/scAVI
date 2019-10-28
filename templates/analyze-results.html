@@ -211,7 +211,7 @@
 				// Add link for uploaded data
 				var dataset_uid = JSON.parse($('#notebook-link').attr('data-notebook_configuration'))['data']['parameters']['uid'];
 				if (dataset_uid) {
-					$('#reanalyze').attr('href', $('#reanalyze').attr('href')+dataset_uid);
+					// $('#reanalyze').attr('href', $('#reanalyze').attr('href')+dataset_uid);
 					$('#reanalyze').removeClass('hidden');
 				}
 				// Add Email Sharing
