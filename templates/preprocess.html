@@ -68,7 +68,7 @@ $(document).ready(function(){
 	var upload_id = '{{ upload_obj.id }}';
     var enter_point = '/' + window.location.pathname.split('/')[1]
     var namespace = enter_point + '/' + upload_id;
-    var url = 'http://' + document.domain + ':' + location.port + namespace
+    var url = window.location.protocol + '//' + document.domain + ':' + location.port + namespace
     var socket = io(url, {path: enter_point + '/socket.io'})
 
     // Event handler for server sent data.

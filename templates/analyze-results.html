@@ -14,7 +14,7 @@
 		<!-- Buttons -->
 		<div class="col-md-10 mt-auto pt-3 pt-md-0">
 			<div class="float-left float-md-right">
-				<a id="reanalyze" class="btn black border-custom bg-white nodecoration mr-2 d-inline-block hidden" href="{{url_for('add_tools', upload_id=upload_id)}}">Re-analyze Dataset</a>
+				<a id="reanalyze" class="btn black border-custom bg-white nodecoration mr-2 d-inline-block hidden" href="{{url_for('add_tools', upload_id=upload_id)}}">Re-analyze Dataset{{upload_id}}</a>
 				<a id="new-notebook" class="btn black border-custom bg-white nodecoration mr-2 d-inline-block hidden" href="{{url_for('upload_files')}}">New Notebook</a>
                 <a id="open-notebook" class="btn white border-custom bg-blue nodecoration mr-2 d-inline-block hidden" 
                     href="{{url_for('view_notebook', notebook_uid='')}}"
@@ -187,7 +187,7 @@
 	// Generate notebook
 	generate_notebook = function(notebook_configuration) {
 		$.ajax({	
-			url: "http://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate",
+			url:  window.location.protocol + "//amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate",
 			method: "POST",
 			data: notebook_configuration,
 			// data: $('#notebook-configuration').val(),

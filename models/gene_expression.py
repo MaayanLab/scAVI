@@ -137,7 +137,7 @@ def post_genes_to_enrichr(genes, description):
 		'list': (None, genes_str),
 		'description': description
 	}
-	resp = requests.post('http://amp.pharm.mssm.edu/Enrichr/addList', files=payload)
+	resp = requests.post('https://amp.pharm.mssm.edu/Enrichr/addList', files=payload)
 	if not resp.ok:
 		return None
 	else:

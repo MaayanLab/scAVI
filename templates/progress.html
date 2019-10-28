@@ -58,7 +58,7 @@
 $(document).ready(function(){
     var enter_point = '/' + window.location.pathname.split('/')[1]
     var namespace = enter_point + '/' + '{{ds['id']}}';
-    var url = 'http://' + document.domain + ':' + location.port + namespace
+    var url = window.location.protocol + '//' + document.domain + ':' + location.port + namespace
     var socket = io(url, {path: enter_point + '/socket.io'})
 
     // Event handler for server sent data.

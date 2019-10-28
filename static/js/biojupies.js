@@ -107,7 +107,7 @@ function generateNotebook (upload_id){
         terms: []
     };
 
-    var NOTEBOOK_GENERATOR_URL = 'http://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate';
+    var NOTEBOOK_GENERATOR_URL = window.location.protocol + '//amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate';
     // post notebook_config to server to generate notebook
     $.ajax({
         type: 'post',

@@ -387,7 +387,7 @@ def configure_analysis(upload_id):
 def generate_notebook(upload_id):
 	# print(upload_id)
 	# print(request.form)
-	NOTEBOOK_GENERATOR_URL = 'http://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate'
+	NOTEBOOK_GENERATOR_URL = 'https://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate'
 	# Check if form has been provided
 	if request.form:
 
@@ -431,6 +431,7 @@ def generate_notebook(upload_id):
 		# print(resp_data)
 		# Return result
 		# return redirect(resp_data['nbviewer_url'])
+		print upload_id
 		return render_template('analyze-results.html', 
 			notebook_configuration_dict=c,
 			notebook_configuration=json.dumps(c),
