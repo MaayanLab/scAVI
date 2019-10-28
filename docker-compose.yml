@@ -2,16 +2,10 @@ version: '3'
 services:
   scavi:
     build: .
-    image: maayanlab/scv:1.0.1
+    image: maayanlab/scv:1.0.2
     ports:
       - 5000:5000
-    environment:
-      - APPLICATION_DEFAULT_CREDENTIALS=${APPLICATION_DEFAULT_CREDENTIALS}
-      - ENTER_POINT=${ENTER_POINT}
-      - GCLOUD_PROJECT=${GCLOUD_PROJECT}
-      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
-      - MONGOURI=${MONGOURI}
-      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
-      - debug=${debug}
+    env_file:
+    - .env
     volumes:
       - ./data:/my_application/data
