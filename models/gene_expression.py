@@ -326,8 +326,18 @@ class GeneExpressionDataset(object):
 				'done': {'$first': '$done'},
 				} }
 		])
+		gene_set_libraries = set(gene_set_libraries.split(","))
+		visualized = [i["name"] for i in db['vis'].find({'dataset_id': dataset_id},{"name":True})]
+		enriched = [i["gene_set_library"] for i in db['enrichr'].find({'dataset_id': dataset_id},{"gene_set_library": True})]
 		try:
 			doc = cur.next()
+			done = True
+			vis = set(["PCA", "tSNE"])
+			if len(vis.intersection(visualized)) < len(vis):
+				done = False
+			elif len(gene_set_libraries.intersection(enriched)) < len(gene_set_libraries):
+				done = False
+			doc["done"] = done 
 		except StopIteration: # dataset doesn't exist
 			doc = None
 		return doc
