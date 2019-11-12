@@ -312,7 +312,7 @@ class GeneExpressionDataset(object):
 		return obj
 
 	@classmethod
-	def load_meta(cls, dataset_id, db):
+	def load_meta(cls, dataset_id, db, gene_set_libraries='KEGG_2016,ARCHS4_Cell-lines'):
 		'''Only load number of samples and number of genes, for fast response under /progress endpoint.
 		'''
 		cur = db[cls.coll].aggregate([
