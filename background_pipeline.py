@@ -156,57 +156,87 @@ def background_pipeline(socketio=None, dataset_id=None, enter_point=None, gene_s
 	# step 1.
 	emit_message('Retrieving expression data from database for %s' % dataset_id)
 	gds = GeneExpressionDataset.load(dataset_id, db, meta_only=False)
-	emit_message('Dataset loaded with shape %d x %d' % gds.df.shape)
-
+	emit_message('Dataset loaded with shape (%d x %d)' % gds.df.shape)
+	visualized = db['vis'].find({'dataset_id': dataset_id},{"name":True})
+	vis_num = visualized.count()
+	vis_done = []
+	for v in visualized:
+		vis_done.append(v["name"])
+	vis_num = db['vis'].find({'dataset_id': dataset_id}, {'name':True}).count()
+	enriched = db['enrichr'].find({'dataset_id': dataset_id},{"gene_set_library": True})
+	enrich_num = enriched.count()
+	enriched_libraries = []
+	for lib in enriched:
+		enriched_libraries.append(lib["gene_set_library"])
+	emit_message('Dataset has %d visualizations and  %d enrichments' % (vis_num, enrich_num))
+	# Check if visualizations exists:
 	# step 2.
-	emit_message('Performing PCA...')
-	vis = Visualization(ged=gds, name='PCA', func=do_pca)
-	coords = vis.compute_visualization()
-	emit_message('PCA finished')
-	emit_message(done='visualization', name='PCA')
-	vis.save(db)
-
-	emit_message('Performing tSNE-2d...')
-	vis = Visualization(ged=gds, name='tSNE', func=do_tsne, n_components=2)
-	coords = vis.compute_visualization()
-	emit_message('tSNE-2d finished')
-	emit_message(done='visualization', name='tSNE-2')
-	vis.save(db)
-
-	emit_message('Performing tSNE-3d...')
-	vis = Visualization(ged=gds, name='tSNE-3d', func=do_tsne)
-	coords = vis.compute_visualization()
-	emit_message('tSNE-3d finished')
-	emit_message(done='visualization', name='tSNE-3')
-	vis.save(db)
-
-	emit_message('Performing Monocle-2d...')
-	pe = PseudotimeEstimator(gds, name='monocle', func=lambda x: run_monocle_pipeline(x, n_components=2))
-	try:
-		pe.fit()
-	except RRuntimeError as e:
-		emit_message(get_exception_message(e))
-		pass
+	if 'PCA' not in vis_done:
+		emit_message('Performing PCA...')
+		vis = Visualization(ged=gds, name='PCA', func=do_pca)
+		coords = vis.compute_visualization()
+		emit_message('PCA finished')
+		emit_message(done='visualization', name='PCA')
+		vis.save(db)
 	else:
-		emit_message('Monocle analysis finished')
-		emit_message(done='visualization', name='monocle-2')
-		pe.save(db)
+		emit_message("PCA is done")
 
-	# step 3.
-	emit_message('POSTing DEGs to Enrichr for enrichment analysis')
-	d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
-	emit_message('Number of gene sets sent to Enrichr: %d' % len(d_sample_userListId))
-	emit_message('Will perform enrichment analysis on the following gene-set libraries: %s' % ', '.join(gene_set_libraries))
-	for gene_set_library in gene_set_libraries:
-		emit_message('Performing enrichment on: %s' % gene_set_library)
-		er = EnrichmentResults(gds, gene_set_library)
-		er.do_enrichment(db)
-		emit_message('Summarizing enrichment results from individual cells...')
-		er.summarize(db)
-		er.save(db)
-		emit_message('Enrichment on %s has finished' % gene_set_library)
-		emit_message(done='enrichment', name=gene_set_library)
-		er.remove_intermediates(db)
+	if 'tSNE' not in vis_done:
+		emit_message('Performing tSNE-2d...')
+		vis = Visualization(ged=gds, name='tSNE', func=do_tsne, n_components=2)
+		coords = vis.compute_visualization()
+		emit_message('tSNE-2d finished')
+		emit_message(done='visualization', name='tSNE-2')
+		vis.save(db)
+	else:
+		emit_message("tSNE-2d is done")
+
+	if 'tSNE-3d' not in vis_done:
+		emit_message('Performing tSNE-3d...')
+		vis = Visualization(ged=gds, name='tSNE-3d', func=do_tsne)
+		coords = vis.compute_visualization()
+		emit_message('tSNE-3d finished')
+		emit_message(done='visualization', name='tSNE-3')
+		vis.save(db)
+	else:
+		emit_message("tSNE-3d is done")
+	
+	# if 'monocle' not in vis_done:
+	# 	emit_message('Performing Monocle-2d...')
+	# 	pe = PseudotimeEstimator(gds, name='monocle', func=lambda x: run_monocle_pipeline(x, n_components=2))
+	# 	try:
+	# 		pe.fit()
+	# 	except RRuntimeError as e:
+	# 		emit_message(get_exception_message(e))
+	# 		pass
+	# 	else:
+	# 		emit_message('Monocle analysis finished')
+	# 		emit_message(done='visualization', name='monocle-2')
+	# 		pe.save(db)
+	# else:
+	# 	emit_message("monocle is done")
+	
+	if enrich_num < len(gene_set_libraries):
+		# step 3.
+		emit_message('POSTing DEGs to Enrichr for enrichment analysis')
+		d_sample_userListId = gds.post_DEGs_to_Enrichr(db)
+		emit_message('Number of gene sets sent to Enrichr: %d' % len(d_sample_userListId))
+		emit_message('Will perform enrichment analysis on the following gene-set libraries: %s' % ', '.join(gene_set_libraries))
+		for gene_set_library in gene_set_libraries:
+			if gene_set_library not in enriched_libraries:
+				emit_message('Performing enrichment on: %s' % gene_set_library)
+				er = EnrichmentResults(gds, gene_set_library)
+				er.do_enrichment(db)
+				emit_message('Summarizing enrichment results from individual cells...')
+				er.summarize(db)
+				er.save(db)
+				emit_message('Enrichment on %s has finished' % gene_set_library)
+				emit_message(done='enrichment', name=gene_set_library)
+				er.remove_intermediates(db)
+			else:
+				emit_message("Already enriched  for %s"%gene_set_library)
+	else:
+		emit_message('Enrichment complete, skipping')
 
 	emit_message('All completed!')
 	gds.finish(db)
