@@ -161,7 +161,7 @@
         placeholder: 'e.g. GSE82187, reprogramming',
         render: {
             option: function(item, escape){
-                var notebookUrl = 'view_notebook/' + item.notebook_uid + '/' + item.geo_accession;
+                var notebookUrl = 'view_notebook/' + item.notebook_uid + '/' + item.geo_accession + " Analysis Notebook";
                 var visUrl = 'graph_page/' + item.geo_accession + '/tSNE';
 
                 var html = '<div class="geo-item">';

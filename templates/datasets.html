@@ -22,7 +22,7 @@
                 <td><a href="graph_page/{{ gds['geo_accession'] }}/tSNE" class="btn btn-outline-info btn-sm">Launch Viewer</a></td>
                 <td>
                     {% if gds['notebook_uid'] is not none %}
-                        <a href="view_notebook/{{gds['notebook_uid']}}/{{gds['geo_accession']}}" 
+                        <a href="view_notebook/{{gds['notebook_uid']}}/{{gds['geo_accession']}} Analysis Notebook" 
                             class="btn btn-outline-info btn-sm" target="_blank">Launch Notebook</a>
                     {% else %}
                         <a class="btn btn-outline-info btn-sm disabled">Launch Notebook</a>
