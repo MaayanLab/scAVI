@@ -220,28 +220,30 @@ class GeneExpressionDataset(object):
 		return up_DEGs_df
 
 	def post_DEGs_to_Enrichr(self, db, cutoff=2.33, etype='genewise-z', genes_meta=None):
-		if not self.DEGs_posted(db, etype):
-			up_DEGs_df = self.identify_DEGs(cutoff, etype, genes_meta)
-			d_sample_userListId = OrderedDict()
+		try:	
+			if not self.DEGs_posted(db, etype):
+				up_DEGs_df = self.identify_DEGs(cutoff, etype, genes_meta)
+				d_sample_userListId = OrderedDict()
+				for sample_id in self.sample_ids:
+					up_genes = self.genes[np.where(up_DEGs_df[sample_id])[0]].tolist()
+					user_list_id = None
+					if len(up_genes) > 10:
+						user_list_id = post_genes_to_enrichr(up_genes, '%s up' % sample_id)
 
-			for sample_id in self.sample_ids:
-				up_genes = self.genes[np.where(up_DEGs_df[sample_id])[0]].tolist()
-				user_list_id = None
-				if len(up_genes) > 10:
-					user_list_id = post_genes_to_enrichr(up_genes, '%s up' % sample_id)
-
-				d_sample_userListId[sample_id] = user_list_id
-			# nest
-			d_sample_userListId = {etype: d_sample_userListId}
-		else:
-			doc = db.get_collection(self.coll, codec_options=CodecOptions(OrderedDict))\
-				.find_one({'id': self.id},
-					{'d_sample_userListId.%s'%etype:True, '_id':False},
-					)
-			d_sample_userListId = doc['d_sample_userListId']
-
-		self.d_sample_userListId = d_sample_userListId
-		return d_sample_userListId
+					d_sample_userListId[sample_id] = user_list_id
+				# nest
+				d_sample_userListId = {etype: d_sample_userListId}
+			else:
+				doc = db.get_collection(self.coll, codec_options=CodecOptions(OrderedDict))\
+					.find_one({'id': self.id},
+						{'d_sample_userListId.%s'%etype:True, '_id':False},
+						)
+				d_sample_userListId = doc['d_sample_userListId']
+			self.d_sample_userListId = d_sample_userListId
+			return d_sample_userListId
+		except Exception as e:
+			print(e)
+			throw(e)
 
 	def save_DEGs(self, db, etype='genewise-z'):
 		# Save d_sample_userListId to the existing doc in the db
