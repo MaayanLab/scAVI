@@ -16,7 +16,7 @@ from flask import Flask, request, redirect, render_template, \
 from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import MetaData, or_, and_, func
 from flask_cors import cross_origin
 
@@ -40,14 +40,15 @@ app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, path=ENTER_POINT + '/socket.io', 
 	async_mode='threading',
 	engineio_logger=True,
-	cors_allowed_origins=[os.environ['ORIGIN']]
+	cors_allowed_origins=os.environ['ORIGIN'].split(",")
 	)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 engine = db.engine
-Session = sessionmaker(bind=engine)
+Session = scoped_session(sessionmaker())
+Session.configure(bind=engine)
 metadata = MetaData()
 metadata.reflect(bind=engine)
 tables = metadata.tables
@@ -389,7 +390,7 @@ def configure_analysis(upload_id):
 def generate_notebook(upload_id):
 	# print(upload_id)
 	# print(request.form)
-	NOTEBOOK_GENERATOR_URL = 'https://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate'
+	NOTEBOOK_GENERATOR_URL = os.environ['HOSTNAME'] + '/notebook-generator-server-sc/api/generate'
 	# Check if form has been provided
 	if request.form:
 
@@ -433,22 +434,23 @@ def generate_notebook(upload_id):
 		# print(resp_data)
 		# Return result
 		# return redirect(resp_data['nbviewer_url'])
-		print upload_id
+
 		return render_template('analyze-results.html', 
 			notebook_configuration_dict=c,
 			notebook_configuration=json.dumps(c),
 			upload_id=upload_id,
 			ENTER_POINT=ENTER_POINT,
 			expected_time=2,
+			NOTEBOOK_GENERATOR_URL=NOTEBOOK_GENERATOR_URL,
 			)
 
-@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>', defaults={'gse_id': None}, methods=['GET'])
-@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>/<string:gse_id>', methods=['GET'])
-def view_notebook(notebook_uid, gse_id):
-	if gse_id is None:
-		gse_id = 'scRNA-seq'
-	nbviewer_url = "https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/%s/%s Analysis Notebook.ipynb" % \
-		(notebook_uid, gse_id)
+@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>', defaults={'name': None}, methods=['GET'])
+@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>/<string:name>', methods=['GET'])
+def view_notebook(notebook_uid, name):
+	if name is None:
+		name = 'scRNA-seq Analysis Notebook'
+	nbviewer_url = "https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/%s/%s.ipynb" % \
+		(notebook_uid, name)
 	return render_template('view-notebook.html',
 		nbviewer_url=nbviewer_url,
 		ENTER_POINT=ENTER_POINT
@@ -464,7 +466,7 @@ def check_progress(dataset_id):
 		abort(404)
 	else:
 		# Check if dataset_id has started the process
-		if not ds['started']:
+		if not ds['started'] or not ds['done']:
 			# run the pipeline
 			logger = Logger(dataset_id)
 			thread = socketio.start_background_task(
@@ -830,7 +832,6 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 	'''Decrypt sample_ids from the hash then render template for the brush modal.
 	'''
 	sample_ids = encrypt.decrypt(sample_ids_hash).split(',')
-
 	if dataset_id.startswith('GSE'):
 		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
 	else:
@@ -839,10 +840,8 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 	samples_meta = gds.meta_df.loc[sample_ids]
 	# filter out columns with equal number of unique values
 	samples_meta = samples_meta.loc[:, samples_meta.nunique() < len(sample_ids)]
-
 	# get the mask of the selected samples in the dataset
 	mask = np.in1d(gds.sample_ids, sample_ids)
-
 	# prepare gene expression
 	cur = mongo.db['expression'].find(
 		{'dataset_id': dataset_id},
