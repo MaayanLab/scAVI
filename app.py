@@ -839,7 +839,9 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 	# prepare meta
 	samples_meta = gds.meta_df.loc[sample_ids]
 	# filter out columns with equal number of unique values
-	samples_meta = samples_meta.loc[:, samples_meta.nunique() < len(sample_ids)]
+	filtered = samples_meta.nunique() < len(sample_ids)
+	if sum(filtered) > 0: # Filter it out only when it does not result to an empty samples_meta
+		samples_meta = samples_meta.loc[:, filtered]
 	# get the mask of the selected samples in the dataset
 	mask = np.in1d(gds.sample_ids, sample_ids)
 	# prepare gene expression
