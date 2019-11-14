@@ -900,6 +900,8 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 	return render_template('brush-modal.html',
 		meta_df=samples_meta,
 		plot_data=json.dumps(plot_data),
+		enriched=len(enrichment.keys())>0,
+		predicted=len(prediction.keys())>0,
 		ENTER_POINT=ENTER_POINT,
 		)
 
