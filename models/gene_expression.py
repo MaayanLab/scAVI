@@ -160,6 +160,10 @@ class GeneExpressionDataset(object):
 		self.meta = meta
 		self.meta_df = pd.DataFrame(meta.get('meta_df', {}), index=self.sample_ids)
 		self.id = hashlib.md5(self.df.values.tobytes()).hexdigest()
+		# Alternative: hash both meta and id
+		# df_hash = hashlib.md5(self.df.values.tobytes()).hexdigest()
+		# meta_hash = hashlib.md5(self.meta_df .values.tobytes()).hexdigest()
+		# self.id = hashlib.md5(df_hash+meta_hash).hexdigest()
 	
 	def log10_and_zscore(self):
 		self.df = log10_and_zscore(self.df)

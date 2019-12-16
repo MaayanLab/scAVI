@@ -474,7 +474,7 @@ def check_progress(dataset_id):
 				socketio=socketio,
 				enter_point=ENTER_POINT,
 				dataset_id=dataset_id,
-				gene_set_libraries='KEGG_2016,ARCHS4_Cell-lines',
+				gene_set_libraries=os.environ['GENE_SET_LIBRARIES'],#'KEGG_2016,ARCHS4_Cell-lines',
 				logger=logger,
 				db=mongo.db
 				)
@@ -897,6 +897,8 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 		'genes': top_genes_zscores_df.melt().to_dict(orient='list'), # {'gene': [genes], 'value': [values]}
 		'enrichment' : enrichment,
 		'prediction': prediction,
+		'samples_ids': sample_ids,
+		'gds_sids': gds.sample_ids
 	}
 
 	return render_template('brush-modal.html',
