@@ -4,7 +4,7 @@ reticulate::use_python(python_home)
 library(dplyr)
 library(monocle)
 library(tibble)
-
+options(DelayedArray.block.size=100e6)
 
 # Make a CellDataSet object
 # @expr_df: CPM expression data.frame (genes by samples) 

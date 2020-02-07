@@ -13,7 +13,7 @@ import pandas as pd
 mongo = MongoClient(os.environ['MONGOURI'])
 db = mongo['SCV']
 
-endpoint = 'http://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate'
+endpoint = 'https://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate'
 notebook_configuration_base = {
   "notebook": {
     "title": "",

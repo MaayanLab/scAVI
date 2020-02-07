@@ -20,7 +20,7 @@ def get_most_enriched_terms(combined_scores_df):
 
 
 def get_enrichment(user_list_id, gene_set_library):
-	ENRICHR_URL = 'http://amp.pharm.mssm.edu/Enrichr/enrich'
+	ENRICHR_URL = 'https://amp.pharm.mssm.edu/Enrichr/enrich'
 	query_string = '?userListId=%s&backgroundType=%s'
 	response = requests.get(
 		ENRICHR_URL + query_string % (user_list_id, gene_set_library)

@@ -7,7 +7,7 @@ var gene_series_base = {
   point: {
     events: {
       click: function(){
-        location.href = 'http://amp.pharm.mssm.edu/Harmonizome/gene/' + 
+        location.href = window.location.protocol + '//amp.pharm.mssm.edu/Harmonizome/gene/' + 
         this.options.gene.toUpperCase();    
       }
     }

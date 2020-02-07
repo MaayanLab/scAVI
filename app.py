@@ -16,8 +16,9 @@ from flask import Flask, request, redirect, render_template, \
 from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import MetaData, or_, and_, func
+from flask_cors import cross_origin
 
 import encrypt
 from utils import *
@@ -37,14 +38,17 @@ mongo.init_app(app)
 
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, path=ENTER_POINT + '/socket.io', 
-	async_mode='threading'
+	async_mode='threading',
+	engineio_logger=True,
+	cors_allowed_origins=os.environ['ORIGIN'].split(",")
 	)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 engine = db.engine
-Session = sessionmaker(bind=engine)
+Session = scoped_session(sessionmaker())
+Session.configure(bind=engine)
 metadata = MetaData()
 metadata.reflect(bind=engine)
 tables = metadata.tables
@@ -337,8 +341,8 @@ def configure_analysis(upload_id):
 			tables['parameter'].columns['parameter_description'], \
 			tables['parameter_value'].columns['value'], \
 			tables['parameter_value'].columns['default']) \
-		.outerjoin(tables['parameter']) \
-		.outerjoin(tables['parameter_value']) \
+		.outerjoin(tables['parameter'], tables['parameter'].columns['tool_fk'] == tables['tool'].columns['id']) \
+		.outerjoin(tables['parameter_value'], tables['parameter_value'].columns['parameter_fk'] == tables['parameter'].columns['id']) \
 		.filter(tables['tool'].columns['tool_string'].in_(tools)).all()
 	session.close()
 	p = pd.DataFrame(db_query).set_index(['tool_string'])#pd.read_sql_query('SELECT tool_name, tool_string, tool_description, parameter_name, parameter_description, parameter_string, value, `default` FROM tool t LEFT JOIN parameter p ON t.id=p.tool_fk LEFT JOIN parameter_value pv ON p.id=pv.parameter_fk WHERE t.tool_string IN {}'.format(tool_query_string), engine).set_index(['tool_string'])#.set_index(['tool_name', 'parameter_name', 'parameter_description', 'parameter_string'])
@@ -374,7 +378,7 @@ def configure_analysis(upload_id):
 def generate_notebook(upload_id):
 	# print(upload_id)
 	# print(request.form)
-	NOTEBOOK_GENERATOR_URL = 'http://amp.pharm.mssm.edu/notebook-generator-server-sc/api/generate'
+	NOTEBOOK_GENERATOR_URL = os.environ['HOSTNAME'] + '/notebook-generator-server-sc/api/generate'
 	# Check if form has been provided
 	if request.form:
 
@@ -418,21 +422,23 @@ def generate_notebook(upload_id):
 		# print(resp_data)
 		# Return result
 		# return redirect(resp_data['nbviewer_url'])
+
 		return render_template('analyze-results.html', 
 			notebook_configuration_dict=c,
 			notebook_configuration=json.dumps(c),
 			upload_id=upload_id,
 			ENTER_POINT=ENTER_POINT,
 			expected_time=2,
+			NOTEBOOK_GENERATOR_URL=NOTEBOOK_GENERATOR_URL,
 			)
 
-@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>', defaults={'gse_id': None}, methods=['GET'])
-@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>/<string:gse_id>', methods=['GET'])
-def view_notebook(notebook_uid, gse_id):
-	if gse_id is None:
-		gse_id = 'GIVWE'
-	nbviewer_url = "https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/%s/%s Analysis Notebook.ipynb" % \
-		(notebook_uid, gse_id)
+@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>', defaults={'name': None}, methods=['GET'])
+@app.route(ENTER_POINT + '/view_notebook/<string:notebook_uid>/<string:name>', methods=['GET'])
+def view_notebook(notebook_uid, name):
+	if name is None:
+		name = 'scRNA-seq Analysis Notebook'
+	nbviewer_url = "https://nbviewer.jupyter.org/urls/storage.googleapis.com/jupyter-notebook-generator/%s/%s.ipynb" % \
+		(notebook_uid, name)
 	return render_template('view-notebook.html',
 		nbviewer_url=nbviewer_url,
 		ENTER_POINT=ENTER_POINT
@@ -448,7 +454,7 @@ def check_progress(dataset_id):
 		abort(404)
 	else:
 		# Check if dataset_id has started the process
-		if not ds['started']:
+		if not ds['started'] or not ds['done']:
 			# run the pipeline
 			logger = Logger(dataset_id)
 			thread = socketio.start_background_task(
@@ -456,7 +462,7 @@ def check_progress(dataset_id):
 				socketio=socketio,
 				enter_point=ENTER_POINT,
 				dataset_id=dataset_id,
-				gene_set_libraries='KEGG_2016,ARCHS4_Cell-lines',
+				gene_set_libraries=os.environ['GENE_SET_LIBRARIES'],#'KEGG_2016,ARCHS4_Cell-lines',
 				logger=logger,
 				db=mongo.db
 				)
@@ -539,6 +545,7 @@ def load_graph_layout_coords(graph_name, dataset_id):
 	return redirect(ENTER_POINT + '/graph/%s/%s/2' % (dataset_id, graph_name))
 
 @app.route(ENTER_POINT + '/graph/<string:dataset_id>/<string:graph_name>/<int:n_dim>', methods=['GET'])
+@cross_origin()
 def load_graph_layout_coords_with_dim(graph_name, dataset_id, n_dim):
 	'''API for different graphs'''
 	if request.method == 'GET':
@@ -804,7 +811,6 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 	'''Decrypt sample_ids from the hash then render template for the brush modal.
 	'''
 	sample_ids = encrypt.decrypt(sample_ids_hash).split(',')
-
 	if dataset_id.startswith('GSE'):
 		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
 	else:
@@ -812,11 +818,11 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 	# prepare meta
 	samples_meta = gds.meta_df.loc[sample_ids]
 	# filter out columns with equal number of unique values
-	samples_meta = samples_meta.loc[:, samples_meta.nunique() < len(sample_ids)]
-
+	filtered = samples_meta.nunique() < len(sample_ids)
+	if sum(filtered) > 0: # Filter it out only when it does not result to an empty samples_meta
+		samples_meta = samples_meta.loc[:, filtered]
 	# get the mask of the selected samples in the dataset
 	mask = np.in1d(gds.sample_ids, sample_ids)
-
 	# prepare gene expression
 	cur = mongo.db['expression'].find(
 		{'dataset_id': dataset_id},
@@ -870,11 +876,15 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 		'genes': top_genes_zscores_df.melt().to_dict(orient='list'), # {'gene': [genes], 'value': [values]}
 		'enrichment' : enrichment,
 		'prediction': prediction,
+		'samples_ids': sample_ids,
+		'gds_sids': gds.sample_ids
 	}
 
 	return render_template('brush-modal.html',
 		meta_df=samples_meta,
 		plot_data=json.dumps(plot_data),
+		enriched=len(enrichment.keys())>0,
+		predicted=len(prediction.keys())>0,
 		ENTER_POINT=ENTER_POINT,
 		)
 

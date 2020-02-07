@@ -12,3 +12,5 @@ logs/*.log
 .vscode/
 .config
 test_*.R
+.env
+.env*.local

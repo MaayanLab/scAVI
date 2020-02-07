@@ -471,7 +471,6 @@ var Scatter3dView = Backbone.View.extend({
 		// devices with DPR > 1 may experience poorer canvas qualities
 		// this.renderer.setPixelRatio( this.DPR );
 		this.renderer.setSize( this.WIDTH, this.HEIGHT, false );
-		console.log(this.WIDTH, this.HEIGHT)
 		// Put the renderer's DOM into the container
 		this.renderer.domElement.id = "renderer";
 		this.container.appendChild( this.renderer.domElement );
@@ -494,7 +493,13 @@ var Scatter3dView = Backbone.View.extend({
 			self.renderer.setSize(self.WIDTH, self.HEIGHT)
 			self.camera.aspect = self.WIDTH / self.HEIGHT;
 			self.camera.updateProjectionMatrix();
-			// TODO: update camera frustum, position and the x, y scales of the brush
+			// get the original domains of the brush
+			var xDomain = self.brush.x().domain(),
+				yDomain = self.brush.y().domain();
+			// update the ranges of x, y
+			self.brush
+				.x(d3.scale.linear().range([0, self.WIDTH]).domain(xDomain))
+				.y(d3.scale.linear().range([self.HEIGHT, 0]).domain(yDomain))
 		});
 		
 	},
@@ -952,7 +957,6 @@ var Scatter3dView = Backbone.View.extend({
 			var geometry = intersect.object.geometry;
 			var id = geometry.attributes.id.array[idx];
 			var url = 'sample/' + id;
-			// console.log(id)
 			window.open(url);
 		}
 	},
