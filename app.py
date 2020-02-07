@@ -532,6 +532,56 @@ def graph_page_with_ndim(graph_name, dataset_id, n_dim):
 		)
 
 
+@app.route(ENTER_POINT + '/graph_page_plain/<string:dataset_id>/<string:graph_name>')
+def graph_page_plain(graph_name, dataset_id):
+	return redirect(ENTER_POINT + '/graph_page_plain/%s/%s/2' % (dataset_id, graph_name))
+
+@app.route(ENTER_POINT + '/graph_page_plain/<string:dataset_id>/<string:graph_name>/<int:n_dim>')
+def graph_page_plain_with_ndim(graph_name, dataset_id, n_dim):
+	# defaults
+	sdvConfig = {
+		'labelKey': ['sample_id'],
+	}
+	if n_dim == 2:
+		sdvConfig['is3d'] = False
+		sdvConfig['pointSize'] = 12
+	elif n_dim == 3:
+		sdvConfig['is3d'] = True
+		sdvConfig['pointSize'] = 0.5
+
+	# pick the attributes for default shaping and coloring
+	if dataset_id.startswith('GSE'):
+		gds = GEODataset.load(dataset_id, mongo.db, meta_only=True)
+		meta_df = gds.meta_df
+		n_samples = len(gds.sample_ids)
+	else:
+		gds = GeneExpressionDataset.load_meta(dataset_id, mongo.db)
+		n_samples = gds['n_samples']
+		doc = mongo.db['dataset'].find_one({'id': dataset_id}, {'_id': False, 'meta.meta_df': True})
+		meta_df = pd.DataFrame(doc['meta']['meta_df'])
+
+	# Find if this dataset is in dataset_meta
+	doc = mongo.db['dataset_meta'].find_one({'graph_id': dataset_id})
+	if doc:
+		sdvConfig['colorKey'] = doc['default_color_col']
+	else:
+		sdvConfig['colorKey'] = meta_df.columns[0]
+	sdvConfig['shapeKey'] = None
+
+	visualizations = get_available_vis(mongo.db, dataset_id)
+
+	# flag indicating whether a tree will be plotted
+	# has_tree = graph_name in PSEUDOTIME_ALGOS
+	return render_template('index_plain.html', 
+		script='main',
+		ENTER_POINT=ENTER_POINT,
+		graphs=json.dumps(visualizations),
+		graph_name=graph_name,
+		dataset_id=dataset_id,
+		sdvConfig=json.dumps(sdvConfig),
+		)
+
+
 @app.route('/<path:filename>')
 def serve_static_file(filename):
 	'''Serve static files.

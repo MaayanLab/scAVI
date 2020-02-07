@@ -1,0 +1,40 @@
+{% extends "base_plain.html" %}
+{% block content %}
+    <div id="body" class="container-full">
+      <canvas id="text-label"></canvas>
+    </div>
+{% endblock %}
+{% block scripts %}
+
+    <script src="node_modules/three/build/three.min.js"></script>
+    <script src="node_modules/three/examples/js/controls/OrbitControls.js"></script>
+
+    <script src="node_modules/three/examples/js/Detector.js"></script>
+    <script src="node_modules/three/examples/js/libs/stats.min.js"></script>
+    
+    <script src="js/textures.js"></script>
+    <script src="js/scatterPlot.js"></script>
+    <script src="js/scatterWidgets.js"></script>
+    <script src="js/treePlot.js"></script>
+    <script src="js/mobileCheck.js"></script>
+    <script>
+        var graph_name = "{{ graph_name }}";
+        var dataset_id = "{{ dataset_id }}";
+        var graphs = {{ graphs|safe }};
+        var sdvConfig = {{ sdvConfig|safe }};
+    </script>
+    <script src="js/{{ script }}.js"></script>
+
+    <div class="modal fade" id="brush-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="myModalLabel">Selected samples</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <div class="modal-body"></div>
+        </div>
+      </div>
+    </div>
+    
+{% endblock %}
