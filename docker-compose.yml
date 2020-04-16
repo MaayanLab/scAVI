@@ -18,3 +18,14 @@ services:
       - GENE_SET_LIBRARIES=${GENE_SET_LIBRARIES}
     volumes:
       - ./data:/my_application/data
+
+  mongohost:
+    image: mongo
+
+  mysqlhost:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
