@@ -45,6 +45,7 @@ socketio = SocketIO(app, path=ENTER_POINT + '/socket.io',
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 db = SQLAlchemy(app)
 engine = db.engine
 Session = scoped_session(sessionmaker())
