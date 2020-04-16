@@ -13,3 +13,5 @@ logs/*.log
 test_*.R
 .env
 .env*.local
+venv
+renv

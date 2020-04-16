@@ -3,6 +3,49 @@ scAVI is a web-based platform developed to enable users to analyze and visualize
 
 The scAVI platform supports the analysis and visualization of 463 publicly available scRNA-seq studies from GEO covering 194,653 single cells/samples. Analyses are provided as 463 dedicated landing pages and Jupyter Notebook reports for each study.
 
+## Development
+
+### Installation
+#### Python2
+```bash
+# ensure virtualenv is installed
+python2 -m pip install virtualenv
+# ensure setup virtualenv
+python2 -m virtualenv venv
+# establish virtualenv
+source venv/bin/activate
+# install packages
+pip install -r requirements.txt
+```
+
+#### R
+```bash
+# ensure R stores things here
+export R_LIBS=$(pwd)/renv
+# setup R environment
+Rscript setup.R
+```
+
+#### NodeJS
+```bash
+cd static
+# Install node dependencies
+npm i
+```
+
+### Running in development
+```bash
+# activate environments
+source venv/bin/activate
+export R_LIBS=$(pwd)/renv
+# export .env variables
+set -o allexport
+source .env
+set +o allexport
+# run
+bash run.sh
+```
+
 ## Deploying
 
 ### Environment
