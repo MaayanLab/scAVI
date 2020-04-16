@@ -413,6 +413,39 @@ var ScatterData = Backbone.Model.extend({
 });
 
 
+function buildAxis(src, dst, colorHex, dashed) {
+	var geom = new THREE.Geometry(),
+		mat;
+
+	if (dashed) {
+		mat = new THREE.LineDashedMaterial({ linewidth: 1, color: colorHex, dashSize: 1, gapSize: 1 });
+	} else {
+		mat = new THREE.LineBasicMaterial({ linewidth: 1, color: colorHex });
+	}
+
+	geom.vertices.push(src.clone());
+	geom.vertices.push(dst.clone());
+	geom.computeLineDistances(); // This one is SUPER important, otherwise dashed lines will appear as simple plain lines
+
+	var axis = new THREE.Line(geom, mat, THREE.LinePieces);
+
+	return axis;
+}
+
+function buildAxes(length) {
+	var axes = new THREE.Object3D();
+
+	axes.add(buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(length, 0, 0), 0xFF0000, false)); // +X
+	axes.add(buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(-length, 0, 0), 0xFF0000, false)); // -X
+	axes.add(buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, length, 0), 0x00FF00, false)); // +Y
+	axes.add(buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -length, 0), 0x00FF00, false)); // -Y
+	axes.add(buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, length), 0x0000FF, false)); // +Z
+	axes.add(buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -length), 0x0000FF, false)); // -Z
+
+	return axes;
+}
+
+
 var Scatter3dView = Backbone.View.extend({
 	// this is the view for all points
 	model: ScatterData,
@@ -476,6 +509,7 @@ var Scatter3dView = Backbone.View.extend({
 		this.container.appendChild( this.renderer.domElement );
 		// Set up camera and control
 		this.setUpCameraAndControl();
+
 		this.mouse = new THREE.Vector2();
 
 		if (this.showStats) {
@@ -673,6 +707,11 @@ var Scatter3dView = Backbone.View.extend({
 				this.raycaster.params.Points.threshold = this.pointSize/200;	
 			}
 		}
+
+		// set up axes
+		this.scene.add(
+			buildAxes(Math.max(self.WIDTH, self.HEIGHT))
+		);	
 	},
 
 	removeCurrentCameraAndControl: function(){
