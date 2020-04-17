@@ -427,7 +427,7 @@ function buildAxis(src, dst, colorHex, dashed) {
 	geom.vertices.push(dst.clone());
 	geom.computeLineDistances(); // This one is SUPER important, otherwise dashed lines will appear as simple plain lines
 
-	var axis = new THREE.Line(geom, mat, THREE.LinePieces);
+	var axis = new THREE.Line(geom, mat, THREE.LineSegments);
 
 	return axis;
 }
