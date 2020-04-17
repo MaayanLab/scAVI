@@ -56,7 +56,7 @@ pip install -r requirements.txt
 # ensure R stores things here
 export R_LIBS=$(pwd)/renv
 # setup R environment
-Rscript setup.R
+R -e "source('setup.R')"
 ```
 
 #### NodeJS
