@@ -36,11 +36,18 @@ var Legend = Backbone.View.extend({
 		this.g.append('g')
 			.attr('id', 'legendColor')
 			.attr("class", "legendPanel")
-			.attr("transform", "translate(0, 0)");
+			.attr("transform", "translate(0, 0)")
+			.attr("visibility", "hidden");
 		this.g.append('g')
 			.attr('id', 'legendShape')
 			.attr("class", "legendPanel")
-			.attr("transform", "translate(0, 0)");
+			.attr("transform", "translate(0, 0)")
+			.attr("visibility", "hidden");
+		this.g.append('g')
+			.attr('id', 'legendAxis')
+			.attr("class", "legendPanel")
+			.attr("transform", "translate(0, 0)")
+			.attr("visibility", "hidden");
 
 	},
 
@@ -71,6 +78,37 @@ var Legend = Backbone.View.extend({
 		this.g.select("#legendColor")
 			.call(legendColor);
 
+		// gross hack
+		const legend_base = $('#vis-btn-group > .btn-group > .btn.active')[0].id
+			// end gross hack
+
+		// axis legend
+		if (this.scatterPlot.is3d) {
+			var legendScale = d3.scale.ordinal()
+				.domain([`${legend_base}-1`, `${legend_base}-2`, `${legend_base}-3`])
+				.range(["#ff0000", "#00ff00", "#0000ff"])
+			var legendAxis = d3.legend.color()
+				.title("Axes")
+				.shapeWidth(20)
+				.cells(3)
+				.scale(legendScale)
+
+			this.g.select("#legendAxis")
+				.call(legendAxis)
+		} else {
+			var legendScale = d3.scale.ordinal()
+				.domain([`${legend_base}-1`, `${legend_base}-2`])
+				.range(["#ff0000", "#00ff00"])
+			var legendAxis = d3.legend.color()
+				.title("Axes")
+				.shapeWidth(20)
+				.cells(3)
+				.scale(legendScale)
+
+			this.g.select("#legendAxis")
+				.call(legendAxis)
+		}
+
 		var self = this
 		// a hack here because d3.legend has no callback
 		setTimeout(function(){self.createLegendCellForNull();}, 400)
@@ -80,15 +118,26 @@ var Legend = Backbone.View.extend({
 	},
 	
 	moveShapeLegend: function(){
-		var bbox = this.g.select('#legendColor')
-			.node()
-			.getBBox();
+		var legendColorBBox = this.g.select('#legendColor').node().getBBox();
+		var legendShapeBBox = this.g.select('#legendShape').node().getBBox();
+		// show legendColor accordingly
+		this.g.select('#legendColor')
+			.transition()
+			.attr("visibility", "visible")
+			.duration(100)
 		// move legendShape accordingly
-		var dy = bbox.height + 10;
 		this.g.select('#legendShape')
 			.transition()
-			.attr('transform', 'translate(0, ' + dy + ')')
-			.duration(500)
+			.attr('transform', 'translate(0, ' + legendColorBBox.height + 10 + ')')
+			.attr("visibility", "visible")
+			.duration(100)
+		
+		// move legendAxis accordingly
+		this.g.select('#legendAxis')
+			.transition()
+			.attr('transform', 'translate(0, ' + (legendColorBBox.height + 10 + legendShapeBBox.height + 10) + ')')
+			.attr("visibility", "visible")
+			.duration(100)
 	},
 
 	createLegendCellForNull: function(){
