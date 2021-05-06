@@ -1,4 +1,4 @@
-flask_cors==2.0.1
+flask_cors==3.0.9
 flask_sqlalchemy==2.0
 Flask-PyMongo==0.5.1
 Flask-SocketIO==2.9.4
