@@ -73,7 +73,7 @@ def index_page():
 
 	cur = mongo.db['geo'].find({'geo_accession': {'$in': dataset_ids}}, 
 		projection,
-		cursor_type=CursorType.EXHAUST
+		# cursor_type=CursorType.EXHAUST
 		)
 
 	n_studies = cur.count()
@@ -122,7 +122,7 @@ def all_datasets():
 
 	cur = mongo.db['geo'].find({'geo_accession': {'$in': dataset_ids}}, 
 		projection,
-		cursor_type=CursorType.EXHAUST
+		# cursor_type=CursorType.EXHAUST
 		)
 
 	n_studies = cur.count()
@@ -182,7 +182,7 @@ def query_datasets():
 			]}
 		]},
 		projection,
-		cursor_type=CursorType.EXHAUST
+		# cursor_type=CursorType.EXHAUST
 		)
 
 	n_results = cur.count()
@@ -849,7 +849,7 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 	cur = mongo.db['expression'].find(
 		{'dataset_id': dataset_id},
 		{'gene':True, 'values': True, '_id': False},
-		cursor_type=CursorType.EXHAUST
+		# cursor_type=CursorType.EXHAUST
 	)
 	# pick to top expressed genes
 	zscores_df = pd.DataFrame.from_dict({doc['gene'] : np.array(doc['values'])[mask] for doc in cur})
@@ -867,7 +867,9 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 			{'scores': {'$exists': True}}
 		]},
 		{'gene_set_library':True, 'scores': True, 'type':True, '_id':False},
-		cursor_type=CursorType.EXHAUST)
+		cursor_type=CursorType.EXHAUS
+	# T
+	)
 	for doc in cur:
 		lib = doc['gene_set_library']
 		scores_df = pd.DataFrame.from_dict({term: np.array(scores)[mask] for term, scores in doc['scores'].iteritems() })\
@@ -882,7 +884,8 @@ def decrypt_sample_ids(dataset_id, sample_ids_hash):
 	prediction = {}
 	cur = mongo.db['preds'].find({'dataset_id': dataset_id}, 
 		{'name':True, 'probas': True, '_id':False},
-		cursor_type=CursorType.EXHAUST)
+		# cursor_type=CursorType.EXHAUST
+	)
 	for doc in cur:
 		pred = doc['name']
 		scores_df = pd.DataFrame.from_dict({label: np.array(probas)[mask] for label, probas in doc['probas'].iteritems() })\
