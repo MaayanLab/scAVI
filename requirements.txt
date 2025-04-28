@@ -2,7 +2,7 @@ flask_cors==2.0.1
 flask_sqlalchemy==2.0
 Flask-PyMongo==0.5.1
 Flask-SocketIO==2.9.4
-Flask==0.12.2
+Flask==1.0
 gevent==1.2.2
 google-cloud-storage==1.13.2
 h5py==2.9.0
